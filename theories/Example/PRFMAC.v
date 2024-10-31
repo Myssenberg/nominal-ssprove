@@ -13,7 +13,7 @@
   negligible in [n].
 *)
 
-From Relational Require Import OrderEnrichedCategory GenericRulesSimple.
+(*From Relational Require Import OrderEnrichedCategory GenericRulesSimple.*)
 
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
@@ -29,8 +29,6 @@ From extructures Require Import ord fset fmap.
 
 Import SPropNotations.
 
-Import PackageNotation.
-
 From Equations Require Import Equations.
 Require Equations.Prop.DepElim.
 
@@ -43,6 +41,11 @@ Set Primitive Projections.
 Import Num.Def.
 Import Num.Theory.
 Import Order.POrderTheory.
+
+Import PackageNotation.
+
+From NominalSSP Require Import FsetSolve Nominal Fresh Pr NomPackage Disjoint.
+Import FsetSolve.
 
 (**
   We can't use sets directly in [choice_type] so instead we use a map to units.
@@ -77,7 +80,7 @@ Definition checktag: nat := 6.
 Definition guess: nat := 7.
 
 Definition mkpair {Lt Lf E}
-  (t: package Lt [interface] E) (f: package Lf [interface] E):
+  (t: trimmed_package Lt [interface] E) (f: trimmed_package Lf [interface] E):
   loc_GamePair E := fun b => if b then {locpackage t} else {locpackage f}.
 
 Context (PRF: Word -> Word -> Word).
@@ -113,10 +116,10 @@ Hint Extern 1 (ValidCode ?L ?I kgen) =>
   : typeclass_instances ssprove_valid_db.
 
 Definition EVAL_pkg_tt:
-  package EVAL_locs_tt
+  trimmed_package EVAL_locs_tt
     [interface]
     [interface #val #[lookup]: 'word → 'word ] :=
-  [package
+  [trimmed_package
     #def #[lookup] (m: 'word): 'word {
       k ← kgen ;;
       ret (PRF k m)
@@ -124,10 +127,10 @@ Definition EVAL_pkg_tt:
   ].
 
 Definition EVAL_pkg_ff:
-  package EVAL_locs_ff
+  trimmed_package EVAL_locs_ff
     [interface]
     [interface #val #[lookup]: 'word → 'word ] :=
-  [package
+  [trimmed_package
     #def #[lookup] (m: 'word): 'word {
       T ← get T_loc ;;
       match getm T m with
@@ -144,13 +147,14 @@ Definition EVAL := mkpair EVAL_pkg_tt EVAL_pkg_ff.
 
 Definition GUESS_locs := fset [:: T_loc].
 
+
 Definition GUESS_pkg_tt:
-  package GUESS_locs
+  trimmed_package GUESS_locs
     [interface]
     [interface
       #val #[lookup]: 'word → 'word ;
       #val #[guess]: 'word × 'word → 'bool ] :=
-  [package
+  [trimmed_package
     #def #[lookup] (m: 'word): 'word {
       T ← get T_loc ;;
       match getm T m with
@@ -170,17 +174,18 @@ Definition GUESS_pkg_tt:
           ret r
       | Some r => ret r
       end ;;
-      ret (t == r)
+      ret (eq_op t r) (*Ask Markus if this is okay *)
     }
   ].
 
+
 Definition GUESS_pkg_ff:
-  package GUESS_locs
+  trimmed_package GUESS_locs
     [interface]
     [interface
       #val #[lookup]: 'word → 'word ;
       #val #[guess]: 'word × 'word → 'bool ] :=
-  [package
+  [trimmed_package
     #def #[lookup] (m: 'word): 'word {
       T ← get T_loc ;;
       match getm T m with
@@ -193,9 +198,10 @@ Definition GUESS_pkg_ff:
     } ;
     #def #[guess] ('(m, t): 'word × 'word): 'bool {
       T ← get T_loc ;;
-      ret (Some t == getm T m)
+      ret (eq_op (Some t) (getm T m))
     }
   ].
+
 
 Definition GUESS := mkpair GUESS_pkg_tt GUESS_pkg_ff.
 
@@ -203,29 +209,29 @@ Definition TAG_locs_tt := fset [:: k_loc].
 Definition TAG_locs_ff := fset [:: k_loc; S_loc].
 
 Definition TAG_pkg_tt:
-  package TAG_locs_tt
+  trimmed_package TAG_locs_tt
     [interface]
     [interface
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ] :=
-  [package
+  [trimmed_package
     #def #[gettag] (m: 'word): 'word {
       k ← kgen ;;
       ret (PRF k m)
     } ;
     #def #[checktag] ('(m, t): 'word × 'word): 'bool {
       k ← kgen ;;
-      ret (t == PRF k m)
+      ret (eq_op t (PRF k m))
     }
   ].
 
 Definition TAG_pkg_ff:
-  package TAG_locs_ff
+  trimmed_package TAG_locs_ff
     [interface]
     [interface
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ] :=
-  [package
+  [trimmed_package
     #def #[gettag] (m: 'word): 'word {
       S ← get S_loc ;;
       k ← kgen ;;
@@ -244,12 +250,12 @@ Definition TAG := mkpair TAG_pkg_tt TAG_pkg_ff.
 Definition TAG_EVAL_locs_ff := fset [:: S_loc].
 
 Definition TAG_EVAL_pkg_tt:
-  package fset0
+  trimmed_package fset0
     [interface #val #[lookup]: 'word → 'word ]
     [interface
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ] :=
-  [package
+  [trimmed_package
     #def #[gettag] (m: 'word): 'word {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       t ← lookup m ;;
@@ -258,17 +264,17 @@ Definition TAG_EVAL_pkg_tt:
     #def #[checktag] ('(m, t): 'word × 'word): 'bool {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       r ← lookup m ;;
-      ret (t == r)
+      ret (eq_op t r)
     }
   ].
 
 Definition TAG_EVAL_pkg_ff:
-  package TAG_EVAL_locs_ff
+  trimmed_package TAG_EVAL_locs_ff
     [interface #val #[lookup]: 'word → 'word]
     [interface
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ] :=
-  [package
+  [trimmed_package
     #def #[gettag] (m: 'word): 'word {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       S ← get S_loc ;;
@@ -285,14 +291,14 @@ Definition TAG_EVAL_pkg_ff:
 Definition TAG_GUESS_locs := fset [:: S_loc ].
 
 Definition TAG_GUESS_pkg:
-  package TAG_GUESS_locs
+  trimmed_package TAG_GUESS_locs
     [interface
       #val #[lookup]: 'word → 'word ;
       #val #[guess]: 'word × 'word → 'bool ]
     [interface
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ] :=
-  [package
+  [trimmed_package
     #def #[gettag] (m: 'word): 'word {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       S ← get S_loc ;;
@@ -308,7 +314,7 @@ Definition TAG_GUESS_pkg:
   ].
 
 Lemma TAG_equiv_true:
-  TAG true ≈₀ TAG_EVAL_pkg_tt ∘ EVAL true.
+  TAG true ≈₀ dlink TAG_EVAL_pkg_tt EVAL true. (* WE MADE IT UNTIL HERE *)
 Proof.
   apply: eq_rel_perf_ind_eq.
   simplify_eq_rel m.
