@@ -174,7 +174,8 @@ Definition GUESS_pkg_tt:
           ret r
       | Some r => ret r
       end ;;
-      ret (eq_op t r) (*Ask Markus if this is okay *)
+      ret (t == r)%B (*Ask Markus if this is okay : we tell it to interpret this syntax
+as if it was in the boolean scope *)
     }
   ].
 
@@ -313,10 +314,22 @@ Definition TAG_GUESS_pkg:
     }
   ].
 
-Lemma TAG_equiv_true:
-  TAG true ≈₀ dlink TAG_EVAL_pkg_tt EVAL true. (* WE MADE IT UNTIL HERE *)
+Check eq_rel_perf_ind_eq.
+
+Instance valid_TAG_eval:
+  ValidPackage (EVAL_locs_tt) Game_import [interface
+      #val #[gettag]: 'word → 'word ;
+      #val #[checktag]: 'word × 'word → 'bool ] (nom_link TAG_EVAL_pkg_tt (EVAL_pkg_tt)).
 Proof.
-  apply: eq_rel_perf_ind_eq.
+  eapply valid_package_inject_locations.
+  2: dprove_valid.
+  fset_solve.
+Qed.
+
+Lemma TAG_equiv_true:
+  TAG true ≈₀ nom_link TAG_EVAL_pkg_tt (EVAL true). (* WE MADE IT UNTIL HERE *)
+Proof.
+  apply eq_rel_perf_ind_eq.
   simplify_eq_rel m.
   all: apply rpost_weaken_rule with eq;
     last by move=> [? ?] [? ?] [].
@@ -329,7 +342,7 @@ Proof.
 Qed.
 
 Lemma TAG_EVAL_equiv_true:
-  TAG_EVAL_pkg_tt ∘ EVAL false ≈₀ TAG_GUESS_pkg ∘ GUESS true.
+  dlink TAG_EVAL_pkg_tt (EVAL false) ≈₀ dlink TAG_GUESS_pkg (GUESS true).
 Proof.
   apply eq_rel_perf_ind_ignore with (fset [:: S_loc]).
   1: {
