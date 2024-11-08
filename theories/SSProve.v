@@ -30,22 +30,6 @@ Import PackageNotation.
 #[local] Open Scope ring_scope.
 
 
-(* adv_less *)
-
-Definition adv_less {L₀ L₁ E} (G₀ G₁ : raw_package)
-  `{ValidPackage L₀ Game_import E G₀} `{ValidPackage L₁ Game_import E G₁} ε :=
-  ∀ LA A,
-    ValidPackage LA E A_export A →
-    fdisjoint LA L₀ →
-    fdisjoint LA L₁ →
-    AdvantageE G₀ G₁ A <= ε A.
-
-Notation " G0 ≤[ R ] G1 " :=
-  (adv_less G0 G1 R)
-  (at level 50, format " G0  ≤[  R  ]  G1")
-  : package_scope.
-
-
 (* specialized theorems *)
 
 Definition rel_jdg_replace_l
@@ -91,24 +75,100 @@ Proof.
   + intros l v _; apply put_pre_cond_heap_ignore.
 Qed.
 
-(* swap independent pieces of code *)
-
-Lemma notin_neq (f : seq Location) (l m : Location) : l \notin f -> m \in f -> l != m.
-  unfold "\in".
-  intros Hni Hi.
-  eapply contraNneq.
-  2: apply Hni.
-  intros Eq.
-  by rewrite Eq.
+Lemma rpre_learn {A₀ A₁ : choiceType} {P : Type}
+  : ∀ (m₀ : raw_code A₀) (m₁ : raw_code A₁)
+      (pre : precond) (post : postcond A₀ A₁),
+      (∀ s₀ s₁, pre (s₀, s₁) → P)
+      → (P → ⊢ ⦃ pre ⦄ m₀ ≈ m₁ ⦃ post ⦄)
+      → ⊢ ⦃ pre ⦄ m₀ ≈ m₁ ⦃ post ⦄.
+Proof.
+  intros m0 m1 pre post H1 H2.
+  apply rpre_hypothesis_rule => s0 s1 H3.
+  specialize (H1 s0 s1 H3).
+  specialize (H2 H1).
+  eapply rpre_weaken_rule; [ apply H2 |] => s0' s1' //= [H4 H5].
+  by subst.
 Qed.
+
+Lemma r_rem_lhs {A₀ A₁ : choiceType}
+  : ∀ (l : Location) (m₀ : raw_code A₀) (m₁ : raw_code A₁)
+      (pre : precond) (post : postcond A₀ A₁),
+      (∀ v, ⊢ ⦃ λ '(s0, s1), (pre ⋊ rem_lhs l v) (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄)
+      → ⊢ ⦃ λ '(s0, s1), pre (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄.
+Proof.
+  intros l m0 m1 pre post H.
+  apply rpre_hypothesis_rule => s0 s1 H'.
+  eapply rpre_weaken_rule; [ apply H |].
+  instantiate (1 := get_heap s0 l).
+  move=> s0' s1' [H1 H2]; subst.
+  split; auto.
+  reflexivity.
+Qed.
+
+Lemma r_rem_rhs {A₀ A₁ : choiceType}
+  : ∀ (l : Location) (m₀ : raw_code A₀) (m₁ : raw_code A₁)
+      (pre : precond) (post : postcond A₀ A₁),
+      (∀ v, ⊢ ⦃ λ '(s0, s1), (pre ⋊ rem_rhs l v) (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄)
+      → ⊢ ⦃ λ '(s0, s1), pre (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄.
+Proof.
+  intros l m0 m1 pre post H.
+  apply rpre_hypothesis_rule => s0 s1 H'.
+  eapply rpre_weaken_rule; [ apply H |].
+  instantiate (1 := get_heap s1 l).
+  move=> s0' s1' [H1 H2]; subst.
+  split; auto.
+  reflexivity.
+Qed.
+
+Lemma r_remembers_lhs {A₀ A₁ : choiceType}
+  : ∀ (l : Location) (m₀ : raw_code A₀) (m₁ : raw_code A₁)
+      (pre : precond) (post : postcond A₀ A₁) v,
+      Remembers_lhs l v pre
+      → ⊢ ⦃ λ '(s0, s1), (pre ⋊ rem_lhs l v) (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄
+      → ⊢ ⦃ λ '(s0, s1), pre (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄.
+Proof.
+  intros l m0 m1 pre post v H H'.
+  eapply rpre_weaken_rule; [ apply H' |].
+  split; auto.
+Qed.
+
+Lemma r_remembers_rhs {A₀ A₁ : choiceType}
+  : ∀ (l : Location) (m₀ : raw_code A₀) (m₁ : raw_code A₁)
+      (pre : precond) (post : postcond A₀ A₁) v,
+      Remembers_rhs l v pre
+      → ⊢ ⦃ λ '(s0, s1), (pre ⋊ rem_rhs l v) (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄
+      → ⊢ ⦃ λ '(s0, s1), pre (s0, s1) ⦄ m₀ ≈ m₁ ⦃ post ⦄.
+Proof.
+  intros l m0 m1 pre post v H H'.
+  eapply rpre_weaken_rule; [ apply H' |].
+  split; auto.
+Qed.
+
+Lemma r_bind_eq {A B₀ B₁ : choiceType}
+  : ∀ (m₀ m₁ : raw_code A) (f₀ : A → raw_code B₀) (f₁ : A → raw_code B₁)
+      (pre : precond) (post : postcond B₀ B₁),
+      ⊢ ⦃ pre ⦄ m₀ ≈ m₁ ⦃ λ '(a₀, s₀) '(a₁, s₁), a₀ = a₁ ∧ pre (s₀, s₁) ⦄
+      → (∀ (a : A), ⊢ ⦃ pre ⦄ f₀ a ≈ f₁ a ⦃ post ⦄)
+      → ⊢ ⦃ pre ⦄ x ← m₀ ;; f₀ x ≈ x ← m₁ ;; f₁ x ⦃ post ⦄.
+Proof.
+  intros m0 m1 f0 f1 pre post R R'.
+  eapply r_bind; [ apply R |] => a0 a1 //=.
+  apply rpre_hypothesis_rule => s0 s1 [H0 H1].
+  subst.
+  eapply rpre_weaken_rule; [ apply R' |].
+  move => s0' s1' //= [H2 H3].
+  by subst.
+Qed.
+
+
+
+(* swap independent pieces of code *)
 
 Lemma disjoint_neq (f1 f2 : {fset Location}) (l1 l2 : Location) : l1 \in f1 -> l2 \in f2 -> fdisjoint f1 f2 -> l1 != l2.
 Proof.
-  move => H1 H2 /fdisjointP H.
-  eapply notin_neq.
-  2: apply H2.
-  apply H.
-  apply H1.
+  move => ? ? /fdisjointP H.
+  apply /eqP => ?; subst.
+  apply /negP; [ eapply H |]; eassumption.
 Qed.
 
 Lemma swap_code_aux :
@@ -121,108 +181,63 @@ Lemma swap_code_aux :
       ⦃ eq ⦄.
 Proof.
   move=> A B c₀ c₁ L₀ L₁ Disj V₀ V₁.
-  induction c₀.
+  induction V₀.
   all: ssprove_code_simpl; simpl.
   - apply rreflexivity_rule.
-  - inversion V₀.
-    eapply fromEmpty.
-    rewrite fset0E.
-    apply H2.
+  - rewrite -fset0E // in H.
   - ssprove_swap_rhs 0%N.
-    2: {
-      ssprove_sync_eq => v.
-      apply H.
-      inversion V₀.
-      apply inj_right_pair in H1.
-      rewrite -H1.
-      apply H3.
-    }
-    simpl.
-    apply (r_get_remember_lhs l _ _ (λ '(h₀, h₁), h₀ = h₁)%pack _).
-    intro x.
-    apply rsame_head_alt_pre.
-    2: {
-      intros y.
-      apply (r_get_remember_rhs l _ _ ((λ '(h₀, h₁), h₀ = h₁) ⋊ rem_lhs l x)%pack _).
-      intro z.
-      apply r_ret.
-      intros s₀ s₁ [[H₀ H₁] H₂].
-      rewrite !pair_equal_spec.
-      repeat split.
-      2: apply H₀.
-      by rewrite -H₁ -H₂ H₀.
-    }
-    eapply rpost_weaken_rule.
-    1: eapply (r_reflexivity_alt ((λ '(h₀, h₁), h₀ = h₁) ⋊ rem_lhs l x) ) .
-    1: apply V₁.
-    3: {
-      intros [a₀ s₀] [a₁ s₁] f.
-      apply and_comm.
-      apply f.
-    }
-    1: {
-      intros ll _ s₀ s₁ [Eq _].
-      by rewrite Eq.
-    }
-    unfold "⋊".
-    intros ll y H₀ s₀ s₁ [H₁ H₂].
-    split.
-    1: by rewrite H₁.
-    unfold rem_lhs.
-    inversion V₀.
-    unfold put_pre_cond.
-    rewrite get_set_heap_neq.
-    1: apply H₂.
-    eapply disjoint_neq; [ exact H2 | exact H₀ | assumption ].
+    2: ssprove_sync_eq; apply H1.
+    eapply (r_get_remember_lhs l _ _ (λ '(h₀, h₁), h₀ = h₁)) => v.
+    apply r_bind_eq.
+    1: eapply r_reflexivity_alt.
+    1: eassumption.
+    1: intros l' H'.
+    1: ssprove_invariant.
+    1: intros s0 s1 ->; done.
+    1: intros l' v' H' s0 s1 [-> H''].
+    1: split; [ done |].
+    1: unfold rem_lhs.
+    1: rewrite get_set_heap_neq.
+    1: apply H''.
+    1: eapply disjoint_neq; eassumption.
+    intros x.
+    eapply (r_get_remember_rhs l _ _
+      ((λ '(h₀, h₁), h₀ = h₁) ⋊ rem_lhs l v)%pack _).
+    intros v'.
+    apply r_ret.
+    intros s₀ s₁ [[H₀ H₁] H₂].
+    rewrite !pair_equal_spec.
+    repeat split.
+    2: apply H₀.
+    by rewrite -H₁ -H₂ H₀.
+
   - ssprove_swap_rhs 0%N.
-    2: {
-      ssprove_sync_eq.
-      apply IHc₀.
-      inversion V₀.
-      apply H3.
-    }
-    simpl.
+    2: ssprove_sync_eq; apply IHV₀.
     apply (r_put_lhs l _ _ _ (λ '(h₀, h₁), h₀ = h₁)%pack _).
-    apply rsame_head_alt_pre.
-    2: {
-      intro x.
-      apply r_put_rhs.
-      apply r_ret.
-      intros s₀ s₁ [s₁' [[s₀' [H₀ H₁]] H₂]].
-      by rewrite H₁ H₀ -H₂.
-    }
-    eapply rpost_weaken_rule.
-    1: eapply (r_reflexivity_alt).
-    1: apply V₁.
-    3: {
-      intros [a₀ s₀] [a₁ s₁] f.
-      apply and_comm.
-      apply f.
-    }
-    1: {
-      intros ll H₀ s₀ s₁ [s₀' [H₁ H₂]].
-      rewrite H₂ -H₁.
-      symmetry.
-      apply get_heap_set_heap.
-      inversion V₀.
-      eapply disjoint_neq; [| | rewrite fdisjointC; exact Disj ]; assumption.
-    }
-    unfold set_lhs.
-    intros ll x H₀ s₀ s₁ [s₀' [H₁ H₂]].
-    exists (set_heap s₁ ll x).
-    split.
+    apply r_bind_eq.
+    1: eapply r_reflexivity_alt.
+    1: eassumption.
+    1: intros ll H₀ s₀ s₁ [s₀' [H₁ H₂]].
+    1: rewrite H₂ -H₁.
+    1: symmetry.
+    1: apply get_heap_set_heap.
+    1: eapply disjoint_neq; [| | rewrite fdisjointC ]; eassumption.
+    1: intros ll x H₀ s₀ s₁ [s₀' [H₁ H₂]].
+    1: exists (set_heap s₁ ll x).
+    1: split.
     1: reflexivity.
-    rewrite -H₁ H₂.
-    apply set_heap_commut.
-    inversion V₀.
-    eapply disjoint_neq; [| | exact Disj ]; assumption.
+    1: rewrite -H₁ H₂.
+    1: apply set_heap_commut.
+    1: eapply disjoint_neq; [| | exact Disj ]; assumption.
+    intros x.
+    apply r_put_rhs.
+    apply r_ret.
+    intros s₀ s₁ [s₁' [[s₀' [H₀ H₁]] H₂]].
+    by rewrite H₁ H₀ -H₂.
+
   - ssprove_swap_rhs 0%N.
-    ssprove_sync_eq.
-    intros v.
-    apply H.
-    apply (inversion_valid_cmd_bind _ _ (cmd_sample _)) in V₀.
-    destruct V₀. 
-    apply H1.
+    ssprove_sync_eq => v.
+    apply H0.
 Qed.
 
 Theorem swap_code :
@@ -242,38 +257,6 @@ Proof.
   1: exact Disj.
   all: easy.
 Qed.
-
-Lemma rpre_learn {A₀ A₁ : choiceType} {P : Type}
-  : ∀ (m₀ : raw_code A₀) (m₁ : raw_code A₁)
-      (pre : precond) (post : postcond A₀ A₁),
-      (∀ s₀ s₁, pre (s₀, s₁) → P)
-      → (P → ⊢ ⦃ pre ⦄ m₀ ≈ m₁ ⦃ post ⦄)
-      → ⊢ ⦃ pre ⦄ m₀ ≈ m₁ ⦃ post ⦄.
-Proof.
-  intros m0 m1 pre post H1 H2.
-  apply rpre_hypothesis_rule => s0 s1 H3.
-  specialize (H1 s0 s1 H3).
-  specialize (H2 H1).
-  eapply rpre_weaken_rule; [ apply H2 |] => s0' s1' //= [H4 H5].
-  by subst.
-Qed.
-
-Lemma r_bind_eq {A B₀ B₁ : choiceType}
-  : ∀ (m₀ m₁ : raw_code A) (f₀ : A → raw_code B₀) (f₁ : A → raw_code B₁)
-      (pre : precond) (post : postcond B₀ B₁),
-      ⊢ ⦃ pre ⦄ m₀ ≈ m₁ ⦃ λ '(a₀, s₀) '(a₁, s₁), a₀ = a₁ ∧ pre (s₀, s₁) ⦄
-      → (∀ (a : A), ⊢ ⦃ pre ⦄ f₀ a ≈ f₁ a ⦃ post ⦄)
-      → ⊢ ⦃ pre ⦄ x ← m₀ ;; f₀ x ≈ x ← m₁ ;; f₁ x ⦃ post ⦄.
-Proof.
-  intros m0 m1 f0 f1 pre post R R'.
-  eapply r_bind; [ apply R |] => a0 a1 //=.
-  apply rpre_hypothesis_rule => s0 s1 [H0 H1].
-  subst.
-  eapply rpre_weaken_rule; [ apply R' |].
-  move => s0' s1' //= [H2 H3].
-  by subst.
-Qed.
-
 
 Class Cross (l l' : Location) R pre :=
   is_cross : ∀ s₀ s₁, pre (s₀, s₁) → R (get_heap s₀ l) (get_heap s₁ l').
