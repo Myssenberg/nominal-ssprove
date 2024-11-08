@@ -316,15 +316,16 @@ Definition TAG_GUESS_pkg:
 
 Check eq_rel_perf_ind_eq.
 
-Instance valid_TAG_eval:
+(*Instance valid_TAG_eval:
   ValidPackage (EVAL_locs_tt) Game_import [interface
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ] (nom_link TAG_EVAL_pkg_tt (EVAL_pkg_tt)).
+
 Proof.
   eapply valid_package_inject_locations.
   2: dprove_valid.
   fset_solve.
-Qed.
+Qed. *)
 
 Lemma TAG_equiv_true:
   TAG true ≈₀ nom_link TAG_EVAL_pkg_tt (EVAL true). (* WE MADE IT UNTIL HERE *)
@@ -342,7 +343,7 @@ Proof.
 Qed.
 
 Lemma TAG_EVAL_equiv_true:
-  dlink TAG_EVAL_pkg_tt (EVAL false) ≈₀ dlink TAG_GUESS_pkg (GUESS true).
+  nom_link TAG_EVAL_pkg_tt (EVAL false) ≈₀ nom_link TAG_GUESS_pkg (GUESS true).
 Proof.
   apply eq_rel_perf_ind_ignore with (fset [:: S_loc]).
   1: {
@@ -377,13 +378,13 @@ Qed.
   invariant holds.
 *)
 Lemma TAG_EVAL_equiv_false:
-  TAG_GUESS_pkg ∘ GUESS false ≈₀ TAG_EVAL_pkg_ff ∘ EVAL false.
+  nom_link TAG_GUESS_pkg (GUESS false) ≈₀ nom_link TAG_EVAL_pkg_ff (EVAL false).
 Proof.
   apply eq_rel_perf_ind with (
     (fun '(h0, h1) => h0 = h1) ⋊
     couple_rhs T_loc S_loc
       (fun T S => forall m t,
-        ((m, t) \in domm S) = (Some t == getm T m))
+        ((m, t) \in domm S) = (Some t == getm T m)%B)
   ).
   1: {
     ssprove_invariant=> /=.
@@ -442,9 +443,9 @@ Proof.
 Qed.
 
 Lemma TAG_equiv_false:
-  TAG_EVAL_pkg_ff ∘ EVAL true ≈₀ TAG false.
+  nom_link TAG_EVAL_pkg_ff (EVAL true) ≈₀ TAG false.
 Proof.
-  apply: eq_rel_perf_ind_eq.
+  apply eq_rel_perf_ind_eq.
   simplify_eq_rel m.
   all: apply rpost_weaken_rule with eq;
     last by move=> [? ?] [? ?] [].
@@ -470,9 +471,28 @@ Definition prf_epsilon := Advantage EVAL.
   This is negligible, but not yet provable in SSProve.
 *)
 Definition statistical_gap :=
-  AdvantageE (TAG_GUESS_pkg ∘ GUESS true) (TAG_GUESS_pkg ∘ GUESS false).
+  AdvantageE (nom_link TAG_GUESS_pkg (GUESS true)) (nom_link TAG_GUESS_pkg (GUESS false)).
 
-Theorem security_based_on_prf LA A:
+Theorem security_based_on_prf :
+ forall {LA} (A : nom_package),
+  ValidPackage LA
+    [interface
+      #val #[gettag]: 'word → 'word ;
+      #val #[checktag]: 'word × 'word → 'bool ]
+    A_export A ->
+  Advantage TAG A <=
+  prf_epsilon (dlink A TAG_EVAL_pkg_tt) +
+  statistical_gap A +
+  prf_epsilon (dlink A TAG_EVAL_pkg_ff).
+Proof.
+  intros LA A.
+  unfold Advantage.
+  erewrite (AdvantageD_perf_l (TAG_equiv_false)).  
+  
+
+Qed.
+
+(*Theorem security_based_on_prf LA A:
   ValidPackage LA
     [interface
       #val #[gettag]: 'word → 'word ;
@@ -510,6 +530,6 @@ Proof.
   rewrite TAG_equiv_false ?fdisjointUr ?H // GRing.addr0.
   rewrite Advantage_sym.
   by rewrite /prf_epsilon /statistical_gap !Advantage_E !Advantage_link.
-Qed.
+Qed. *)
 
 End PRFMAC_example.
