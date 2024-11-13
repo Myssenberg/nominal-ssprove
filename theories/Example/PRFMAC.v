@@ -485,9 +485,11 @@ Theorem security_based_on_prf :
   statistical_gap A +
   prf_epsilon (dlink A TAG_EVAL_pkg_ff).
 Proof.
-  intros LA A.
+  intros LA A vlpa.
+  unfold prf_epsilon.
   unfold Advantage.
-  erewrite (AdvantageD_perf_l (TAG_equiv_false)).  
+  simpl.
+  (*rewrite Advantage_E Advantage_sym.*)
   
 
 Qed.
