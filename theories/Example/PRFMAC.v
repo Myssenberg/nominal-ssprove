@@ -44,7 +44,7 @@ Import Order.POrderTheory.
 
 Import PackageNotation.
 
-From NominalSSP Require Import FsetSolve Nominal Fresh Pr NomPackage Disjoint.
+From NominalSSP Require Import FsetSolve Nominal Fresh Pr NomPackage Disjoint Prelude.
 Import FsetSolve.
 
 (**
@@ -79,9 +79,9 @@ Definition gettag: nat := 5.
 Definition checktag: nat := 6.
 Definition guess: nat := 7.
 
-Definition mkpair {Lt Lf E}
+(*Definition mkpair {Lt Lf E}
   (t: trimmed_package Lt [interface] E) (f: trimmed_package Lf [interface] E):
-  loc_GamePair E := fun b => if b then {locpackage t} else {locpackage f}.
+  loc_GamePair E := fun b => if b then {locpackage t} else {locpackage f}.*)
 
 Context (PRF: Word -> Word -> Word).
 
@@ -143,7 +143,7 @@ Definition EVAL_pkg_ff:
     }
   ].
 
-Definition EVAL := mkpair EVAL_pkg_tt EVAL_pkg_ff.
+Definition EVAL b := if b then EVAL_pkg_tt : nom_package else EVAL_pkg_ff.
 
 Definition GUESS_locs := fset [:: T_loc].
 
@@ -204,7 +204,7 @@ Definition GUESS_pkg_ff:
   ].
 
 
-Definition GUESS := mkpair GUESS_pkg_tt GUESS_pkg_ff.
+Definition GUESS b := if b then GUESS_pkg_tt : nom_package else GUESS_pkg_ff.
 
 Definition TAG_locs_tt := fset [:: k_loc].
 Definition TAG_locs_ff := fset [:: k_loc; S_loc].
@@ -246,7 +246,7 @@ Definition TAG_pkg_ff:
     }
   ].
 
-Definition TAG := mkpair TAG_pkg_tt TAG_pkg_ff.
+Definition TAG b := if b then TAG_pkg_tt : nom_package else TAG_pkg_ff.
 
 Definition TAG_EVAL_locs_ff := fset [:: S_loc].
 
@@ -464,7 +464,7 @@ Local Open Scope ring_scope.
   which an adversary can distinguish the PRF from a truly random function.
   Negligible by assumption.
 *)
-Definition prf_epsilon := Advantage EVAL.
+Definition prf_epsilon := AdvantageP EVAL.
 
 (**
   The advantage an adversary can gain in the [GUESS] game.
@@ -480,16 +480,23 @@ Theorem security_based_on_prf :
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ]
     A_export A ->
-  Advantage TAG A <=
+  AdvantageP TAG A <=
   prf_epsilon (dlink A TAG_EVAL_pkg_tt) +
   statistical_gap A +
   prf_epsilon (dlink A TAG_EVAL_pkg_ff).
 Proof.
   intros LA A vlpa.
   unfold prf_epsilon.
-  unfold Advantage.
+  unfold AdvantageP.
   simpl.
+  Search TAG_pkg_tt.
+  erewrite (AdvantageD_perf_l (TAG_equiv_true)).
+  dprove_convert.
+
+
+
   (*rewrite Advantage_E Advantage_sym.*)
+  (*advantage_trans (skriv den mellemliggende pakke)*)
   
 
 Qed.
