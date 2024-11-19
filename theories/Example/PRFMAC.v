@@ -507,9 +507,28 @@ Proof.
   dprove_convert.
   erewrite (AdvantageD_perf_r (TAG_EVAL_equiv_false)).
   erewrite nom_link_dlink.
-  ---simpl.
+  --- simpl.
+  erewrite <- AdvantageD_dlink.
+  erewrite <- AdvantageD_dlink.
+  Search AdvantageD.
+  (*We want to use AdvantageD_sym in more than just the line before the <=
+    
+    We are so close to be doing the triangle thingy.*)
+
+  erewrite @AdvantageD_sym, @AdvantageD_sym.
+  Search AdvL.
+  eapply AdvantageD_alpha.
+  erewrite AdvantageD_sym.
+  
+  Search AdvantageD.
+  
+
+
+  erewrite AdvantageD_triangle.
+  
+  erewrite AdvantageD_dlink.
   advantage_trans(EVAL_pkg_tt).
-  simpl.
+  advantage_trans(EVAL_pkg_ff).
   Search EVAL_pkg_tt.
  
   
