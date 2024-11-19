@@ -492,6 +492,27 @@ Proof.
   Search TAG_pkg_tt.
   erewrite (AdvantageD_perf_l (TAG_equiv_true)).
   dprove_convert.
+  Search TAG_pkg_ff.
+  erewrite <- (AdvantageD_perf_r (TAG_equiv_false)).
+  Search nom_link.
+  erewrite nom_link_dlink.
+  - simpl.
+  unfold statistical_gap.
+  Search TAG_GUESS_pkg.
+  Search AdvantageE.
+  erewrite <- AdvantageD_AdvantageE.
+  -- simpl.
+  Search TAG_GUESS_pkg.
+  erewrite <-(AdvantageD_perf_l (TAG_EVAL_equiv_true)).
+  dprove_convert.
+  erewrite (AdvantageD_perf_r (TAG_EVAL_equiv_false)).
+  erewrite nom_link_dlink.
+  ---simpl.
+  advantage_trans(EVAL_pkg_tt).
+  simpl.
+  Search EVAL_pkg_tt.
+ 
+  
 
 
 
