@@ -291,6 +291,9 @@ Definition TAG_EVAL_pkg_ff:
 
 Definition TAG_GUESS_locs := fset [:: S_loc ].
 
+#[local] Hint Unfold TAG_GUESS_locs TAG_EVAL_locs_ff
+   TAG_locs_tt TAG_locs_ff GUESS_locs EVAL_locs_tt EVAL_locs_ff EVAL : in_fset_eq.
+
 Definition TAG_GUESS_pkg:
   trimmed_package TAG_GUESS_locs
     [interface
@@ -473,6 +476,7 @@ Definition prf_epsilon := AdvantageP EVAL.
 Definition statistical_gap :=
   AdvantageE (nom_link TAG_GUESS_pkg (GUESS true)) (nom_link TAG_GUESS_pkg (GUESS false)).
 
+
 Theorem security_based_on_prf :
  forall {LA} (A : nom_package),
   ValidPackage LA
@@ -494,8 +498,12 @@ Proof.
   dprove_convert.
   Search TAG_pkg_ff.
   erewrite <- (AdvantageD_perf_r (TAG_equiv_false)).
+  dprove_convert.
   Search nom_link.
   erewrite nom_link_dlink.
+  2: unfold disj.
+  2: fset_solve.
+  2: {
   - simpl.
   unfold statistical_gap.
   Search TAG_GUESS_pkg.
@@ -510,10 +518,34 @@ Proof.
   --- simpl.
   erewrite <- AdvantageD_dlink.
   erewrite <- AdvantageD_dlink.
+  erewrite (AdvantageD_sym (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_tt) (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff)).
   Search AdvantageD.
+  advantage_trans (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff).
+  Search (_ <= _).
+  apply ler_add.
+  Search (?x<=?x).
+  Search reflexivity.
+  2: apply lexx.
+  Search AdvantageD.
+  apply AdvantageD_triangle.
+  Unshelve.
+  
+  2: apply ler_refl.
+  (*ssprove_sync.*)
+  (*ssprove_code_simpl_more.*)
+(*ssprove_code_simpl.*)
+  (*simplify_eq_rel m.*)
+
+
   (*We want to use AdvantageD_sym in more than just the line before the <=
     
     We are so close to be doing the triangle thingy.*)
+
+
+(*
+For example you can write erewrite (AdvantageD_sym G H)
+This will rewrite only in places where it says AdvantageD G H ?A into AdvantageD H G ?A
+*)
 
   erewrite @AdvantageD_sym, @AdvantageD_sym.
   Search AdvL.
