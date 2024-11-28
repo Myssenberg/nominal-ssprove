@@ -293,6 +293,10 @@ Definition TAG_GUESS_locs := fset [:: S_loc ].
 
 #[local] Hint Unfold TAG_GUESS_locs TAG_EVAL_locs_ff
    TAG_locs_tt TAG_locs_ff GUESS_locs EVAL_locs_tt EVAL_locs_ff EVAL : in_fset_eq.
+(*
+  Hints added to help coq infer stuff in the proof.
+*)
+
 
 Definition TAG_GUESS_pkg:
   trimmed_package TAG_GUESS_locs
@@ -499,38 +503,26 @@ Proof.
   Search TAG_pkg_ff.
   erewrite <- (AdvantageD_perf_r (TAG_equiv_false)).
   dprove_convert.
-  Search nom_link.
-  erewrite nom_link_dlink.
-  2: unfold disj.
-  2: fset_solve.
-  2: {
-  - simpl.
   unfold statistical_gap.
-  Search TAG_GUESS_pkg.
-  Search AdvantageE.
   erewrite <- AdvantageD_AdvantageE.
   -- simpl.
-  Search TAG_GUESS_pkg.
   erewrite <-(AdvantageD_perf_l (TAG_EVAL_equiv_true)).
-  dprove_convert.
   erewrite (AdvantageD_perf_r (TAG_EVAL_equiv_false)).
-  erewrite nom_link_dlink.
-  --- simpl.
+  dprove_convert.
   erewrite <- AdvantageD_dlink.
   erewrite <- AdvantageD_dlink.
   erewrite (AdvantageD_sym (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_tt) (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff)).
-  Search AdvantageD.
   advantage_trans (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff).
-  Search (_ <= _).
+  simpl.
   apply ler_add.
-  Search (?x<=?x).
-  Search reflexivity.
   2: apply lexx.
-  Search AdvantageD.
   apply AdvantageD_triangle.
-  Unshelve.
+  -- simpl.
+
+
+  (*Unshelve.
   
-  2: apply ler_refl.
+  2: apply ler_refl.*)
   (*ssprove_sync.*)
   (*ssprove_code_simpl_more.*)
 (*ssprove_code_simpl.*)
