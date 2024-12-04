@@ -478,7 +478,7 @@ Definition prf_epsilon := AdvantageP EVAL.
   This is negligible, but not yet provable in SSProve.
 *)
 Definition statistical_gap :=
-  AdvantageE (nom_link TAG_GUESS_pkg (GUESS true)) (nom_link TAG_GUESS_pkg (GUESS false)).
+  AdvantageD (nom_link TAG_GUESS_pkg (GUESS true)) (nom_link TAG_GUESS_pkg (GUESS false)).
 
 
 Theorem security_based_on_prf :
@@ -504,8 +504,8 @@ Proof.
   erewrite <- (AdvantageD_perf_r (TAG_equiv_false)).
   dprove_convert.
   unfold statistical_gap.
-  erewrite <- AdvantageD_AdvantageE.
-  -- simpl.
+  (*erewrite <- AdvantageD_AdvantageE.*)
+  (*-- simpl.*)
   erewrite <-(AdvantageD_perf_l (TAG_EVAL_equiv_true)).
   erewrite (AdvantageD_perf_r (TAG_EVAL_equiv_false)).
   dprove_convert.
@@ -517,7 +517,18 @@ Proof.
   apply ler_add.
   2: apply lexx.
   apply AdvantageD_triangle.
-  -- simpl.
+Qed.
+  -- simpl. Search disj. 
+
+
+  -- auto with alpha_db nocore.
+
+
+
+  Check supp_fdisjoint.
+  -- simpl. unfold disj. apply supp_fdisjoint.
+  -- unfold disj. simpl. dprove_valid.
+  --
 
 
   (*Unshelve.
