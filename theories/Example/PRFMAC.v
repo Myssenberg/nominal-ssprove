@@ -79,10 +79,6 @@ Definition gettag: nat := 5.
 Definition checktag: nat := 6.
 Definition guess: nat := 7.
 
-(*Definition mkpair {Lt Lf E}
-  (t: trimmed_package Lt [interface] E) (f: trimmed_package Lf [interface] E):
-  loc_GamePair E := fun b => if b then {locpackage t} else {locpackage f}.*)
-
 Context (PRF: Word -> Word -> Word).
 
 Definition EVAL_locs_tt := fset [:: k_loc].
@@ -174,8 +170,7 @@ Definition GUESS_pkg_tt:
           ret r
       | Some r => ret r
       end ;;
-      ret (t == r)%B (*Ask Markus if this is okay : we tell it to interpret this syntax
-as if it was in the boolean scope *)
+      ret (t == r)%B 
     }
   ].
 
@@ -199,7 +194,7 @@ Definition GUESS_pkg_ff:
     } ;
     #def #[guess] ('(m, t): 'word × 'word): 'bool {
       T ← get T_loc ;;
-      ret (eq_op (Some t) (getm T m))
+      ret (Some t == getm T m)%B
     }
   ].
 
@@ -222,7 +217,7 @@ Definition TAG_pkg_tt:
     } ;
     #def #[checktag] ('(m, t): 'word × 'word): 'bool {
       k ← kgen ;;
-      ret (eq_op t (PRF k m))
+      ret (t == PRF k m)%B
     }
   ].
 
@@ -293,10 +288,6 @@ Definition TAG_GUESS_locs := fset [:: S_loc ].
 
 #[local] Hint Unfold TAG_GUESS_locs TAG_EVAL_locs_ff
    TAG_locs_tt TAG_locs_ff GUESS_locs EVAL_locs_tt EVAL_locs_ff EVAL : in_fset_eq.
-(*
-  Hints added to help coq infer stuff in the proof.
-*)
-
 
 Definition TAG_GUESS_pkg:
   trimmed_package TAG_GUESS_locs
@@ -321,21 +312,8 @@ Definition TAG_GUESS_pkg:
     }
   ].
 
-Check eq_rel_perf_ind_eq.
-
-(*Instance valid_TAG_eval:
-  ValidPackage (EVAL_locs_tt) Game_import [interface
-      #val #[gettag]: 'word → 'word ;
-      #val #[checktag]: 'word × 'word → 'bool ] (nom_link TAG_EVAL_pkg_tt (EVAL_pkg_tt)).
-
-Proof.
-  eapply valid_package_inject_locations.
-  2: dprove_valid.
-  fset_solve.
-Qed. *)
-
 Lemma TAG_equiv_true:
-  TAG true ≈₀ nom_link TAG_EVAL_pkg_tt (EVAL true). (* WE MADE IT UNTIL HERE *)
+  TAG true ≈₀ nom_link TAG_EVAL_pkg_tt (EVAL true). 
 Proof.
   apply eq_rel_perf_ind_eq.
   simplify_eq_rel m.
@@ -494,126 +472,21 @@ Theorem security_based_on_prf :
   prf_epsilon (dlink A TAG_EVAL_pkg_ff).
 Proof.
   intros LA A vlpa.
-  unfold prf_epsilon.
-  unfold AdvantageP.
+  unfold prf_epsilon, AdvantageP, statistical_gap.
   simpl.
-  Search TAG_pkg_tt.
   erewrite (AdvantageD_perf_l (TAG_equiv_true)).
-  dprove_convert.
-  Search TAG_pkg_ff.
   erewrite <- (AdvantageD_perf_r (TAG_equiv_false)).
-  dprove_convert.
-  unfold statistical_gap.
-  (*erewrite <- AdvantageD_AdvantageE.*)
-  (*-- simpl.*)
   erewrite <-(AdvantageD_perf_l (TAG_EVAL_equiv_true)).
   erewrite (AdvantageD_perf_r (TAG_EVAL_equiv_false)).
-  dprove_convert.
-  erewrite <- AdvantageD_dlink.
-  erewrite <- AdvantageD_dlink.
+  repeat erewrite <- AdvantageD_dlink.
   erewrite (AdvantageD_sym (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_tt) (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff)).
+  dprove_convert.
   advantage_trans (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff).
   simpl.
-  apply ler_add.
+  apply lerD.
   2: apply lexx.
   apply AdvantageD_triangle.
 Qed.
-  -- simpl. Search disj. 
 
-
-  -- auto with alpha_db nocore.
-
-
-
-  Check supp_fdisjoint.
-  -- simpl. unfold disj. apply supp_fdisjoint.
-  -- unfold disj. simpl. dprove_valid.
-  --
-
-
-  (*Unshelve.
-  
-  2: apply ler_refl.*)
-  (*ssprove_sync.*)
-  (*ssprove_code_simpl_more.*)
-(*ssprove_code_simpl.*)
-  (*simplify_eq_rel m.*)
-
-
-  (*We want to use AdvantageD_sym in more than just the line before the <=
-    
-    We are so close to be doing the triangle thingy.*)
-
-
-(*
-For example you can write erewrite (AdvantageD_sym G H)
-This will rewrite only in places where it says AdvantageD G H ?A into AdvantageD H G ?A
-*)
-
-  erewrite @AdvantageD_sym, @AdvantageD_sym.
-  Search AdvL.
-  eapply AdvantageD_alpha.
-  erewrite AdvantageD_sym.
-  
-  Search AdvantageD.
-  
-
-
-  erewrite AdvantageD_triangle.
-  
-  erewrite AdvantageD_dlink.
-  advantage_trans(EVAL_pkg_tt).
-  advantage_trans(EVAL_pkg_ff).
-  Search EVAL_pkg_tt.
- 
-  
-
-
-
-  (*rewrite Advantage_E Advantage_sym.*)
-  (*advantage_trans (skriv den mellemliggende pakke)*)
-  
-
-Qed.
-
-(*Theorem security_based_on_prf LA A:
-  ValidPackage LA
-    [interface
-      #val #[gettag]: 'word → 'word ;
-      #val #[checktag]: 'word × 'word → 'bool ]
-    A_export A ->
-  fdisjoint LA (
-    EVAL_locs_tt :|: EVAL_locs_ff :|: GUESS_locs :|:
-    TAG_locs_tt :|: TAG_locs_ff :|:
-    TAG_EVAL_locs_ff :|: TAG_GUESS_locs
-  ) ->
-  Advantage TAG A <=
-  prf_epsilon (A ∘ TAG_EVAL_pkg_tt) +
-  statistical_gap A +
-  prf_epsilon (A ∘ TAG_EVAL_pkg_ff).
-Proof.
-  move=> vA H.
-  rewrite Advantage_E Advantage_sym.
-  ssprove triangle (TAG true) [::
-    TAG_EVAL_pkg_tt ∘ EVAL true   ;
-    TAG_EVAL_pkg_tt ∘ EVAL false  ;
-    TAG_GUESS_pkg ∘ GUESS true  ;
-    TAG_GUESS_pkg ∘ GUESS false ;
-    TAG_EVAL_pkg_ff ∘ EVAL false  ;
-    TAG_EVAL_pkg_ff ∘ EVAL true
-  ] (TAG false) A
-  as ineq.
-  apply: le_trans.
-  1: by apply: ineq.
-  rewrite !fdisjointUr in H.
-  move: H => /andP [/andP [/andP [/andP [/andP [/andP [H1 H2] H3] H4] H5] H6] H7].
-  move: {ineq H1 H2 H3 H4 H5 H6 H7} (H1, H2, H3, H4, H5, H6, H7, fdisjoints0) => H.
-  rewrite TAG_equiv_true ?fdisjointUr ?H // GRing.add0r.
-  rewrite TAG_EVAL_equiv_true ?fdisjointUr ?H // GRing.addr0.
-  rewrite TAG_EVAL_equiv_false ?fdisjointUr ?H // GRing.addr0.
-  rewrite TAG_equiv_false ?fdisjointUr ?H // GRing.addr0.
-  rewrite Advantage_sym.
-  by rewrite /prf_epsilon /statistical_gap !Advantage_E !Advantage_link.
-Qed. *)
 
 End PRFMAC_example.
