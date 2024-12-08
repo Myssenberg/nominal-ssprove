@@ -260,7 +260,7 @@ Definition TAG_EVAL_pkg_tt:
     #def #[checktag] ('(m, t): 'word × 'word): 'bool {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       r ← lookup m ;;
-      ret (eq_op t r)
+      ret (t == r)%B
     }
   ].
 
