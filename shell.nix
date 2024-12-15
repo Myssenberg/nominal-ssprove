@@ -5,6 +5,7 @@ in pkgs.stdenv.mkDerivation {
   buildInputs = [
     pkgs.glibcLocales
     pkgs.ssprove
+    pkgs.coqPackages.coqide
     (pkgs.vim_configurable.customize {
         name = "vim";
         vimrcConfig = {

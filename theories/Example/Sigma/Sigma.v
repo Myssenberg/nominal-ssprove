@@ -8,8 +8,6 @@ Set Warnings "notation-overridden,ambiguous-paths".
 From Coq Require Import Utf8.
 From extructures Require Import ord fset fmap.
 
-From Crypt Require Import Package Prelude.
-
 From Equations Require Import Equations.
 Require Equations.Prop.DepElim.
 
@@ -19,13 +17,9 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-Import Num.Def.
-Import Num.Theory.
-Import Order.POrderTheory.
-
+From NominalSSP Require Import Prelude.
+Import Num.Def Num.Theory Order.POrderTheory.
 Import PackageNotation.
-
-From NominalSSP Require Import Nominal NomPackage Disjoint.
 
 #[local] Open Scope ring_scope.
 
@@ -67,57 +61,53 @@ Record raw_sigma :=
 
 #[local] Open Scope package_scope.
 
-Notation " 'statement p " :=
-  (Statement p)
+Notation " 'statement p " := (Statement p)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'witness p " :=
-  (Witness p)
+Notation " 'witness p " := (Witness p)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'message p " :=
-  (Message p)
+Notation " 'message p " := (Message p)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'challenge p " :=
-  (Challenge p)
+Notation " 'challenge p " := (Challenge p)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'response p " :=
-  (Response p)
+Notation " 'response p " := (Response p)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'statement p " :=
-  (Statement p)
+Notation " 'statement p " := (Statement p)
   (at level 3) : package_scope.
 
-Notation " 'witness p " :=
-  (Witness p)
+Notation " 'witness p " := (Witness p)
   (at level 3) : package_scope.
 
-Notation " 'message p " :=
-  (Message p)
+Notation " 'message p " := (Message p)
   (at level 3) : package_scope.
 
-Notation " 'challenge p " :=
-  (Challenge p)
+Notation " 'challenge p " := (Challenge p)
   (at level 3) : package_scope.
 
-Notation " 'response p " :=
-  (Response p)
+Notation " 'response p " := (Response p)
   (at level 3) : package_scope.
+
 
 (* Section: Correct *)
 
+Definition chInput p := ('statement p × 'witness p) × 'challenge p.
+Notation " 'input p " :=
+  (chInput p)
+  (in custom pack_type at level 2, p constr).
+
 Definition RUN : nat := 1.
 
-Definition Correct p :=
-  [interface #val #[ RUN ] : ('statement p × 'witness p) × 'challenge p → 'bool ].
+Definition ICorrect p :=
+  [interface #val #[ RUN ] : ('input p) → 'bool ].
 
 Definition Correct_real p :
-  trimmed_package p.(locs) Game_import (Correct p) :=
+  trimmed_package p.(locs) Game_import (ICorrect p) :=
   [trimmed_package
-    #def #[ RUN ] ('(h, w, e) : ('statement p × 'witness p) × 'challenge p) : 'bool {
+    #def #[ RUN ] ('(h, w, e) : 'input p) : 'bool {
       #assert p.(R) h w ;;
       a ← p.(commit) h w ;;
       z ← p.(response) h w a e ;;
@@ -126,31 +116,27 @@ Definition Correct_real p :
   ].
 
 Definition Correct_ideal p :
-  trimmed_package fset0 Game_import (Correct p) :=
+  trimmed_package fset0 Game_import (ICorrect p) :=
   [trimmed_package
-    #def #[ RUN ] ('(h, w, e) : ('statement p × 'witness p) × 'challenge p) : 'bool {
+    #def #[ RUN ] ('(h, w, e) : 'input p) : 'bool {
       #assert p.(R) h w ;;
       @ret 'bool true
     }
   ].
 
-Definition Correct_pair p b :=
+Definition Correct p b :=
   if b then Correct_real p : nom_package else Correct_ideal p.
 
 (* Main security statement for Special Honest-Verifier Zero-Knowledge. *)
 Definition Adv_Correct p ε :=
   ∀ (A : nom_package),
-  ValidPackage (loc A) (Correct p) A_export A →
-  AdvantageP (Correct_pair p) A <= ε A.
+  ValidPackage (loc A) (ICorrect p) A_export A →
+  AdvantageP (Correct p) A <= ε A.
+
 
 (* Section: SHVZK *)
 
 Definition TRANSCRIPT : nat := 0.
-
-Definition chInput p := ('statement p × 'witness p) × 'challenge p.
-Notation " 'input p " :=
-  (chInput p)
-  (in custom pack_type at level 2, p constr).
 
 Definition chTranscript (p : raw_sigma) :=
   (('statement p × 'message p) × 'challenge p) × 'response p.
@@ -184,11 +170,58 @@ Definition SHVZK_ideal p :
 Definition SHVZK p b :=
   if b then SHVZK_real p : nom_package else SHVZK_ideal p.
 
-(* Main security statement for Special Honest-Verifier Zero-Knowledge. *)
 Definition Adv_SHVZK p ε :=
   ∀ (A : nom_package),
   ValidPackage (loc A) (Transcript p) A_export A →
   AdvantageP (SHVZK p) A <= ε A.
+
+
+(* Section: Relating SHVZK and correctness *)
+
+Definition Verify_call p :
+  trimmed_package fset0 (Transcript p) (ICorrect p) :=
+  [trimmed_package
+    #def #[ RUN ] ('(h, w, e) : 'input p) : 'bool {
+      #import {sig #[ TRANSCRIPT ] : ('input p) → 'transcript p} as Transcript ;;
+      '(h, a, e, z) ← Transcript (h, w, e) ;;
+      @ret 'bool (p.(verify) h a e z)
+    }
+  ].
+
+Lemma Verify_SHVZK_Correct_perf {LA} p (A : nom_package)
+  (VA : ValidPackage LA (ICorrect p) A_export A)
+  : AdvantageD (dlink (Verify_call p) (SHVZK_real p)) (Correct_real p) A = 0.
+Proof.
+  rewrite -nom_link_dlink; [| dprove_convert_solve ].
+  eapply AdvantageD_perf; [| exact VA ].
+  eapply eq_rel_perf_ind_eq.
+  simplify_eq_rel hwe.
+  ssprove_code_simpl; rewrite cast_fun_K.
+  destruct hwe as [[h w] e].
+  ssprove_code_simpl_more.
+  ssprove_sync_eq => _.
+  ssprove_code_simpl.
+  eapply rsame_head => a.
+  eapply rsame_head => z.
+  eapply r_ret; auto.
+Qed.
+
+Definition Correct_sim p := dlink (Verify_call p) (SHVZK_ideal p).
+
+Lemma Adv_Correct_sim p A (VA : ValidPackage (loc A) (ICorrect p) A_export A) :
+  AdvantageD (Correct_sim p) (Correct_ideal p) A
+    <= AdvantageP (SHVZK p) (dlink A (Verify_call p)) + AdvantageP (Correct p) A.
+Proof.
+  advantage_trans (dlink (Verify_call p) (SHVZK_real p)).
+  apply lerD.
+  + rewrite AdvantageD_dlink.
+    rewrite AdvantageD_sym.
+    apply le_refl.
+  + advantage_trans (Correct_real p).
+    rewrite Verify_SHVZK_Correct_perf.
+    rewrite GRing.add0r.
+    apply le_refl.
+Qed.
 
 
 (* Section: 2-special-soundness *)
@@ -229,7 +262,6 @@ Definition Special_Soundness_t p :
 Definition Special_Soundness p b :=
   if b then Special_Soundness_t p : nom_package else Special_Soundness_f p.
 
-(* Main security statement for 2-special soundness. *)
 Definition Adv_Special_Soundness p ε :=
   ∀ (A : nom_package),
   ValidPackage (loc A) (Soundness p) A_export A →
