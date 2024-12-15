@@ -4,7 +4,7 @@ The file `theories/Example/PRFMAC.v` is copied from the [SSProve](https://github
 
 # How to run
 
-1. Install nix-shell in your shell of choice.
+1. Install nix-shell in your shell of choice: [Nix-shell installation guide](https://nixos.org/download/#nix-install-linux).
 2. Download the repository.
 3. Open the repository folder in your shell and initialize the nix-shell by running the command `nix-shell`. This might take a while the first time.
 4. When the loading has finished, and you're in the nix-shell, run the `make` command to compile the Coq files.
