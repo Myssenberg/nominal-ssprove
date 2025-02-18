@@ -26,7 +26,26 @@ Import PackageNotation.
 
 Module crypto_box_scheme.
 
+Record crypto_box_scheme :=
+  { PK       : choice_type ;
+    SK       : choice_type ;
+    Nonce    : choice_type ;
+    M        : choice_type ;
+    C        : choice_type ;
+    sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
+    gen : 
+      code fset0 [interface] (SK × PK) ;
+
+    csetpk : forall (pk : PK),
+      code fset0 [interface] unit; (*Unsure of unit is the right term here*)
+
+    pkenc : forall (m : M) (pk_s : PK) (pk_r : PK) (n : Nonce),
+      code fset0 [interface] C ;
+
+    pkdec : forall (c : C) (pk_s : PK) (pk_r : PK) (n : Nonce),
+      code fset0 [interface] M 
+  }.
 
 
 
