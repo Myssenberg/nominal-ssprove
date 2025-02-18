@@ -24,9 +24,12 @@ Module GroupTheorems (GP : GroupParam).
   Definition el : finType := gT.
   Definition exp : finType := Finite.clone _ 'Z_q.
 
+  Lemma el_in_g {x : el} : x \in <[g]>.
+  Proof. rewrite g_gen. apply in_setT. Qed.
+
   Lemma expgE (x : el) : ∃ a, x = g ^+ a.
   Proof.
-    apply /cycleP. rewrite g_gen. apply in_setT.
+    apply /cycleP. apply el_in_g.
   Qed.
 
   Lemma expgq (x : el) : x ^+ q = 1.
@@ -95,12 +98,49 @@ Module GroupTheorems (GP : GroupParam).
     subst.
     by rewrite -!expgD addnA.
   Qed.
+
+  Definition log (x : el) : exp :=
+    inord (sval (@cyclePmin el g x el_in_g)).
+
+  Lemma log_expg (x : el) (a : exp) : log x = a → g ^+ a = x.
+  Proof.
+    unfold log.
+    destruct cyclePmin => H.
+    subst; simpl.
+    f_equal.
+    apply inordK.
+    rewrite trunc_q //.
+  Qed.
+
+  Lemma expg_log (x : el) (a : exp) : g ^+ a = x → log x = a.
+  Proof.
+    intros H.
+    unfold log.
+    destruct cyclePmin.
+    subst; simpl.
+    move: e => /eqP.
+    rewrite eq_expg_mod_order => /eqP.
+    rewrite (modn_small i) => e.
+    rewrite -e.
+    rewrite modn_small.
+    1: apply inord_val.
+    rewrite -modZp.
+    rewrite {2}trunc_q.
+    rewrite ltn_mod.
+    apply order_gt0.
+  Qed.
+
+  Lemma expgn_bij : bijective (λ n : exp, g ^+ n : el).
+  Proof.
+    eexists log => [a|x].
+    - by apply expg_log.
+    - by apply log_expg.
+  Qed.
 End GroupTheorems.
 
 
 Module GP_Z3 <: GroupParam.
   Definition gT : finGroupType := 'Z_3.
-  (* Definition ζ : {set gT} := [set : gT]. *)
   Definition g :  gT := Zp1.
 
   Lemma g_gen : <[g]> = [set : gT].
