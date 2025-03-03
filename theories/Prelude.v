@@ -18,7 +18,7 @@ Import Num.Def.
 Import Num.Theory.
 Import Order.POrderTheory.
 
-From extructures Require Import ord fset fmap.
+From extructures Require Import ord fset fmap fperm.
 
 From Crypt Require Export pkg_composition Prelude Package.
 
@@ -98,36 +98,73 @@ Proof. rewrite /rename /= imfset0 //. Qed.
 #[export] Hint Rewrite <- @supp_equi : in_fset_eq.
 #[export] Hint Rewrite @rename_fset0 @supp0 : in_fset_eq.
 
-Lemma supp_trimmed_package {L I E} (P : trimmed_package L I E)
-  : supp (trimmed_nom P) = supp L.
+Lemma supp_mod {I E} (P : module I E)
+  : supp (mod P) = supp (module_locs P).
 Proof.
   done.
 Qed.
 
-#[export] Hint Rewrite @supp_trimmed_package : in_fset_eq.
+#[export] Hint Rewrite @supp_mod : in_fset_eq.
 
-Lemma supp_nom_package (P : nom_package) : supp P = supp (loc P).
+Lemma supp_raw_module (P : raw_module) : supp P = supp (loc P).
 Proof. done. Qed.
 (* this hint does not reduce nicely with fset_solve
-#[export] Hint Rewrite @supp_nom_package : in_fset_eq.
+#[export] Hint Rewrite @supp_raw_module : in_fset_eq.
  *)
 
-#[export] Hint Rewrite @s_nom_par @s_nom_link : in_fset_eq.
+#[export] Hint Rewrite @s_share_par @s_share_link : in_fset_eq.
 
-Ltac dprove_convert_solve :=
+Create HintDb disj_db.
+#[export] Hint Resolve disj_share_link disj_share_link2 : disj_db.
+#[export] Hint Resolve disj_ID_r disj_ID_l : disj_db.
+
+Lemma disj_par_link {X : nomType} {P Q} {x : X}
+  : disj x P → disj x Q → disj x (P || Q)%share.
+Proof.
+  apply disj_equi2, equi_share_par.
+Qed.
+
+Lemma disj_par_link2 {X : nomType} {P Q} {x : X}
+  : disj P x → disj Q x → disj (P || Q)%share x.
+Proof.
+  rewrite disjC (disjC Q x).
+  apply disj_equi2', equi_share_par.
+Qed.
+
+#[export] Hint Resolve disj_par_link disj_par_link2 : disj_db.
+
+
+Ltac nssprove_abstract_help :=
   match goal with
-  | [ H : is_true (disj _ _) |- _ ] => move: H; dprove_convert_solve
-  | _ => unfold disj; fset_solve
+  | [ H : is_true (disj _ _) |- _ ] => move: H; nssprove_abstract_help
+  | _ => idtac (*unfold disj; fset_solve*)
   end.
 
-Ltac dprove_convert_once :=
-  (rewrite -> nom_link_dlink by dprove_convert_solve)
-  || (rewrite -> nom_par_dpar by dprove_convert_solve)
+#[export] Hint Extern 5 (is_true (disj _ _)) =>
+  nssprove_abstract_help;
+  unfold disj;
+  repeat rewrite -supp_equi;
+  rewrite !supp_mod //=;
+  fset_solve
+  : disj_db.
+
+Ltac nssprove_separate_solve :=
+  auto with disj_db nocore.
+(*
+  match goal with
+  | [ H : is_true (disj _ _) |- _ ] => move: H; nssprove_separate_solve
+  | _ => auto with disj_db (*unfold disj; fset_solve*)
+  end.
+ *)
+
+Ltac nssprove_separate_once :=
+  (rewrite -> share_link_sep_link by nssprove_separate_solve)
+  || (rewrite -> share_par_sep_par by nssprove_separate_solve)
   || (rewrite -> rename_alpha)
   || reflexivity.
 
-Ltac dprove_convert :=
-  repeat dprove_convert_once.
+Ltac nssprove_separate :=
+  repeat nssprove_separate_once.
 
 
 (* rename simplification *)
@@ -145,7 +182,7 @@ Lemma rename_ret {A : choiceType} {π} (a : A) :
   π ∙ ret a = ret a.
 Proof. done. Qed.
 
-Lemma rename_assert {A} {π b k}
+Lemma rename_assert {A} {π : {fperm atom}} {b k}
   : π ∙ @assertD A b k = assertD b (λ x, π ∙ (k x)).
 Proof.
   destruct b; done.

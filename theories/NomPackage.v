@@ -184,27 +184,23 @@ Proof.
   apply valid_support_package.
 Qed.
 
-(* Nom Package *)
 
-Record nom_package := mkNom
+(* Modules *)
+
+Record raw_module := mkNom
   { loc : {fset Location}
   ; val :> raw_package
   ; has_support : support_set val (supp loc)
   }.
 
-Definition nom_from_valid {L I E} p `{H : ValidPackage L I E p} : nom_package :=
-  {| loc := L
-  ;  val := trim E p
-  ;  has_support := @valid_support_package _ _ _ _ H
-  |}.
-
-Definition nom_from_trimmed {L I E} p `{H : ValidPackage L I E p} (tr : trimmed E p) : nom_package :=
+Definition module_from_trimmed {L I E} p `{H : ValidPackage L I E p}
+  (tr : trimmed E p) : raw_module :=
   {| loc := L
   ;  val := p
   ;  has_support := @valid_support_trimmed _ _ _ _ H tr
   |}.
 
-Lemma eq_nom_package {P P' : nom_package}
+Lemma eq_raw_module {P P' : raw_module}
   : loc P = loc P'
   → val P = val P'
   → P = P'.
@@ -274,16 +270,26 @@ Proof.
     apply /fsetUP; by right.
 Qed.
 
-Definition nom_link (P P' : nom_package)
+Definition share_link (P P' : raw_module)
   := {| loc := loc P :|: loc P'
       ; val := link (val P) (val P')
       ; has_support := support_link (has_support P) (has_support P')
       |}.
 
-Lemma nom_link_assoc p1 p2 p3
-  : nom_link p1 (nom_link p2 p3) = nom_link (nom_link p1 p2) p3.
+Declare Scope share_scope.
+Delimit Scope share_scope with share.
+(* Bind Scope share_scope with raw_module. *)
+Open Scope share.
+
+
+Notation "p1 ∘ p2" :=
+  (share_link p1 p2) (right associativity, at level 20) : share_scope.
+
+
+Lemma share_link_assoc p1 p2 p3
+  : p1 ∘ p2 ∘ p3 = (p1 ∘ p2) ∘ p3.
 Proof.
-  apply eq_nom_package; rewrite //=.
+  apply eq_raw_module; rewrite //=.
   + rewrite fsetUA //.
   + rewrite link_assoc //.
 Qed.
@@ -305,26 +311,26 @@ Proof.
   f_equal.
 Qed.
 
-Definition nom_ID I
+Definition ID I
   := {| loc := fset0
       ; val := ID I
       ; has_support := support_ID
       |}.
 
-Lemma nom_link_id {L I E} {p : nom_package} `{ValidPackage L I E p}
-  : flat I → trimmed E p → nom_link p (nom_ID I) = p.
+Lemma share_link_id {L I E} {p : raw_module} `{ValidPackage L I E p}
+  : flat I → trimmed E p → p ∘ ID I = p.
 Proof.
   intros F T.
-  apply eq_nom_package; rewrite //=.
+  apply eq_raw_module; rewrite //=.
   + rewrite fsetU0 //.
   + rewrite link_id //.
 Qed.
 
-Lemma id_nom_link {L I E} {p : nom_package} `{ValidPackage L I E p}
-  : trimmed E p → nom_link (nom_ID E) p = p.
+Lemma id_share_link {L I E} {p : raw_module} `{ValidPackage L I E p}
+  : trimmed E p → ID E ∘ p = p.
 Proof.
   intros T.
-  apply eq_nom_package; rewrite //=.
+  apply eq_raw_module; rewrite //=.
   + rewrite fset0U //.
   + rewrite id_link //.
 Qed.
@@ -359,35 +365,38 @@ Proof.
     apply /fsetUP; by right.
 Qed.
 
-Definition nom_par (P P' : nom_package)
+Definition share_par (P P' : raw_module)
   := {| loc := loc P :|: loc P'
       ; val := par (val P) (val P')
       ; has_support := support_par (has_support P) (has_support P')
       |}.
 
-Lemma nom_par_commut (p1 p2 : nom_package) `{Parable p1 p2} : nom_par p1 p2 = nom_par p2 p1.
+Notation "p1 || p2" :=
+  (share_par p1 p2) : share_scope.
+
+Lemma share_par_commut (p1 p2 : raw_module) `{Parable p1 p2} : p1 || p2 = p2 || p1.
 Proof.
-  apply eq_nom_package; rewrite //=.
+  apply eq_raw_module; rewrite //=.
   + rewrite fsetUC //.
   + rewrite par_commut //.
 Qed.
 
-Lemma nom_par_assoc {P1 P2 P3 : nom_package}
-  : nom_par P1 (nom_par P2 P3) = nom_par (nom_par P1 P2) P3.
+Lemma share_par_assoc {P1 P2 P3 : raw_module}
+  : (P1 || (P2 || P3)) = ((P1 || P2) || P3).
 Proof.
-  apply eq_nom_package; rewrite //=.
+  apply eq_raw_module; rewrite //=.
   + rewrite fsetUA //.
   + rewrite par_assoc //.
 Qed.
 
-Lemma nom_interchange {A B C D E F} {L1 L2 L3 L4} (p1 p2 p3 p4 : nom_package)
+Lemma share_interchange {A B C D E F} {L1 L2 L3 L4} (p1 p2 p3 p4 : raw_module)
   `{ValidPackage L1 B A p1} `{ValidPackage L2 E D p2}
   `{ValidPackage L3 C B p3} `{ValidPackage L4 F E p4} :
   trimmed A p1 → trimmed D p2 → Parable p3 p4 → 
-  nom_par (nom_link p1 p3) (nom_link p2 p4) = nom_link (nom_par p1 p2) (nom_par p3 p4).
+  (p1 ∘ p3) || (p2 ∘ p4) = (p1 || p2) ∘ (p3 || p4).
 Proof.
   intros tr1 tr2 par34.
-  apply eq_nom_package; rewrite //=.
+  apply eq_raw_module; rewrite //=.
   + rewrite fsetUA -(fsetUA (loc p1)) (fsetUC (loc p3)) 2!fsetUA //.
   + rewrite interchange //.
 Qed.
@@ -404,21 +413,21 @@ Proof.
   rewrite absorb //.
 Qed.
 
-Program Definition nom_package_HasAction
-  := HasAction.Build nom_package
+Program Definition raw_module_HasAction
+  := HasAction.Build raw_module
     (λ π P, mkNom (π ∙ loc P) (π ∙ val P) (rename_support_set (has_support P))) _ _.
 Obligation 1.
   rewrite supp_equi //.
 Qed.
 Obligation 2.
-  apply eq_nom_package; rewrite //= rename_id //.
+  apply eq_raw_module; rewrite //= rename_id //.
 Qed.
 Obligation 3.
-  apply eq_nom_package; rewrite //= rename_comp //.
+  apply eq_raw_module; rewrite //= rename_comp //.
 Qed.
 
-HB.instance Definition _ : HasAction nom_package
-  := nom_package_HasAction.
+HB.instance Definition _ : HasAction raw_module
+  := raw_module_HasAction.
 
 Lemma supp_atoms (A : {fset atom}) : supp A = A.
 Proof.
@@ -430,12 +439,12 @@ Proof.
   rewrite fset_cons fsetSuppU fsetSupp1 H //.
 Qed.
 
-Program Definition nom_package_IsNominal
-  : IsNominal nom_package
+Program Definition raw_module_IsNominal
+  : IsNominal raw_module
   := IsNominal.Build _ (λ p, supp (loc p)) _ _.
 Obligation 1.
   intros π H.
-  apply eq_nom_package; rewrite /rename //=.
+  apply eq_raw_module; rewrite /rename //=.
   + rewrite is_support //= supp_atoms //.
   + apply has_support, H.
 Qed.
@@ -449,68 +458,68 @@ Obligation 2.
   rewrite 2!H1 //.
 Qed.
 
-HB.instance Definition _ : IsNominal nom_package
-  := nom_package_IsNominal.
+HB.instance Definition _ : IsNominal raw_module
+  := raw_module_IsNominal.
 
-Lemma loc_nom_link {P P' : nom_package} {π}
-  : loc (π ∙ nom_link P P') = loc (π ∙ P) :|: loc (π ∙ P').
+Lemma loc_share_link {P P' : raw_module} {π}
+  : loc (π ∙ P ∘ P') = loc (π ∙ P) :|: loc (π ∙ P').
 Proof.
   simpl.
   rewrite (equi2_use _ fsetU_equi) //.
 Qed.
 
-Lemma s_nom_link {P P' : nom_package}
-  : supp (nom_link P P') = supp P :|: supp P'.
+Lemma s_share_link {P P' : raw_module}
+  : supp (P ∘ P') = supp P :|: supp P'.
 Proof. rewrite -supp_fsetU //. Qed.
 
-Lemma val_nom_link {P P' : nom_package} {π}
-  : val (π ∙ nom_link P P') = nom_link (π ∙ P) (π ∙ P').
+Lemma val_share_link {P P' : raw_module} {π}
+  : val (π ∙ P ∘ P') = (π ∙ P) ∘ (π ∙ P').
 Proof.  
   unfold rename; simpl.
   rewrite rename_link //.
 Qed.
 
-Lemma rename_nom_link {P P' : nom_package} {π} :
-  π ∙ nom_link P P' = nom_link (π ∙ P) (π ∙ P').
+Lemma rename_share_link {P P' : raw_module} {π} :
+  π ∙ P ∘ P' = (π ∙ P) ∘ (π ∙ P').
 Proof.
-  apply eq_nom_package.
-  + rewrite loc_nom_link //.
-  + rewrite val_nom_link //=.
+  apply eq_raw_module.
+  + rewrite loc_share_link //.
+  + rewrite val_share_link //=.
 Qed.
 
-Lemma val_nom_par {P P' : nom_package} {π}
-  : val (π ∙ nom_par P P') = nom_par (π ∙ P) (π ∙ P').
+Lemma val_share_par {P P' : raw_module} {π}
+  : val (π ∙ (P || P')) = (π ∙ P) || (π ∙ P').
 Proof.
   unfold rename; simpl.
   rewrite rename_par.
   f_equal.
 Qed.
 
-Lemma s_nom_par {P P' : nom_package}
-  : supp (nom_par P P') = supp P :|: supp P'.
+Lemma s_share_par {P P' : raw_module}
+  : supp (P || P') = supp P :|: supp P'.
 Proof. rewrite -supp_fsetU //. Qed.
 
-Lemma rename_nom_par {P P' : nom_package} {π} :
-  π ∙ nom_par P P' = nom_par (π ∙ P) (π ∙ P').
+Lemma rename_share_par {P P' : raw_module} {π} :
+  π ∙ (P || P') = (π ∙ P) || (π ∙ P').
 Proof.
-  apply eq_nom_package.
-  + rewrite loc_nom_link //.
-  + rewrite val_nom_par //=.
+  apply eq_raw_module.
+  + rewrite loc_share_link //.
+  + rewrite val_share_par //=.
 Qed.
 
 Open Scope nominal_scope.
 
-Lemma nom_link_congr {P P' Q Q' : nom_package} :
+Lemma share_link_congr {P P' Q Q' : raw_module} :
   disj P Q → 
   disj P' Q' → 
   P ≡ P' →
   Q ≡ Q' →
-  nom_link P Q ≡ nom_link P' Q'.
+  P ∘ Q ≡ P' ∘ Q'.
 Proof.
   intros D1 D2 [π E1] [π' E2].
   subst.
   exists (split_pi π π' (supp P) (supp Q)).
-  rewrite rename_nom_link.
+  rewrite rename_share_link.
   rewrite split_pi_left.
   1: rewrite split_pi_right; [ done | | done |].
   1: apply (is_support Q).
@@ -519,17 +528,17 @@ Proof.
   1,2: apply D2.
 Qed.
 
-Lemma nom_par_congr {P P' Q Q' : nom_package} :
+Lemma share_par_congr {P P' Q Q' : raw_module} :
   disj P Q →
   disj P' Q' →
   P ≡ P' →
   Q ≡ Q' →
-  nom_par P Q ≡ nom_par P' Q'.
+  (P || Q) ≡ (P' || Q').
 Proof.
   intros D1 D2 [π E1] [π' E2].
   subst.
   exists (split_pi π π' (supp P) (supp Q)).
-  rewrite rename_nom_par.
+  rewrite rename_share_par.
   rewrite split_pi_left.
   1: rewrite split_pi_right; [ done | | done |].
   1: apply (is_support Q).
@@ -539,65 +548,71 @@ Proof.
 Qed.
 
 
-(* trimmed_package *)
+(* module *)
 
 Lemma trimmed_link {E} {P Q} : trimmed E P → trimmed E (link P Q).
 Proof. intros tr. rewrite /trimmed -link_trim_commut tr //. Qed.
 
-Ltac dprove_trimmed :=
+Ltac nssprove_trimmed :=
   (try apply trimmed_empty_package) ||
-  ((apply trimmed_link || apply trimmed_package_cons); dprove_trimmed).
+  ((apply trimmed_link || apply trimmed_package_cons); nssprove_trimmed).
 
-Record trimmed_package L I E :=
-  (* we do not coerce through package as it makes for two coercion paths to raw_pacakge *)
-  { tr_package : package L I E
-  ; tr_trimmed : trimmed E (pack tr_package)
+Record module I E :=
+  { module_locs : {fset Location}
+  ; module_package : package module_locs I E
+  ; module_trimmed : trimmed E (pack module_package)
   }.
 
-Arguments tr_package {L I E}.
-Arguments tr_trimmed {L I E}.
-Arguments Build_trimmed_package {_ _ _} & _ _.
+Arguments module_locs {I E}.
+Arguments module_package {I E}.
+Arguments module_trimmed {I E}.
+Arguments Build_module {_ _} & _ _ _.
 
-Definition trimmed_nom {L I E} : trimmed_package L I E → nom_package
-  := λ t, nom_from_trimmed (pack (tr_package t)) (tr_trimmed t).
+Definition mod {I E} : module I E → raw_module
+  := λ t, module_from_trimmed (pack (module_package t)) (module_trimmed t).
 
-Coercion trimmed_nom : trimmed_package >-> nom_package.
+(* There is no coercion through package as it makes
+   for two coercion paths to raw_pacakge *)
+Coercion mod : module >-> raw_module.
 
 #[export]
-Instance trimmed_valid {L I E} {P : trimmed_package L I E} : ValidPackage L I E P.
-Proof. apply tr_package. Qed.
+Instance module_valid {I E} {P : module I E}
+  : ValidPackage P.(module_locs) I E P.
+Proof. apply module_package. Qed.
 
 #[export]
-Hint Rewrite @s_nom_par @s_nom_link @imfset_fset @map_cons : in_fset_eq.
+Hint Rewrite @s_share_par @s_share_link @imfset_fset @map_cons : in_fset_eq.
 
 
-Notation is_trimmed P := (Build_trimmed_package P%pack (ltac:(dprove_trimmed)))
-  (only parsing).
+Notation no_locs := (fset0 : {fset Location}).
 
+Notation game E := (module Game_import E).
 
-Notation "[ 'trimmed_package' ]" :=
-  (Build_trimmed_package
+Notation adversary I := (module I A_export).
+
+Notation "[ 'module' L ]" :=
+  (Build_module L
     (mkpackage (mkfmap [::]) _)
-    ltac:(dprove_trimmed)
+    ltac:(nssprove_trimmed)
   )
   ( at level 0
   , only parsing )
   : package_scope.
 
-Notation "[ 'trimmed_package' x1 ]" :=
-  (Build_trimmed_package
+Notation "[ 'module' L ; x1 ]" :=
+  (Build_module L
     (mkpackage (mkfmap (x1 :: [::])) _)
-    ltac:(dprove_trimmed)
+    ltac:(nssprove_trimmed)
   )
   ( at level 0
   , x1 custom package at level 2
   , only parsing )
   : package_scope.
 
-Notation "[ 'trimmed_package' x1 ; x2 ; .. ; xn ]" :=
-  (Build_trimmed_package
+Notation "[ 'module' L ; x1 ; x2 ; .. ; xn ]" :=
+  (Build_module L
     (mkpackage (mkfmap (x1 :: x2 :: .. [:: xn] ..)) _)
-    ltac:(dprove_trimmed)
+    ltac:(nssprove_trimmed)
   )
   ( at level 0
   , x1 custom package at level 2

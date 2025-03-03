@@ -5,7 +5,7 @@ From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
 Set Warnings "notation-overridden,ambiguous-paths".
 
 From Coq Require Import Utf8.
-From extructures Require Import ord fset fmap.
+From extructures Require Import ord fset fmap fperm.
 
 From Equations Require Import Equations.
 Require Equations.Prop.DepElim.
@@ -72,8 +72,10 @@ Proof. rewrite H. exact id. Defined.
 
 #[global] Hint Unfold Extra_locs Extra_locs_lr : in_fset_eq.
 
-Definition l p := fresh (Extra_locs p) p.(left).(locs).
-Definition r p := fresh (dpair (Extra_locs p) p.(left).(locs)) p.(right).(locs).
+Definition l p : {fperm atom}
+  := fresh (Extra_locs p) p.(left).(locs).
+Definition r p : {fperm atom}
+  := fresh (dpair (Extra_locs p) p.(left).(locs)) p.(right).(locs).
 
 #[tactic=ssprove_valid]
 Equations raw_or p : raw_sigma :=
@@ -155,10 +157,10 @@ Equations raw_or p : raw_sigma :=
 
 
 Definition Aux n m S T :=
-  (@Build_trimmed_package
-    fset0
+  (@Build_module
     (fset ((m, (S, T)) :: [::]))
     (fset ((n, (S, T)) :: [::]))
+    fset0
     (mkpackage (mkfmap ( 
       (n, mkdef S T
         (λ x, opr (m, (S, T)) x (λ y, ret y))
@@ -183,13 +185,13 @@ Definition AuxR p :=
   ).
 
 #[tactic=ssprove_valid] Equations SHVZK_call p :
-  trimmed_package fset0
+  module
     [interface
        #val #[ LEFT ] : ('input p.(left)) → 'transcript p.(left) ;
        #val #[ RIGHT ] : ('input p.(right)) → 'transcript p.(right)
     ]
     [interface #val #[ TRANSCRIPT ] : ('input (raw_or p)) → 'transcript (raw_or p)] :=
-  SHVZK_call p := [trimmed_package
+  SHVZK_call p := [module no_locs ;
     #def #[ TRANSCRIPT ] (hwe : 'input (raw_or p)) : ('transcript (raw_or p)) {
       #import {sig #[ LEFT ] :
         ('input p.(left)) → 'transcript p.(left)} as LeftTranscript ;;
@@ -213,19 +215,16 @@ Definition AuxR p :=
     }
   ].
 
-Definition CALL p (L R : nom_package) :=
-  nom_link (SHVZK_call p) (nom_par
-    (nom_link (AuxL p) (l p ∙ L))
-    (nom_link (AuxR p) (r p ∙ R))
-  ).
+Definition CALL p (L R : raw_module) : raw_module :=
+  ( (SHVZK_call p) ∘ ( (AuxL p ∘ (l p ∙ L)) || (AuxR p ∘ (r p ∙ R))) )%share.
 
 #[local] Instance call_valid p :
-  ∀ (L R : nom_package),
+  ∀ (L R : raw_module),
     ValidPackage L.(loc) [interface] (Transcript p.(left)) L →
     ValidPackage R.(loc) [interface] (Transcript p.(right)) R →
     ValidPackage (CALL p L R).(loc) [interface] (Transcript (raw_or p))
       (CALL p L R).
-Proof. move => L R VL VR. unfold CALL. dprove_valid. Qed.
+Proof. move => L R VL VR. unfold CALL. nssprove_valid. Qed.
 
 Lemma destruct_let_pair : ∀ A B C (xy : A * B) (f : A → B → C), (let (x, y) := xy in f x y) = f xy.1 xy.2.
 Proof.
@@ -428,11 +427,32 @@ Proof.
     by eapply r_ret.
 Qed.
 
-Definition A_left p A : nom_package :=
-  (((A ⊛ SHVZK_call p) ⊛ dpar (AuxL p) (AuxR p ⊛ SHVZK_real (right p)))).
 
-Definition A_right p A : nom_package :=
-  (((A ⊛ SHVZK_call p) ⊛ dpar (AuxL p ⊛ SHVZK_ideal (left p)) (AuxR p))).
+Local Obligation Tactic := notac.
+
+Program Definition A_left p (A : adversary (Transcript (raw_or p)))
+  : adversary (Transcript (left p)) :=
+  {module ((A ∘ SHVZK_call p) ∘ (AuxL p || (AuxR p ∘ SHVZK_real (right p)))) }.
+Obligation 1.
+  intros p A. nssprove_valid.
+Qed.
+Obligation 2.
+  intros p A.
+  do 2 apply trimmed_link.
+  apply module_trimmed.
+Qed.
+
+Program Definition A_right p (A : adversary (Transcript (raw_or p)))
+  : adversary (Transcript (right p)) :=
+  {module ((A ∘ SHVZK_call p) ∘ ((AuxL p ∘ SHVZK_ideal (left p)) || AuxR p)) }.
+Obligation 1.
+  intros p A. nssprove_valid.
+Qed.
+Obligation 2.
+  intros p A.
+  do 2 apply trimmed_link.
+  apply module_trimmed.
+Qed.
 
 
 Lemma d_left_right p : disj (l p ∙ p.(left).(locs)) (r p ∙ p.(right).(locs)).
@@ -440,38 +460,34 @@ Proof.  unfold l, r, dpair.  auto with alpha_db nocore.  Qed.
 
 
 Theorem OR_SHVZK p :
-  ∀ ε₁ ε₂ : nom_package → Axioms.R,
+  ∀ ε₁ ε₂ : raw_module → Axioms.R,
     Adv_SHVZK p.(left) ε₁ →
     Adv_SHVZK p.(right) ε₂ →
     Adv_SHVZK (raw_or p) (λ A, ε₁ (A_left p A) + ε₂ (A_right p A)).
 Proof.
-  intros ε₀ ε₁ AdvL AdvR A VA.
-  unfold AdvantageP, SHVZK.
-  erewrite (AdvantageD_perf_l (commit_call p)).
-  erewrite <- (AdvantageD_perf_r (simulate_call p)).
+  intros ε₀ ε₁ AdvL AdvR A.
+  unfold AdvFor, SHVZK.
+  erewrite (Adv_perf_l (commit_call p)).
+  erewrite <- (Adv_perf_r (simulate_call p)).
 
   unfold call_real_real, call_ideal_ideal, CALL.
-  move: (d_left_right p) => H; dprove_convert.
+  move: (d_left_right p) => H; nssprove_separate.
 
-  advantage_trans (call_ideal_real p).
+  nssprove_adv_trans (call_ideal_real p).
 
   apply lerD.
   1,2: unfold call_ideal_real, CALL.
-  + move: (d_left p) => {}H; dprove_convert.
-    rewrite AdvantageD_dlink.
-    erewrite @dpar_game_l, @dpar_game_l; try dprove_valid.
-    rewrite AdvantageD_dlink.
-    apply AdvL.
-    unfold A_left.
-    dprove_valid.
+  + move: (d_left p) => {}H; nssprove_separate.
+    rewrite Adv_sep_link.
+    erewrite @sep_par_game_l, @sep_par_game_l; try nssprove_valid.
+    rewrite Adv_sep_link.
+    apply (AdvL (A_left p A)).
 
-  + move: (d_right p) => {}H; dprove_convert.
-    rewrite AdvantageD_dlink.
-    erewrite @dpar_game_r, @dpar_game_r; try dprove_valid.
-    rewrite AdvantageD_dlink.
-    apply AdvR.
-    unfold A_right.
-    dprove_valid.
+  + move: (d_right p) => {}H; nssprove_separate.
+    rewrite Adv_sep_link.
+    erewrite @sep_par_game_r, @sep_par_game_r; try nssprove_valid.
+    rewrite Adv_sep_link.
+    apply (AdvR (A_right p A)).
 Qed.
 
 End SigmaOR.
