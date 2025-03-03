@@ -62,7 +62,7 @@ Qed.
 
 (* fresh *)
 
-Definition fresh {X Y : nomType} (x : X) (y : Y) :=
+Definition fresh {X Y : nomType} (x : X) (y : Y) : {fperm atom} :=
   fperm (λ a, atomize (offset (supp x) + natize a)) (supp y).
 
 Lemma fresh_disjoint {X Y : nomType} {x : X} {y : Y}

@@ -1,4 +1,3 @@
-
 From Coq Require Import Utf8.
 
 From mathcomp Require Import all_ssreflect all_algebra 
@@ -6,6 +5,7 @@ From mathcomp Require Import all_ssreflect all_algebra
 
 Local Open Scope ring_scope.
 Import GroupScope GRing.Theory.
+
 
 Module Type GroupParam.
   Parameter gT : finGroupType.

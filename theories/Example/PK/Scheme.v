@@ -71,8 +71,8 @@ Definition I_CORR (P : pk_scheme) :=
   [interface #val #[ ENCDEC ] : 'mes P → 'mes P ].
 
 Definition CORR0 (P : pk_scheme) :
-  trimmed_package fset0 Game_import (I_CORR P) :=
-  [trimmed_package
+  game (I_CORR P) :=
+  [module no_locs ;
     #def #[ ENCDEC ] (m : 'mes P) : ('mes P) {
       '(sk, pk) ← P.(keygen) ;;
       c ← P.(enc) pk m ;;
@@ -82,14 +82,14 @@ Definition CORR0 (P : pk_scheme) :
   ].
 
 Definition CORR1 (P : pk_scheme) :
-  trimmed_package fset0 Game_import (I_CORR P) :=
-  [trimmed_package
+  game (I_CORR P) :=
+  [module no_locs ;
     #def #[ ENCDEC ] (m : 'mes P) : ('mes P) {
       ret m
     }
   ].
 
-Definition CORR P b := if b then CORR0 P : nom_package else CORR1 P.
+Definition CORR P b := if b then CORR0 P else CORR1 P.
 
 Definition flag_loc : Location := ('option 'unit; 0%N).
 Definition mpk_loc (P : pk_scheme) : Location := ('option ('pub P); 1%N).
@@ -106,8 +106,8 @@ Definition PK_OTSR_loc (P : pk_scheme) :=
   fset [:: mpk_loc P ; flag_loc ].
 
 Definition PK_OTSR0 (P : pk_scheme) :
-  trimmed_package (PK_OTSR_loc P) Game_import (I_PK_OTSR P) :=
-  [trimmed_package
+  game (I_PK_OTSR P) :=
+  [module PK_OTSR_loc P ;
     #def #[ GET ] (_ : 'unit) : ('pub P) {
       getNone (mpk_loc P) ;;
       '(_, pk) ← P.(keygen) ;;
@@ -123,8 +123,8 @@ Definition PK_OTSR0 (P : pk_scheme) :
   ].
 
 Definition PK_OTSR1 (P : pk_scheme) :
-  trimmed_package (PK_OTSR_loc P) Game_import (I_PK_OTSR P) :=
-  [trimmed_package
+  game (I_PK_OTSR P) :=
+  [module PK_OTSR_loc P ;
     #def #[ GET ] (_ : 'unit) : ('pub P) {
       getNone (mpk_loc P) ;;
       '(_, pk) ← P.(keygen) ;;
@@ -139,7 +139,6 @@ Definition PK_OTSR1 (P : pk_scheme) :
     }
   ].
   
-Definition PK_OTSR P b :=
-  if b then PK_OTSR0 P : nom_package else PK_OTSR1 P.
+Definition PK_OTSR P b := if b then PK_OTSR0 P else PK_OTSR1 P.
 
 End PKScheme.

@@ -5,9 +5,14 @@
 *.glob
 .*.aux
 .lia.cache
+.*.d
 Makefile.coq
 Makefile.coq.conf
-.*.d
+CoqMakefile
+CoqMakefile.conf
 
 # vim
 .*.swp
+
+# nix
+result

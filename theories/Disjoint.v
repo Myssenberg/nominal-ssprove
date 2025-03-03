@@ -43,15 +43,19 @@ From NominalSSP Require Import
 
 Import FsetSolve.
 
-(* dlink Section *)
+(* sep_link Section *)
 
-Definition dlink (P P' : nom_package)
-  := nom_link P (move P P').
+Declare Scope sep_scope.
+Delimit Scope sep_scope with sep.
+Bind Scope sep_scope with raw_module.
+Open Scope sep.
 
-Notation " P  ⊛  P' " :=
-  (dlink P P')
-  (at level 35, right associativity)
-  : package_scope.
+
+Definition sep_link (P P' : raw_module)
+  := share_link P (move P P').
+
+Notation "p1 ∘ p2" :=
+  (sep_link p1 p2) (right associativity, at level 20) : sep_scope.
   
 
 Lemma rename_alpha {X : actionType} {O : X} {π} : π ∙ O ≡ O.
@@ -66,12 +70,12 @@ Proof.
   setoid_reflexivity.
 Qed.
 
-Add Parametric Morphism : dlink with
-  signature alpha ==> alpha ==> alpha as dlink_mor.
+Add Parametric Morphism : sep_link with
+  signature alpha ==> alpha ==> alpha as sep_link_mor.
 Proof.
   intros P P' EP Q Q' EQ.
-  unfold dlink.
-  apply nom_link_congr.
+  unfold sep_link.
+  apply share_link_congr.
   1: apply (move_disj P Q).
   1: apply (move_disj P' Q').
   1: assumption.
@@ -186,7 +190,7 @@ Lemma supp_pair {X Y : nomType} {x : X} {y : Y}
   : supp (pair x y) = supp x :|: supp y.
 Proof. done. Qed.
 
-#[export] Hint Resolve s_nom_link s_nom_par supp_pair : alpha_db.
+#[export] Hint Resolve s_share_link s_share_par supp_pair : alpha_db.
 
 
 Lemma subs_refl {X : nomType} {x : X} : subs x x.
@@ -196,23 +200,23 @@ Qed.
 
 #[export] Hint Resolve subs_refl : alpha_db.
 
-Lemma disj_nom_link {X : nomType} {x : X} {P Q}
-  : disj x P → disj x Q → disj x (nom_link P Q).
+Lemma disj_share_link {X : nomType} {x : X} {P Q}
+  : disj x P → disj x Q → disj x (P ∘ Q)%share.
 Proof.
   intros dP dQ.
   unfold disj.
-  rewrite s_nom_link.
+  rewrite s_share_link.
   rewrite fdisjointUr.
   apply /andP.
   by split.
 Qed.
 
-Lemma disj_nom_link2 {X : nomType} {x : X} {P Q}
-  : disj P x → disj Q x → disj (nom_link P Q) x.
+Lemma disj_share_link2 {X : nomType} {x : X} {P Q}
+  : disj P x → disj Q x → disj (P ∘ Q)%share x.
 Proof.
   intros dP dQ.
   rewrite disjC.
-  rewrite disj_nom_link //; rewrite disjC //.
+  rewrite disj_share_link //; rewrite disjC //.
 Qed.
 
 Lemma disj_equi2 {X Y Z W : nomType} {x : X} {y : Y} {z : Z} {f}
@@ -238,16 +242,16 @@ Proof.
   by apply disj_equi2.
 Qed.
 
-Lemma equi_nom_link : equivariant nom_link.
+Lemma equi_share_link : equivariant share_link.
 Proof.
   apply equi2_prove => π x y.
-  apply rename_nom_link.
+  apply rename_share_link.
 Qed.
 
-Lemma equi_nom_par : equivariant nom_par.
+Lemma equi_share_par : equivariant share_par.
 Proof.
   apply equi2_prove => π x y.
-  apply rename_nom_par.
+  apply rename_share_par.
 Qed.
 
 Lemma supp0 {X : nomOrdType} : supp (@fset0 X) = fset0.
@@ -255,25 +259,25 @@ Proof.
   rewrite /supp //= fsetSupp0 //.
 Qed.
 
-Lemma disj_nom_ID_l {X : nomType} {x : X} {I} : disj (nom_ID I) x.
+Lemma disj_ID_l {X : nomType} {x : X} {I} : disj (ID I) x.
 Proof.
   rewrite /disj /supp //= supp0.
   apply fdisjoint0s.
 Qed.
 
-Lemma disj_nom_ID_r {X : nomType} {x : X} {I} : disj x (nom_ID I).
+Lemma disj_ID_r {X : nomType} {x : X} {I} : disj x (ID I).
 Proof.
   rewrite /disj /supp //= supp0.
   apply fdisjoints0.
 Qed.
 
-#[export] Hint Resolve disj_nom_ID_l disj_nom_ID_r : alpha_db.
+#[export] Hint Resolve disj_ID_l disj_ID_r : alpha_db.
 
-(* #[export] Hint Resolve disj_nom_link disj_nom_link2 : alpha_db. *)
+(* #[export] Hint Resolve disj_link disj_link2 : alpha_db. *)
 #[export] Hint Resolve disj_equi2 disj_equi2' : alpha_db.
-#[export] Hint Resolve equi_nom_link equi_nom_par : alpha_db.
+#[export] Hint Resolve equi_share_link equi_share_par : alpha_db.
 
-#[export] Hint Resolve nom_link_congr nom_par_congr : alpha_db.
+#[export] Hint Resolve share_link_congr share_par_congr : alpha_db.
 
 #[export] Hint Extern 1 (alpha (rename _ _) _) =>
   rewrite rename_alpha : alpha_db.
@@ -284,20 +288,21 @@ Qed.
 #[export] Hint Extern 10 (alpha _ _) =>
   reflexivity : alpha_db.
 
-Lemma dlink_assoc (p1 p2 p3 : nom_package)
-  : dlink p1 (dlink p2 p3) ≡ dlink (dlink p1 p2) p3.
+Lemma sep_link_assoc (p1 p2 p3 : raw_module)
+  : p1 ∘ p2 ∘ p3 ≡ (p1 ∘ p2) ∘ p3.
 Proof.
-  rewrite /dlink /move rename_nom_link nom_link_assoc.
+  rewrite /sep_link /move rename_share_link share_link_assoc.
   auto with alpha_db nocore.
 Qed.
 
 
 (* ID *)
 
-Lemma nom_link_adj {P P'} {π} : nom_link P (π ∙ P') ≡ nom_link (π^-1 ∙ P)%fperm P'.
+Lemma share_link_adj {P P'} {π}
+  : (P ∘ (π ∙ P'))%share ≡ ((π^-1 ∙ P)%fperm ∘ P')%share.
 Proof.
   exists (π^-1)%fperm.
-  rewrite rename_nom_link.
+  rewrite rename_share_link.
   rewrite renameK //.
 Qed.
 
@@ -317,33 +322,36 @@ Proof.
   destruct ((n, (S, T)) \in E) eqn:eq; rewrite eq //.
 Qed.
 
-Lemma dlink_id {L I E} (P : nom_package) :
-  ValidPackage L I E P → flat I → trimmed E P → dlink P (nom_ID I) ≡ P.
+Lemma sep_link_id {L I E} (P : raw_module) :
+  ValidPackage L I E P → flat I → trimmed E P → P ∘ (ID I) ≡ P.
 Proof.
   intros V F T.
-  rewrite /dlink /move -{3}(nom_link_id F T).
+  rewrite /sep_link /move -{3}(share_link_id F T).
   auto with alpha_db nocore.
 Qed.
 
-Lemma id_dlink {L I E} (P : nom_package) (V : ValidPackage L I E P)
-  : trimmed E P → dlink (nom_ID E) P ≡ P.
+Lemma id_sep_link {L I E} (P : raw_module) (V : ValidPackage L I E P)
+  : trimmed E P → ID E ∘ P ≡ P.
 Proof.
   intros T.
-  rewrite /dlink /move -{3}(id_nom_link T).
+  rewrite /sep_link /move -{3}(id_share_link T).
   auto with alpha_db nocore.
 Qed.
 
 
-(* dpar *)
+(* sep_par *)
 
-Definition dpar (P P' : nom_package)
-  := nom_par P (move P P').
+Definition sep_par (P P' : raw_module)
+  := share_par P (move P P').
 
-Add Parametric Morphism : dpar with
-  signature alpha ==> alpha ==> alpha as dpar_mor.
+Notation "p1 || p2" :=
+  (sep_par p1 p2) : sep_scope.
+
+Add Parametric Morphism : sep_par with
+  signature alpha ==> alpha ==> alpha as sep_par_mor.
 Proof.
   intros P P' EP Q Q' EQ.
-  unfold dpar, move.
+  unfold sep_par, move.
   auto with alpha_db nocore.
 Qed.
 
@@ -375,40 +383,42 @@ Proof.
   destruct x as [n T]; done.
 Qed.
 
-Lemma dpar_commut (p1 p2 : nom_package) (P : Parable p1 p2) : dpar p1 p2 ≡ dpar p2 p1.
+Lemma sep_par_commut (p1 p2 : raw_module) (P : Parable p1 p2)
+  : (p1 || p2) ≡ (p2 || p1).
 Proof.
-  unfold dpar, move.
-  rewrite nom_par_commut.
+  unfold sep_par, move.
+  rewrite share_par_commut.
   auto with alpha_db nocore.
 Qed.
 
-Lemma dpar_assoc {P1 P2 P3 : nom_package}
-  : dpar P1 (dpar P2 P3) ≡ dpar (dpar P1 P2) P3.
+Lemma sep_par_assoc {P1 P2 P3 : raw_module}
+  : (P1 || (P2 || P3)) ≡ ((P1 || P2) || P3).
 Proof.
-  rewrite /dpar /move rename_nom_par nom_par_assoc.
+  rewrite /sep_par /move rename_share_par share_par_assoc.
   auto with alpha_db nocore.
 Qed.
 
-Lemma dinterchange {A B C D E F} {L1 L2 L3 L4} (p1 p2 p3 p4 : nom_package) :
+Lemma sep_interchange {A B C D E F} {L1 L2 L3 L4} (p1 p2 p3 p4 : raw_module) :
   ValidPackage L1 B A p1 → ValidPackage L2 E D p2 →
   ValidPackage L3 C B p3 → ValidPackage L4 F E p4 →
   trimmed A p1 → trimmed D p2 → Parable p3 p4 → 
-  dpar (dlink p1 p3) (dlink p2 p4) ≡ dlink (dpar p1 p2) (dpar p3 p4).
+  (p1 ∘ p3) || (p2 ∘ p4) ≡ (p1 || p2) ∘  (p3 || p4).
 Proof.
   intros V1 V2 V3 V4 tr1 tr2 P34.
-  rewrite /dpar /dlink /move rename_nom_par rename_nom_link nom_interchange.
+  rewrite /sep_par /sep_link /move
+    rename_share_par rename_share_link share_interchange.
   2: assumption.
   2: by apply rename_trimmed.
   auto 10 with alpha_db nocore.
 Qed.
 
 
-(* AdvantageD *)
+(* Adv *)
 
-Definition Pr' : nom_package → R := λ P, Pr P true.
+Definition Pr' : raw_module → R := λ P, Pr P true.
 
-Definition AdvantageD (G G' A : nom_package)
-  := `| Pr' (dlink A G) - Pr' (dlink A G')|.
+Definition Adv (G G' A : raw_module) : R
+  := `| Pr' (A ∘ G) - Pr' (A ∘ G')|.
 
 Add Parametric Morphism : val with
   signature alpha ==> alpha as val_mor.
@@ -431,11 +441,11 @@ Qed.
 Lemma Pr'_def {P} : Pr' P = Pr (val P) true.
 Proof. done. Qed.
 
-Add Parametric Morphism : AdvantageD with
-  signature alpha ==> alpha ==> alpha ==> eq as AdvantageD_mor.
+Add Parametric Morphism : Adv with
+  signature alpha ==> alpha ==> alpha ==> eq as Adv_mor.
 Proof.
   intros.
-  unfold AdvantageD.
+  unfold Adv.
   rewrite H H0 H1 //.
 Qed.
 
@@ -460,15 +470,15 @@ Proof.
 Qed.
 
 #[export]
-Instance nom_link_valid {L L' I M E} {P P' : nom_package} :
+Instance share_link_valid {L L' I M E} {P P' : raw_module} :
   ValidPackage L M E P → ValidPackage L' I M P' →
-  ValidPackage (L :|: L') I E (nom_link P P').
+  ValidPackage (L :|: L') I E (P ∘ P')%share.
 Proof. by apply valid_link. Qed.
 
 #[export]
-Instance dlink_valid {L L' I M E} {P P' : nom_package} :
+Instance sep_link_valid {L L' I M E} {P P' : raw_module} :
   ValidPackage L M E P → ValidPackage L' I M P' →
-  ValidPackage (L :|: fresh P P' ∙ L') I E (dlink P P').
+  ValidPackage (L :|: fresh P P' ∙ L') I E (P ∘ P')%sep.
 Proof.
   intros V1 V2.
   eapply (valid_link _ _ _ _ _ _ _ V1).
@@ -477,28 +487,28 @@ Proof.
 Qed.
 
 #[export]
-Instance nom_par_valid {L L' I I' E E'} {P P' : nom_package} :
+Instance share_par_valid {L L' I I' E E'} {P P' : raw_module} :
   Parable P P' →
   ValidPackage L I E P → ValidPackage L' I' E' P' →
-  ValidPackage (L :|: L') (I :|: I') (E :|: E') (nom_par P P').
+  ValidPackage (L :|: L') (I :|: I') (E :|: E') (P || P')%share.
 Proof. by apply valid_par. Qed.
 
 #[export]
-Instance nom_par_valid_same_import {L L' I E E'} {P P' : nom_package} :
+Instance share_par_valid_same_import {L L' I E E'} {P P' : raw_module} :
   Parable P P' →
   ValidPackage L I E P → ValidPackage L' I E' P' →
-  ValidPackage (L :|: L') I (E :|: E') (nom_par P P').
+  ValidPackage (L :|: L') I (E :|: E') (P || P')%share.
 Proof.
   intros Par V1 V2.
   rewrite -(fsetUid I).
-  by apply nom_par_valid.
+  by apply share_par_valid.
 Qed.
 
 #[export]
-Instance dpar_valid {L L' I I' E E'} {P P' : nom_package} :
+Instance sep_par_valid {L L' I I' E E'} {P P' : raw_module} :
   Parable P P' → 
   ValidPackage L I E P → ValidPackage L' I' E' P' →
-  ValidPackage (L :|: fresh P P' ∙ L') (I :|: I') (E :|: E') (dpar P P').
+  ValidPackage (L :|: fresh P P' ∙ L') (I :|: I') (E :|: E') (P || P')%sep.
 Proof.
   intros Par V1 V2.
   simpl.
@@ -509,111 +519,109 @@ Proof.
 Qed.
 
 #[export]
-Instance dpar_valid_r {L L' I I' E E'} {P P' : nom_package} :
+Instance sep_par_valid_r {L L' I I' E E'} {P P' : raw_module} :
   Parable P' P → 
   ValidPackage L I E P → ValidPackage L' I' E' P' →
-  ValidPackage (L :|: fresh P P' ∙ L') (I' :|: I) (E' :|: E) (dpar P P').
+  ValidPackage (L :|: fresh P P' ∙ L') (I' :|: I) (E' :|: E) (P || P')%sep.
 Proof.
   intros Par V1 V2.
   rewrite (fsetUC I') (fsetUC E').
-  apply dpar_valid; try assumption.
+  apply sep_par_valid; try assumption.
   rewrite /Parable fdisjointC //.
 Qed.
 
 #[export]
-Instance dpar_valid_same_import {L L' I E E'} {P P' : nom_package} :
+Instance sep_par_valid_same_import {L L' I E E'} {P P' : raw_module} :
   Parable P P' → 
   ValidPackage L I E P → ValidPackage L' I E' P' →
-  ValidPackage (L :|: fresh P P' ∙ L') I (E :|: E') (dpar P P').
+  ValidPackage (L :|: fresh P P' ∙ L') I (E :|: E') (P || P')%sep.
 Proof.
   intros Par V1 V2.
   rewrite -(fsetUid I).
-  by apply dpar_valid.
+  by apply sep_par_valid.
 Qed.
 
-Lemma AdvantageD_triangle {G1 G2 G3 : nom_package} A
-  : AdvantageD G1 G3 A <= AdvantageD G1 G2 A + AdvantageD G2 G3 A.
-Proof. unfold AdvantageD, Pr'. apply Advantage_triangle. Qed.
+Lemma Adv_triangle {G1 G2 G3 : raw_module} A
+  : Adv G1 G3 A <= Adv G1 G2 A + Adv G2 G3 A.
+Proof. unfold Adv, Pr'. apply Advantage_triangle. Qed.
 
-Ltac eadvantage_trans :=
+Ltac nssprove_eadv_trans :=
   eapply le_trans;
-    [ eapply AdvantageD_triangle |].
+    [ eapply Adv_triangle |].
 
-Ltac advantage_trans M :=
+Ltac nssprove_adv_trans M :=
   eapply le_trans;
-    [ eapply (@AdvantageD_triangle _ M) |].
+    [ eapply (@Adv_triangle _ M) |].
 
-Lemma AdvantageD_same (G A : nom_package) :
-  AdvantageD G G A = 0.
-Proof. rewrite /AdvantageD addrN. apply normr0. Qed.
+Lemma Adv_same (G A : raw_module) : Adv G G A = 0.
+Proof. rewrite /Adv addrN. rewrite normr0 //. Qed.
 
-Lemma AdvantageD_sym (G G' A : nom_package) :
-  AdvantageD G G' A = AdvantageD G' G A.
-Proof. apply distrC. Qed.
+Lemma Adv_sym (G G' A : raw_module) : Adv G G' A = Adv G' G A.
+Proof. apply: distrC. Qed.
 
-Lemma AdvantageD_alpha (G G' A : nom_package)
-  : G ≡ G' → AdvantageD G G' A = 0.
+Lemma Adv_alpha (G G' A : raw_module)
+  : G ≡ G' → Adv G G' A = 0.
 Proof.
   intros Eq.
   rewrite Eq.
-  apply AdvantageD_same.
+  apply Adv_same.
 Qed.
 
-Lemma AdvantageD_dlink (G G' D A : nom_package) :
-  AdvantageD (dlink D G) (dlink D G') A = AdvantageD G G' (dlink A D).
+Lemma Adv_sep_link (G G' D A : raw_module) :
+  Adv (D ∘ G) (D ∘ G') A = Adv G G' (A ∘ D).
 Proof.
-  unfold AdvantageD.
-  erewrite dlink_assoc.
-  erewrite dlink_assoc.
+  unfold Adv.
+  erewrite sep_link_assoc.
+  erewrite sep_link_assoc.
   done.
 Qed.
 
-Lemma nom_link_dlink {P P' : nom_package} :
+Lemma share_link_sep_link {P P' : raw_module} :
   disj P P' →
-  nom_link P P' ≡ dlink P P'.
+  (P ∘ P')%share ≡ (P ∘ P').
 Proof.
   intros D.
-  unfold dlink, move.
+  unfold sep_link, move.
   auto with alpha_db nocore.
 Qed.
 
-Lemma link_dlink {P P' : nom_package} :
+Lemma link_sep_link {P P' : raw_module} :
   disj P P' →
-  link P P' ≡ val (dlink P P').
+  (P ∘ P')%pack ≡ val (P ∘ P').
 Proof.
   intros D.
-  change (link P P') with (val (nom_link P P')).
+  change (link P P') with (val (share_link P P')).
   apply alpha_equi; [ done |].
-  apply nom_link_dlink, D.
+  apply share_link_sep_link, D.
 Qed.
 
-Lemma nom_par_dpar {P P' : nom_package} :
+Lemma share_par_sep_par {P P' : raw_module} :
   disj P P' →
-  nom_par P P' ≡ dpar P P'.
+  (P || P')%share ≡ (P || P').
 Proof.
   intros D.
-  unfold dpar, move.
+  unfold sep_par, move.
   auto with alpha_db nocore.
 Qed.
 
-Lemma par_dpar {P P' : nom_package} :
+Lemma par_sep_par {P P' : raw_module} :
   disj P P' →
-  (par P P' : raw_package) ≡ val (dpar P P').
+  (par P P' : raw_package) ≡ val (P || P').
 Proof.
   intros D.
-  change (par P P') with (val (nom_par P P')).
+  change (par P P') with (val (share_par P P')).
   apply alpha_equi; [ done |].
-  apply nom_par_dpar, D.
+  apply share_par_sep_par, D.
 Qed.
 
-Lemma AdvantageD_AdvantageE (G G' A : nom_package) :
+Lemma Adv_AdvantageE (G G' A : raw_module) :
   disj A G ->
   disj A G' ->
-  AdvantageD G G' A = AdvantageE G G' A.
+  Adv G G' A = AdvantageE G G' A.
 Proof.
   intros D1 D2.
-  unfold AdvantageD, AdvantageE.
-  rewrite link_dlink ?link_dlink //.
+  unfold Adv, AdvantageE.
+  rewrite link_sep_link ?link_sep_link //.
 Qed.
 
 Lemma equi_pair {X Y : actionType} : equivariant (@pair X Y).
@@ -680,16 +688,16 @@ Proof.
 Qed.
 
 
-Lemma AdvantageD_adv_equiv {L L' E} {G G' : nom_package} {ε : raw_package → R}
+Lemma Adv_adv_equiv {L L' E} {G G' : raw_module} {ε : raw_package → R}
   {V1 : ValidPackage L Game_import E G} {V2 : ValidPackage L' Game_import E G'} :
   equivariant ε →
   G ≈[ ε ] G' →
-  ∀ {LA} (A : nom_package), ValidPackage LA E A_export A → AdvantageD G G' A = ε A.
+  ∀ {LA} (A : raw_module), ValidPackage LA E A_export A → Adv G G' A = ε A.
 Proof.
   intros equieps adv LA A VA.
   pose (π := fresh ((L, G), (L', G')) (LA, A)).
   setoid_rewrite <- (@rename_alpha _ A π).
-  rewrite AdvantageD_AdvantageE.
+  rewrite Adv_AdvantageE.
   1: rewrite -(absorb π (ε A)).
   1: rewrite equieps.
   1: rewrite adv //.
@@ -698,47 +706,47 @@ Proof.
   1-4: auto with alpha_db nocore.
 Qed.
 
-Lemma AdvantageD_perf {L L' E} {G G' : nom_package}
+Lemma Adv_perf {L L' E} {G G' : raw_module}
   {V1 : ValidPackage L Game_import E G} {V2 : ValidPackage L' Game_import E G'} :
   G ≈₀ G' →
-  ∀ {LA} (A : nom_package), ValidPackage LA E A_export A → AdvantageD G G' A = 0.
+  ∀ {LA} (A : raw_module), ValidPackage LA E A_export A → Adv G G' A = 0.
 Proof.
   intros adv LA A VA.
-  eapply (AdvantageD_adv_equiv (ε := λ _, 0)).
+  eapply (Adv_adv_equiv (ε := λ _, 0)).
   1: done.
   1: apply adv.
   apply VA.
 Qed.
 
-Lemma AdvantageD_perf_l {P P' Q A : nom_package} {LP LP' LA E}
+Lemma Adv_perf_l {P P' Q A : raw_module} {LP LP' LA E}
   {V1 : ValidPackage LP Game_import E P}
   {V2 : ValidPackage LP' Game_import E P'}
   {V3 : ValidPackage LA E A_export A} :
-  P ≈₀ P' → AdvantageD P Q A = AdvantageD P' Q A.
+  P ≈₀ P' → Adv P Q A = Adv P' Q A.
 Proof.
   intros Indish.
   apply le_anti.
   apply /andP; split.
-  - eadvantage_trans.
-    erewrite (AdvantageD_perf Indish).
+  - nssprove_eadv_trans.
+    erewrite (Adv_perf Indish).
     + rewrite GRing.add0r //.
     + eassumption.
-  - eadvantage_trans.
-    erewrite (AdvantageD_perf (adv_equiv_sym _ _ _ _ _ _ _ _ Indish)).
+  - nssprove_eadv_trans.
+    erewrite (Adv_perf (adv_equiv_sym _ _ _ _ _ _ _ _ Indish)).
     + rewrite GRing.add0r //.
     + eassumption.
 Qed.
 
-Lemma AdvantageD_perf_r {P P' Q A : nom_package} {LP LP' LA E}
+Lemma Adv_perf_r {P P' Q A : raw_module} {LP LP' LA E}
   {V1 : ValidPackage LP Game_import E P}
   {V2 : ValidPackage LP' Game_import E P'}
   {V3 : ValidPackage LA E A_export A} :
-  P ≈₀ P' → AdvantageD Q P A = AdvantageD Q P' A.
+  P ≈₀ P' → Adv Q P A = Adv Q P' A.
 Proof.
   intros Indish.
-  rewrite AdvantageD_sym.
-  erewrite AdvantageD_perf_l; [| done].
-  rewrite AdvantageD_sym //.
+  rewrite Adv_sym.
+  erewrite Adv_perf_l; [| done].
+  rewrite Adv_sym //.
 Qed.
 
 
@@ -759,8 +767,8 @@ Proof.
   rewrite mapimE eq //.
 Qed.
 
-Definition nom {L I} p {V : ValidPackage L I (exports p) p} : nom_package
-  := nom_from_trimmed p exports_trimmed.
+Definition nom {L I} p {V : ValidPackage L I (exports p) p} : raw_module
+  := module_from_trimmed p exports_trimmed.
 
 
 Lemma s_nom {L I p} {V : ValidPackage L I (exports p) p} : supp (nom p) = supp L.
@@ -774,19 +782,13 @@ Instance nom_valid {L I p} (V : ValidPackage L I (exports p) p)
 Proof. apply V. Qed.
 
 #[export]
-Instance nom_ID_valid {I} : flat I → ValidPackage fset0 I I (nom_ID I).
+Instance ID_valid {I} : flat I → ValidPackage fset0 I I (ID I).
 Proof.
   apply valid_ID.
 Qed.
 
 Lemma val_nom {L I} p {V : ValidPackage L I (exports p) p}
   : val (nom p) = p.
-Proof. done. Qed.
-
-Lemma val_nom_link {P P'} : val (nom_link P P') = link (val P) (val P').
-Proof. done. Qed.
-
-Lemma val_nom_par {P P'} : val (nom_par P P') = par (val P) (val P').
 Proof. done. Qed.
 
 
@@ -809,29 +811,29 @@ Lemma Parable_nom_r {L I p p'} {V : ValidPackage L I (exports p') p'}
   : Parable p p' → Parable p (nom p').
 Proof. rewrite val_nom //. Qed.
 
-Lemma Parable_nom_ID_l {E p}
-  : Parable (ID E) p → Parable (nom_ID E) p.
+Lemma Parable_ID_l {E p}
+  : Parable (pkg_composition.ID E) p → Parable (ID E) p.
 Proof. done. Qed.
 
-Lemma Parable_nom_ID_r {E p}
-  : Parable p (ID E) → Parable p (nom_ID E).
+Lemma Parable_ID_r {E p}
+  : Parable p (pkg_composition.ID E) → Parable p (ID E).
 Proof. done. Qed.
 
-Ltac dprove_rec :=
+Ltac nssprove_rec :=
   lazymatch goal with
   | |- (ValidPackage ?L ?I ?E (val ?P)) =>
       tryif assert_fails (is_evar I)
-        then (eapply valid_package_inject_import; dprove_rec) else
+        then (eapply valid_package_inject_import; nssprove_rec) else
       tryif assert_fails (is_evar E)
-        then (eapply valid_package_inject_export; dprove_rec) else
+        then (eapply valid_package_inject_export; nssprove_rec) else
       lazymatch P with
-      | (nom_link ?P1 ?P2) => eapply valid_link; dprove_rec
-      | (nom_par ?P1 ?P2) => eapply valid_par; dprove_rec
-      | (dlink ?P1 ?P2) => eapply dlink_valid; dprove_rec
-      | (dpar ?P1 ?P2) => eapply dpar_valid; dprove_rec
-      | (nom_ID ?I1) => eapply nom_ID_valid; dprove_rec
-      | (rename ?pi ?P1) => eapply rename_valid; dprove_rec
-      | (trimmed_nom ?P1) => eapply trimmed_valid
+      | (share_link ?P1 ?P2) => eapply valid_link; nssprove_rec
+      | (share_par ?P1 ?P2) => eapply valid_par; nssprove_rec
+      | (sep_link ?P1 ?P2) => eapply sep_link_valid; nssprove_rec
+      | (sep_par ?P1 ?P2) => eapply sep_par_valid; nssprove_rec
+      | (ID ?I1) => eapply ID_valid; nssprove_rec
+      | (rename ?pi ?P1) => eapply rename_valid; nssprove_rec
+      | (mod ?P1) => eapply module_valid
           (* | (nom (pack ?P1)) => apply pack_valid
       | (nom ?P1) => apply nom_valid
           (* apply valid_trim; apply (pack_valid P1) *)
@@ -839,17 +841,17 @@ Ltac dprove_rec :=
       | _ => try eassumption
       end
     (*
-  | |- (ValidPackage ?L ?I ?E (val (dlink ?P1 ?P2))) =>
-      eapply dlink_valid;
+  | |- (ValidPackage ?L ?I ?E (val (sep_link ?P1 ?P2))) =>
+      eapply sep_link_valid;
       [ eapply valid_package_inject_export |];
-      dprove_rec
-  | |- (ValidPackage ?L ?I ?E (val (dpar ?P1 ?P2))) =>
-      eapply dpar_valid_same_import;
+      nssprove_rec
+  | |- (ValidPackage ?L ?I ?E (val (sep_par ?P1 ?P2))) =>
+      eapply sep_par_valid_same_import;
       [ | eapply valid_package_inject_import
         | eapply valid_package_inject_import ] ;
-            dprove_rec
-  | |- (ValidPackage ?L ?I ?E (val (nom_ID ?M))) =>
-      eapply nom_ID_valid; dprove_rec
+            nssprove_rec
+  | |- (ValidPackage ?L ?I ?E (val (ID ?M))) =>
+      eapply ID_valid; nssprove_rec
   | |- (ValidPackage ?L ?I ?E (val (nom ?M))) =>
       apply valid_trim; apply (pack_valid M)
   | |- (ValidPackage ?L ?I ?E (val ?P)) =>
@@ -859,13 +861,13 @@ Ltac dprove_rec :=
   | |- is_true ( fsubset ?A ?B ) =>
       try assumption
   | |- (Parable (val (nom ?P1)) ?P2) =>
-      apply Parable_nom_l ; dprove_rec
+      apply Parable_nom_l ; nssprove_rec
   | |- (Parable ?P1 (val (nom ?P2))) =>
-      apply Parable_nom_r ; dprove_rec
-  | |- (Parable (val (nom_ID ?E1)) ?P2) =>
-      apply Parable_nom_ID_l ; dprove_rec
-  | |- (Parable ?P1 (val (nom_ID ?E2))) =>
-      apply Parable_nom_ID_r ; dprove_rec
+      apply Parable_nom_r ; nssprove_rec
+  | |- (Parable (val (ID ?E1)) ?P2) =>
+      apply Parable_ID_l ; nssprove_rec
+  | |- (Parable ?P1 (val (ID ?E2))) =>
+      apply Parable_ID_r ; nssprove_rec
   | |- (Parable ?P1 ?P2) =>
       try (assumption || (apply Parable_commut ; assumption)) ;
       try (unfold Parable; simpl; fset_solve)
@@ -874,20 +876,24 @@ Ltac dprove_rec :=
       apply Game_import_flat
   | |- (flat ?E) =>
       assumption || (eapply flat_valid_package; eassumption) || (try ssprove_valid)
-  | |- (trimmed ?E1 (val (nom_ID ?E2))) =>
+  | |- (trimmed ?E1 (val (ID ?E2))) =>
       apply trimmed_ID
   | |- (trimmed ?E ?P) =>
-      (try assumption) || (try apply tr_trimmed) || dprove_trimmed
+      (try assumption) || (try apply module_trimmed) || nssprove_trimmed
   | |- ?x =>
       done ||
       (* idtac x ; *)
       fail "What do I do with this?"
   end.
     
-Ltac dprove_valid :=
+Ltac nssprove_valid :=
   (* try unfold Game_import ; *)
-  dprove_rec ;
+  nssprove_rec ;
   try (fset_solve; fail).
+
+Notation "{ 'module' m }" :=
+  (Build_module (loc m%sep) (mkpackage m%sep _) _)
+  (only parsing) : sep_scope.
 
 
 Lemma valid_idents {L I E} P {V : ValidPackage L I E P} : fsubset (idents E) (domm P).
@@ -905,41 +911,41 @@ Proof.
   apply H.
 Qed.
 
-Lemma swish {L L' : {fset Location}} {I I' E E' : Interface} {P P' : nom_package} :
-  ValidPackage L I E P → ValidPackage L' I' E' P' → Parable (nom_ID I) P' →
+Lemma swish {L L' : {fset Location}} {I I' E E' : Interface} {P P' : raw_module} :
+  ValidPackage L I E P → ValidPackage L' I' E' P' → Parable (ID I) P' →
   flat I → trimmed E P → trimmed E' P' →
-  dpar P P' ≡ dlink (dpar P (nom_ID E')) (dpar (nom_ID I) P').
+  (P || P') ≡ (P || ID E') ∘ (ID I || P').
 Proof.
   intros V1 V2 V3.
   intros fl tr tr'.
-  erewrite <- dinterchange; try dprove_valid.
-  rewrite id_dlink //.
-  rewrite dlink_id //.
+  erewrite <- sep_interchange; try nssprove_valid.
+  rewrite id_sep_link //.
+  rewrite sep_link_id //.
   setoid_reflexivity.
 Qed.
 
-Lemma swash {L L' I I' E E'} {P P' : nom_package} :
-  ValidPackage L I E P → ValidPackage L' I' E' P' → Parable P (nom_ID I') →
+Lemma swash {L L' I I' E E'} {P P' : raw_module} :
+  ValidPackage L I E P → ValidPackage L' I' E' P' → Parable P (ID I') →
   flat I' → trimmed E P → trimmed E' P' →
-  dpar P P' ≡ dlink (dpar (nom_ID E) P') (dpar P (nom_ID I')).
+  (P || P') ≡ (ID E || P') ∘ (P || ID I').
 Proof.
   intros V1 V2 V3.
   intros fl tr tr'.
-  erewrite <- dinterchange; try dprove_valid.
-  rewrite id_dlink //.
-  rewrite dlink_id //.
+  erewrite <- sep_interchange; try nssprove_valid.
+  rewrite id_sep_link //.
+  rewrite sep_link_id //.
   reflexivity.
 Qed.
 
-Lemma Game_import_empty : ID (Game_import) = emptym.
-Proof. rewrite /ID /Game_import -fset0E //. Qed.
+Lemma Game_import_empty : pkg_composition.ID (Game_import) = emptym.
+Proof. rewrite /pkg_composition.ID /Game_import -fset0E //. Qed.
 
-Lemma dpar_empty_l {P} : dpar (nom_ID (Game_import)) P ≡ P.
+Lemma sep_par_empty_l {P} : (ID (Game_import) || P) ≡ P.
 Proof.
-  exists (fresh (nom_ID Game_import) P)^-1%fperm.
-  unfold dpar.
-  rewrite rename_nom_par renameK.
-  apply eq_nom_package.
+  exists (fresh (ID Game_import) P)^-1%fperm.
+  unfold sep_par.
+  rewrite rename_share_par renameK.
+  apply eq_raw_module.
   1,2: unfold rename; simpl.
   + unfold rename; simpl.
     rewrite imfset0 fset0U //.
@@ -949,11 +955,11 @@ Proof.
     rewrite unionmE //.
 Qed.
 
-Lemma dpar_empty_r {P} : dpar P (nom_ID (Game_import)) ≡ P.
+Lemma sep_par_empty_r {P} : (P || ID (Game_import)) ≡ P.
 Proof.
-  rewrite -> dpar_commut.
-  + apply dpar_empty_l.
-  + apply Parable_nom_ID_r.
+  rewrite -> sep_par_commut.
+  + apply sep_par_empty_l.
+  + apply Parable_ID_r.
     rewrite Game_import_empty.
     rewrite /Parable /domm //= -fset0E.
     apply fdisjoints0.
@@ -965,7 +971,7 @@ Hint Unfold Game_import : in_fset_eq.
 #[export]
 Hint Rewrite <- fset0E : in_fset_eq.
 
-Lemma domm_ID {E} : domm (ID E) = idents E.
+Lemma domm_ID {E} : domm (pkg_composition.ID E) = idents E.
 Proof. rewrite //= domm_ID //. Qed.
 
 #[export] Instance Parable_Game_import_l {P} : Parable (ID Game_import) P.
@@ -980,72 +986,73 @@ Proof.
   rewrite /Parable domm_ID /idents -fset0E imfset0 fdisjoints0 //.
 Qed.
 
-Lemma dpar_game_l {LP LQ LR EP EQ ER IQ} {P Q R : nom_package}
+Lemma sep_par_game_l {LP LQ LR EP EQ ER IQ} {P Q R : raw_module}
   {VP : ValidPackage LP EQ EP P}
   {VQ : ValidPackage LQ IQ EQ Q}
   {VR : ValidPackage LR Game_import ER R}
   {trP : trimmed EP P}
   {trR : trimmed ER R} :
-  (dpar (dlink P Q) R) ≡ dlink (dpar P R) Q.
+  ((P ∘ Q) || R) ≡ (P || R) ∘ Q.
 Proof.
-  rewrite -{2}(@dpar_empty_r Q).
-  erewrite <- dinterchange.
-  2-7: dprove_valid.
+  rewrite -{2}(@sep_par_empty_r Q).
+  erewrite <- sep_interchange.
+  2-7: nssprove_valid.
   2: apply Parable_Game_import_r.
-  rewrite dlink_id; [ reflexivity | | assumption ].
+  rewrite sep_link_id; [ reflexivity | | assumption ].
   apply Game_import_flat.
 Qed.
 
-Lemma dpar_game_r {LP LQ LR EP EQ ER IQ} {P Q R : nom_package}
+Lemma sep_par_game_r {LP LQ LR EP EQ ER IQ} {P Q R : raw_module}
   {VP : ValidPackage LP EQ EP P}
   {VQ : ValidPackage LQ IQ EQ Q}
   {VR : ValidPackage LR Game_import ER R}
   {trP : trimmed EP P}
   {trR : trimmed ER R} :
-  (dpar R (dlink P Q)) ≡ dlink (dpar R P) Q.
+  (R || (P ∘ Q)) ≡ (R || P) ∘ Q.
 Proof.
-  rewrite -{2}(@dpar_empty_l Q).
-  erewrite <- dinterchange.
-  2-7: dprove_valid.
+  rewrite -{2}(@sep_par_empty_l Q).
+  erewrite <- sep_interchange.
+  2-7: nssprove_valid.
   2: apply Parable_Game_import_l.
-  rewrite dlink_id; [ reflexivity | | assumption ].
+  rewrite sep_link_id; [ reflexivity | | assumption ].
   apply Game_import_flat.
 Qed.
 
-Lemma AdvantageD_dpar_dlink_r (P₀ P₁ P₁' G G' A : nom_package)
+Lemma Adv_par_link_r (P₀ P₁ P₁' G G' A : raw_module)
   {LP₀ LP₁ LP₁'} {I₀ I₁ E₀ E₁}
   {V1 : ValidPackage LP₀ I₀ E₀ P₀}
   {V2 : ValidPackage LP₁ I₁ E₁ P₁}
   {V3 : ValidPackage LP₁' I₁ E₁ P₁'}
-  {P1 : Parable (nom_ID I₀) P₁}
-  {P2 : Parable (nom_ID I₀) P₁'} :
+  {P1 : Parable (ID I₀) P₁}
+  {P2 : Parable (ID I₀) P₁'} :
   flat I₀ → trimmed E₀ P₀ → trimmed E₁ P₁ → trimmed E₁ P₁' →
-  AdvantageD (dlink (dpar P₀ P₁) G) (dlink (dpar P₀ P₁') G') A
-    = AdvantageD (dlink (dpar (nom_ID I₀) P₁) G) (dlink (dpar (nom_ID I₀) P₁') G') (dlink A (dpar P₀ (nom_ID E₁))).
+  Adv ((P₀ || P₁) ∘ G) ((P₀ || P₁') ∘ G') A
+    = Adv ((ID I₀ || P₁) ∘ G) ((ID I₀ || P₁') ∘ G') (A ∘ (P₀ || (ID E₁))).
 Proof.
   intros fl0 tr0 tr1 tr2.
-  rewrite <- AdvantageD_dlink.
-  erewrite dlink_assoc.
-  erewrite dlink_assoc.
+  rewrite <- Adv_sep_link.
+  erewrite sep_link_assoc.
+  erewrite sep_link_assoc.
   erewrite <- @swish, <- @swish.
-  all: dprove_valid.
+  all: nssprove_valid.
 Qed.
 
-Lemma AdvantageD_dpar_r (G₀ G₁ G₁' A : nom_package) {L₀ L₁ L₁' : {fset Location}} {E₀ E₁}
+Lemma Adv_par_r (G₀ G₁ G₁' A : raw_module)
+  {L₀ L₁ L₁' : {fset Location}} {E₀ E₁}
   {V1 : ValidPackage L₀ Game_import E₀ G₀}
   {V2 : ValidPackage L₁ Game_import E₁ G₁}
   {V3 : ValidPackage L₁' Game_import E₁ G₁'} :
   trimmed E₀ G₀ → trimmed E₁ G₁ → trimmed E₁ G₁' →
-  AdvantageD (dpar G₀ G₁) (dpar G₀ G₁') A = AdvantageD G₁ G₁' (dlink A (dpar G₀ (nom_ID E₁))).
+  Adv (G₀ || G₁) (G₀ || G₁') A = Adv G₁ G₁' (A ∘ (G₀ || ID E₁)).
 Proof.
   intros tr0 tr1 tr2.
-  rewrite -AdvantageD_dlink.
+  rewrite -Adv_sep_link.
   rewrite swish.
-  2-4: try dprove_valid.
-  rewrite dpar_empty_l.
+  2-4: try nssprove_valid.
+  rewrite sep_par_empty_l.
   rewrite swish.
-  2-4: try dprove_valid.
-  rewrite dpar_empty_l.
+  2-4: try nssprove_valid.
+  rewrite sep_par_empty_l.
   reflexivity.
 Qed.
 
@@ -1058,44 +1065,43 @@ Proof.
   rewrite domm_trimmed //.
 Qed.
 
-Lemma AdvantageD_dpar_dlink_l (P₀ P₀' P₁ G G' A : nom_package)
+Lemma Adv_par_link_l (P₀ P₀' P₁ G G' A : raw_module)
   {LP₀ LP₀' LP₁} {I₀ I₁ E₀ E₁}
   {V1 : ValidPackage LP₀ I₀ E₀ P₀}
   {V2 : ValidPackage LP₀' I₀ E₀ P₀'}
   {V3 : ValidPackage LP₁ I₁ E₁ P₁}
-  {P1 : Parable P₀ (nom_ID I₁)}
-  {P2 : Parable P₀' (nom_ID I₁)} :
+  {P1 : Parable P₀ (ID I₁)}
+  {P2 : Parable P₀' (ID I₁)} :
   flat I₁ → trimmed E₀ P₀ → trimmed E₀ P₀' → trimmed E₁ P₁ →
-  AdvantageD (dlink (dpar P₀ P₁) G) (dlink (dpar P₀' P₁) G') A
-    = AdvantageD (dlink (dpar P₀ (nom_ID I₁)) G) (dlink (dpar P₀' (nom_ID I₁)) G')
-      (dlink A (dpar (nom_ID E₀) P₁)).
+  Adv ((P₀ || P₁) ∘ G) ((P₀' || P₁) ∘ G') A
+    = Adv ((P₀ || ID I₁) ∘ G) ((P₀' || ID I₁) ∘ G') (A ∘ (ID E₀ || P₁)).
 Proof.
   intros fl1 tr0 tr1 tr2.
   (* Why do these have to be erewrite? And other places *)
-  erewrite <- AdvantageD_dlink.
-  erewrite dlink_assoc, dlink_assoc.
+  erewrite <- Adv_sep_link.
+  erewrite sep_link_assoc, sep_link_assoc.
   erewrite <- @swash, <- @swash.
-  all: dprove_valid.
+  all: nssprove_valid.
 Qed.
 
-Lemma AdvantageD_dpar_l (G₀ G₀' G₁ A : nom_package) {L₀ L₀'  L₁} {E₀ E₁}
+Lemma Adv_par_l (G₀ G₀' G₁ A : raw_module) {L₀ L₀'  L₁} {E₀ E₁}
   {V1 : ValidPackage L₀ Game_import E₀ G₀}
   {V2 : ValidPackage L₀' Game_import E₀ G₀'}
   {V3 : ValidPackage L₁ Game_import E₁ G₁}
-  {P : Parable (nom_ID E₀) G₁} :
+  {P : Parable (ID E₀) G₁} :
   trimmed E₀ G₀ → trimmed E₁ G₁ → trimmed E₀ G₀' →
-  AdvantageD (dpar G₀ G₁) (dpar G₀' G₁) A = AdvantageD G₀ G₀' (dlink A (dpar (nom_ID E₀) G₁)).
+  Adv (G₀ || G₁) (G₀' || G₁) A = Adv G₀ G₀' (A ∘ (ID E₀ || G₁)).
 Proof.
   intros tr0 tr1 tr2.
-  rewrite -AdvantageD_dlink.
+  rewrite -Adv_sep_link.
   rewrite swash.
-  2-4: try dprove_valid.
-  rewrite dpar_empty_r.
+  2-4: try nssprove_valid.
+  rewrite sep_par_empty_r.
   rewrite swash.
-  2-4: try dprove_valid.
-  rewrite dpar_empty_r.
+  2-4: try nssprove_valid.
+  rewrite sep_par_empty_r.
   reflexivity.
 Qed.
 
 
-Definition AdvantageP GG A := AdvantageD (GG true) (GG false) A.
+Definition AdvFor GG A : R := Adv (GG true) (GG false) A.
