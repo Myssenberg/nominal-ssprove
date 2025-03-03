@@ -16,3 +16,7 @@ CoqMakefile.conf
 
 # nix
 result
+
+# DS_store (mac)
+*.DS_Store
+.histfile
