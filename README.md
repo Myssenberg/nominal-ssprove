@@ -14,4 +14,5 @@ docker build -t nominal-ssprove .
 docker run --rm -it nominal-ssprove
 ```
 
-The project files are copied into the image, so changes made will not propagate to the host filesystem. The final image is around 4GB in size and can be deleted with the command `docker rmi nominal-ssprove`.
+The project files are copied into the image, so changes made will not propagate to the host filesystem.
+The final image is around 4GB in size and can be deleted with the command `docker rmi nominal-ssprove`.
