@@ -44,7 +44,7 @@ Import Order.POrderTheory.
 
 Import PackageNotation.
 
-From NominalSSP Require Import FsetSolve Nominal Fresh Pr NomPackage Disjoint Prelude.
+From NominalSSP Require Import Prelude.
 Import FsetSolve.
 
 (**
@@ -112,10 +112,8 @@ Hint Extern 1 (ValidCode ?L ?I kgen) =>
   : typeclass_instances ssprove_valid_db.
 
 Definition EVAL_pkg_tt:
-  trimmed_package EVAL_locs_tt
-    [interface]
-    [interface #val #[lookup]: 'word → 'word ] :=
-  [trimmed_package
+  game [interface #val #[lookup]: 'word → 'word ] :=
+  [module EVAL_locs_tt ;
     #def #[lookup] (m: 'word): 'word {
       k ← kgen ;;
       ret (PRF k m)
@@ -123,10 +121,8 @@ Definition EVAL_pkg_tt:
   ].
 
 Definition EVAL_pkg_ff:
-  trimmed_package EVAL_locs_ff
-    [interface]
-    [interface #val #[lookup]: 'word → 'word ] :=
-  [trimmed_package
+  game [interface #val #[lookup]: 'word → 'word ] :=
+  [module EVAL_locs_ff ;
     #def #[lookup] (m: 'word): 'word {
       T ← get T_loc ;;
       match getm T m with
@@ -139,18 +135,17 @@ Definition EVAL_pkg_ff:
     }
   ].
 
-Definition EVAL b := if b then EVAL_pkg_tt : nom_package else EVAL_pkg_ff.
+Definition EVAL b := if b then EVAL_pkg_tt else EVAL_pkg_ff.
 
 Definition GUESS_locs := fset [:: T_loc].
 
 
 Definition GUESS_pkg_tt:
-  trimmed_package GUESS_locs
-    [interface]
-    [interface
+  game [interface
       #val #[lookup]: 'word → 'word ;
-      #val #[guess]: 'word × 'word → 'bool ] :=
-  [trimmed_package
+      #val #[guess]: 'word × 'word → 'bool
+  ] :=
+  [module GUESS_locs ;
     #def #[lookup] (m: 'word): 'word {
       T ← get T_loc ;;
       match getm T m with
@@ -176,12 +171,11 @@ Definition GUESS_pkg_tt:
 
 
 Definition GUESS_pkg_ff:
-  trimmed_package GUESS_locs
-    [interface]
-    [interface
-      #val #[lookup]: 'word → 'word ;
-      #val #[guess]: 'word × 'word → 'bool ] :=
-  [trimmed_package
+  game [interface
+    #val #[lookup]: 'word → 'word ;
+    #val #[guess]: 'word × 'word → 'bool
+  ] :=
+  [module GUESS_locs ;
     #def #[lookup] (m: 'word): 'word {
       T ← get T_loc ;;
       match getm T m with
@@ -199,18 +193,17 @@ Definition GUESS_pkg_ff:
   ].
 
 
-Definition GUESS b := if b then GUESS_pkg_tt : nom_package else GUESS_pkg_ff.
+Definition GUESS b := if b then GUESS_pkg_tt else GUESS_pkg_ff.
 
 Definition TAG_locs_tt := fset [:: k_loc].
 Definition TAG_locs_ff := fset [:: k_loc; S_loc].
 
 Definition TAG_pkg_tt:
-  trimmed_package TAG_locs_tt
-    [interface]
-    [interface
+  game [interface
       #val #[gettag]: 'word → 'word ;
-      #val #[checktag]: 'word × 'word → 'bool ] :=
-  [trimmed_package
+      #val #[checktag]: 'word × 'word → 'bool
+  ] :=
+  [module TAG_locs_tt ;
     #def #[gettag] (m: 'word): 'word {
       k ← kgen ;;
       ret (PRF k m)
@@ -222,12 +215,11 @@ Definition TAG_pkg_tt:
   ].
 
 Definition TAG_pkg_ff:
-  trimmed_package TAG_locs_ff
-    [interface]
-    [interface
-      #val #[gettag]: 'word → 'word ;
-      #val #[checktag]: 'word × 'word → 'bool ] :=
-  [trimmed_package
+  game [interface
+    #val #[gettag]: 'word → 'word ;
+    #val #[checktag]: 'word × 'word → 'bool
+  ] :=
+  [module TAG_locs_ff ;
     #def #[gettag] (m: 'word): 'word {
       S ← get S_loc ;;
       k ← kgen ;;
@@ -241,17 +233,16 @@ Definition TAG_pkg_ff:
     }
   ].
 
-Definition TAG b := if b then TAG_pkg_tt : nom_package else TAG_pkg_ff.
+Definition TAG b := if b then TAG_pkg_tt else TAG_pkg_ff.
 
 Definition TAG_EVAL_locs_ff := fset [:: S_loc].
 
 Definition TAG_EVAL_pkg_tt:
-  trimmed_package fset0
-    [interface #val #[lookup]: 'word → 'word ]
-    [interface
+  module [interface #val #[lookup]: 'word → 'word ] [interface
       #val #[gettag]: 'word → 'word ;
-      #val #[checktag]: 'word × 'word → 'bool ] :=
-  [trimmed_package
+      #val #[checktag]: 'word × 'word → 'bool
+  ] :=
+  [module no_locs ;
     #def #[gettag] (m: 'word): 'word {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       t ← lookup m ;;
@@ -265,12 +256,11 @@ Definition TAG_EVAL_pkg_tt:
   ].
 
 Definition TAG_EVAL_pkg_ff:
-  trimmed_package TAG_EVAL_locs_ff
-    [interface #val #[lookup]: 'word → 'word]
-    [interface
+  module [interface #val #[lookup]: 'word → 'word] [interface
       #val #[gettag]: 'word → 'word ;
-      #val #[checktag]: 'word × 'word → 'bool ] :=
-  [trimmed_package
+      #val #[checktag]: 'word × 'word → 'bool
+  ] :=
+  [module TAG_EVAL_locs_ff ;
     #def #[gettag] (m: 'word): 'word {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       S ← get S_loc ;;
@@ -290,14 +280,14 @@ Definition TAG_GUESS_locs := fset [:: S_loc ].
    TAG_locs_tt TAG_locs_ff GUESS_locs EVAL_locs_tt EVAL_locs_ff EVAL : in_fset_eq.
 
 Definition TAG_GUESS_pkg:
-  trimmed_package TAG_GUESS_locs
+  module
     [interface
       #val #[lookup]: 'word → 'word ;
       #val #[guess]: 'word × 'word → 'bool ]
     [interface
       #val #[gettag]: 'word → 'word ;
       #val #[checktag]: 'word × 'word → 'bool ] :=
-  [trimmed_package
+  [module TAG_GUESS_locs ;
     #def #[gettag] (m: 'word): 'word {
       #import {sig #[lookup]: 'word → 'word } as lookup ;;
       S ← get S_loc ;;
@@ -313,7 +303,7 @@ Definition TAG_GUESS_pkg:
   ].
 
 Lemma TAG_equiv_true:
-  TAG true ≈₀ nom_link TAG_EVAL_pkg_tt (EVAL true). 
+  TAG true ≈₀ (TAG_EVAL_pkg_tt ∘ (EVAL true))%share. 
 Proof.
   apply eq_rel_perf_ind_eq.
   simplify_eq_rel m.
@@ -328,7 +318,7 @@ Proof.
 Qed.
 
 Lemma TAG_EVAL_equiv_true:
-  nom_link TAG_EVAL_pkg_tt (EVAL false) ≈₀ nom_link TAG_GUESS_pkg (GUESS true).
+  (TAG_EVAL_pkg_tt ∘ EVAL false)%share ≈₀ (TAG_GUESS_pkg ∘ GUESS true)%share.
 Proof.
   apply eq_rel_perf_ind_ignore with (fset [:: S_loc]).
   1: {
@@ -363,7 +353,7 @@ Qed.
   invariant holds.
 *)
 Lemma TAG_EVAL_equiv_false:
-  nom_link TAG_GUESS_pkg (GUESS false) ≈₀ nom_link TAG_EVAL_pkg_ff (EVAL false).
+  (TAG_GUESS_pkg ∘ GUESS false)%share ≈₀ (TAG_EVAL_pkg_ff ∘ EVAL false)%share.
 Proof.
   apply eq_rel_perf_ind with (
     (fun '(h0, h1) => h0 = h1) ⋊
@@ -428,7 +418,7 @@ Proof.
 Qed.
 
 Lemma TAG_equiv_false:
-  nom_link TAG_EVAL_pkg_ff (EVAL true) ≈₀ TAG false.
+  (TAG_EVAL_pkg_ff ∘ EVAL true)%share ≈₀ TAG false.
 Proof.
   apply eq_rel_perf_ind_eq.
   simplify_eq_rel m.
@@ -449,44 +439,42 @@ Local Open Scope ring_scope.
   which an adversary can distinguish the PRF from a truly random function.
   Negligible by assumption.
 *)
-Definition prf_epsilon := AdvantageP EVAL.
+Definition prf_epsilon := AdvFor EVAL.
 
 (**
   The advantage an adversary can gain in the [GUESS] game.
   This is negligible, but not yet provable in SSProve.
 *)
-Definition statistical_gap :=
-  AdvantageD (nom_link TAG_GUESS_pkg (GUESS true)) (nom_link TAG_GUESS_pkg (GUESS false)).
+Definition statistical_gap := Adv
+  (TAG_GUESS_pkg ∘ (GUESS true))%share
+  (TAG_GUESS_pkg ∘ (GUESS false))%share.
 
 
 Theorem security_based_on_prf :
- forall {LA} (A : nom_package),
-  ValidPackage LA
-    [interface
-      #val #[gettag]: 'word → 'word ;
-      #val #[checktag]: 'word × 'word → 'bool ]
-    A_export A ->
-  AdvantageP TAG A <=
-  prf_epsilon (dlink A TAG_EVAL_pkg_tt) +
+  forall (A : adversary [interface
+    #val #[gettag]: 'word → 'word ;
+    #val #[checktag]: 'word × 'word → 'bool
+  ]),
+  AdvFor TAG A <=
+  prf_epsilon (A ∘ TAG_EVAL_pkg_tt) +
   statistical_gap A +
-  prf_epsilon (dlink A TAG_EVAL_pkg_ff).
+  prf_epsilon (A ∘ TAG_EVAL_pkg_ff).
 Proof.
-  intros LA A vlpa.
-  unfold prf_epsilon, AdvantageP, statistical_gap.
+  intros A.
+  unfold prf_epsilon, AdvFor, statistical_gap.
   simpl.
-  erewrite (AdvantageD_perf_l (TAG_equiv_true)).
-  erewrite <- (AdvantageD_perf_r (TAG_equiv_false)).
-  erewrite <-(AdvantageD_perf_l (TAG_EVAL_equiv_true)).
-  erewrite (AdvantageD_perf_r (TAG_EVAL_equiv_false)).
-  repeat erewrite <- AdvantageD_dlink.
-  erewrite (AdvantageD_sym (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_tt) (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff)).
-  dprove_convert.
-  advantage_trans (TAG_EVAL_pkg_ff ⊛ EVAL_pkg_ff).
+  erewrite (Adv_perf_l (TAG_equiv_true)).
+  erewrite <- (Adv_perf_r (TAG_equiv_false)).
+  erewrite <-(Adv_perf_l (TAG_EVAL_equiv_true)).
+  erewrite (Adv_perf_r (TAG_EVAL_equiv_false)).
+  repeat erewrite <- Adv_sep_link.
+  erewrite (Adv_sym (TAG_EVAL_pkg_ff ∘ EVAL_pkg_tt) (TAG_EVAL_pkg_ff ∘ EVAL_pkg_ff)).
+  nssprove_separate.
+  nssprove_adv_trans (TAG_EVAL_pkg_ff ∘ EVAL_pkg_ff)%sep.
   simpl.
   apply lerD.
   2: apply lexx.
-  apply AdvantageD_triangle.
+  apply Adv_triangle.
 Qed.
-
 
 End PRFMAC_example.
