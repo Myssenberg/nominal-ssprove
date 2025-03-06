@@ -34,8 +34,8 @@ Record crypto_box_scheme :=
     C        : choice_type ;
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
-    gen : 
-      code fset0 [interface] (PK) ;
+    pkgen : 
+      code fset0 [interface] (PK × SK) ;
 
     csetpk : forall (pk : PK),
       code fset0 [interface] unit; (*Unsure of unit is the right term here*)
@@ -72,22 +72,41 @@ Notation " 'c p " := (C p)
   (at level 3) : package_scope.
 
 
-(*Definition PK_loc (P : crypto_box_scheme): Location := ('option ('pk P) ; 0).*)(*Trying to use option instead of true/false from the paper*)
+(*Definition PK_loc (P : crypto_box_scheme): Location := ('option ('pk P) ; 0%N).*)(*Trying to use option instead of true/false from the paper*)
 
 Definition PK_loc (P : crypto_box_scheme): Location := ('pk P %B ; 0).
 
-Definition SK_loc (P : crypto_box_scheme): Location := (chMap 'pk P 'sk P ; 0). 
+Definition SK_loc (P : crypto_box_scheme): Location := (chMap 'pk P 'sk P ; 1). 
 
 
 Definition PKEY_locs_tt (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 Definition PKEY_locs_ff (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P].
 
+(*Context (PKgen : crypto_box_scheme -> (PK × SK)).*)
+
+Definition GEN := 2%N.
+
+Definition I_tt (P: crypto_box_scheme):= [interface #val #[ GEN ]: 'unit → 'pk P ].
+
+
+Definition PKEY_tt (P : crypto_box_scheme) :
+  game (I_tt P) :=
+  [module PKEY_locs_tt P ; 
+    #def #[ GEN ] (_ : 'unit): ('pk P) {
+      '(pk, sk) ← P.(pkgen) ;;
+      PKLOC ← get PK_loc P;;
+      #put (PK_loc P) := setm PKLOC pk True ;;
+      ret pk
+    }
+  ].
+
+
 Definition PKEY_tt (P : crypto_box_scheme):
-  game [interface #val #[gen]: 'unit → 'pk P ]:=
+  game [interface #val #[gen]: 'unit → 'pk P ] :=
   [module PKEY_locs_tt P ; 
     #def #[gen] : PK {
-      '(pk) <- P.(gen) ;;
-      PKLOC <- get PK_loc ;;
+      '(pk, sk) ← P.(pkgen) ;;
+      PKLOC ← get PK_loc ;;
       #put (PK_loc P) := setm PKLOC pk True ;;
       ret pk
     }
