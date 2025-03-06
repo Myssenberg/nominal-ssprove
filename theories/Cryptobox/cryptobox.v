@@ -27,7 +27,8 @@ Import PackageNotation.
 Module crypto_box_scheme.
 
 Record crypto_box_scheme :=
-  { PK       : choice_type ;
+  { PK       : finType ;
+    PK_pos   : Positive #|PK|;
     SK       : choice_type ;
     Nonce    : choice_type ;
     M        : choice_type ;
@@ -35,7 +36,7 @@ Record crypto_box_scheme :=
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
     pkgen : 
-      code fset0 [interface] (PK × SK) ;
+      code fset0 [interface] ('fin #|PK| × SK) ;
 
     csetpk : forall (pk : PK),
       code fset0 [interface] unit; (*Unsure of unit is the right term here*)
@@ -47,10 +48,10 @@ Record crypto_box_scheme :=
       code fset0 [interface] M 
   }.
 
-Notation " 'pk p " := (PK p)
+Notation " 'pk p " := ('fin #|PK p|)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'pk p " := (PK p)
+Notation " 'pk p " := ('fin #|PK p|)
   (at level 3) : package_scope.
 
 Notation " 'sk p " := (SK p)
@@ -74,7 +75,13 @@ Notation " 'c p " := (C p)
 
 (*Definition PK_loc (P : crypto_box_scheme): Location := ('option ('pk P) ; 0%N).*)(*Trying to use option instead of true/false from the paper*)
 
-Definition PK_loc (P : crypto_box_scheme): Location := ('pk P %B ; 0).
+Instance pk_posi p : Positive #|PK p|.
+Proof.
+apply PK_pos. Defined.
+
+Definition PK_loc (P : crypto_box_scheme): Location := (chMap 'pk P 'bool ; 0).
+
+(*Definition PK_loc (P : crypto_box_scheme): Location := ('set ('pk P × 'bool) ; 0).*)
 
 Definition SK_loc (P : crypto_box_scheme): Location := (chMap 'pk P 'sk P ; 1). 
 
@@ -88,6 +95,8 @@ Definition GEN := 2%N.
 
 Definition I_tt (P: crypto_box_scheme):= [interface #val #[ GEN ]: 'unit → 'pk P ].
 
+Check setm.
+
 
 Definition PKEY_tt (P : crypto_box_scheme) :
   game (I_tt P) :=
@@ -95,7 +104,11 @@ Definition PKEY_tt (P : crypto_box_scheme) :
     #def #[ GEN ] (_ : 'unit): ('pk P) {
       '(pk, sk) ← P.(pkgen) ;;
       PKLOC ← get PK_loc P;;
-      #put (PK_loc P) := setm PKLOC pk True ;;
+      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;
+
+      
+      SKLOC ← get SK_loc P ;;
+      #put (SK_loc P) := setm SKLOC pk sk ;;
       ret pk
     }
   ].
