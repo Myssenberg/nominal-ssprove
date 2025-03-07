@@ -92,14 +92,16 @@ Definition PKEY_locs_ff (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P].
 (*Context (PKgen : crypto_box_scheme -> (PK × SK)).*)
 
 Definition GEN := 2%N.
+Definition CSETPK := 3%N.
 
-Definition I_tt (P: crypto_box_scheme):= [interface #val #[ GEN ]: 'unit → 'pk P ].
+Definition I_PKEY (P: crypto_box_scheme) :=
+  [interface
+    #val #[ GEN ]: 'unit → 'pk P ;
+    #val #[ CSETPK ]: 'pk P → 'unit
+].
 
-Check setm.
-
-
-Definition PKEY_tt (P : crypto_box_scheme) :
-  game (I_tt P) :=
+Definition PKEY (P : crypto_box_scheme):
+  game (I_PKEY P) :=
   [module PKEY_locs_tt P ; 
     #def #[ GEN ] (_ : 'unit): ('pk P) {
       '(pk, sk) ← P.(pkgen) ;;
@@ -110,23 +112,48 @@ Definition PKEY_tt (P : crypto_box_scheme) :
       SKLOC ← get SK_loc P ;;
       #put (SK_loc P) := setm SKLOC pk sk ;;
       ret pk
+    } ;
+
+    #def #[ CSETPK ] (pk : 'pk P) : 'unit {
+      (*(if #assert (PKLOC pk == None) then
+        #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk false ;;
+        ret Datatypes.tt
+      else
+        ret Datatypes.tt) ;;*)
+
+      PKLOC ← get PK_loc P;;
+      #assert PKLOC pk == None ;;
+      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk false ;;
+      ret (Datatypes.tt : 'unit)
+(*I don't know what this Datatypes.tt is, so ask Markus, but it will not let me return unit without this*)
     }
   ].
 
 
-Definition PKEY_tt (P : crypto_box_scheme):
-  game [interface #val #[gen]: 'unit → 'pk P ] :=
+Definition PKEY (P : crypto_box_scheme):
+  game (I_PKEY P) :=
   [module PKEY_locs_tt P ; 
-    #def #[gen] : PK {
+    #def #[ GEN ] (_ : 'unit): ('pk P) {
       '(pk, sk) ← P.(pkgen) ;;
-      PKLOC ← get PK_loc ;;
-      #put (PK_loc P) := setm PKLOC pk True ;;
+      PKLOC ← get PK_loc P;;
+      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;
+
+      
+      SKLOC ← get SK_loc P ;;
+      #put (SK_loc P) := setm SKLOC pk sk ;;
       ret pk
+    } ;
+
+    #def #[ CSETPK ] (pk : 'pk P) : 'unit {
+      PKLOC ← get PK_loc P;;
+      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;
+      ret Datatypes.tt (*I don't know what this is, so ask Markus, but it will not let me return unit without this*)
+      
+      (*PKLOC ← get PK_loc P ;;
+      if getm PKLOC pk then
+        #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk false*)
     }
   ].
-
-Definition PKEY_ff :=
-  True.
 
 Definition GPKAE_tt_PKEY_tt :=
   True. (*TEMPORARY*)
