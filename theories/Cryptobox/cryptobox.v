@@ -98,7 +98,7 @@ Definition PKEY_locs_ff (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P].
 
 Definition GEN := 2%N.
 Definition CSETPK := 3%N.
-Definition GETSK := 3%N.
+Definition GETSK := 4%N.
 
 Definition I_PKEY (P: crypto_box_scheme) :=
   [interface
@@ -150,11 +150,9 @@ Definition PKEY (P : crypto_box_scheme):
     #def #[ GETSK ] (pk : 'pk P) : ('sk P) {
       SKLOC ← get SK_loc P ;;
       #assert isSome (SKLOC pk) as someSK;;
-      sk ← getSome (getm SKLOC pk) someSK ;;
-      ret sk
-      
-      (*sk := getm SKLOC pk;;
-      ret sk*)
+
+      let sk := getSome (SKLOC pk) someSK in
+      @ret ('sk P) sk
     }
   ].
 
