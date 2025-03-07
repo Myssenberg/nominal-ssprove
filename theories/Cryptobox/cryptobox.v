@@ -29,14 +29,15 @@ Module crypto_box_scheme.
 Record crypto_box_scheme :=
   { PK       : finType ;
     PK_pos   : Positive #|PK|;
-    SK       : choice_type ;
+    SK       : finType ;
+    SK_pos   : Positive #|SK|;
     Nonce    : choice_type ;
     M        : choice_type ;
     C        : choice_type ;
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
     pkgen : 
-      code fset0 [interface] ('fin #|PK| × SK) ;
+      code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
 
     csetpk : forall (pk : PK),
       code fset0 [interface] unit; (*Unsure of unit is the right term here*)
@@ -54,10 +55,10 @@ Notation " 'pk p " := ('fin #|PK p|)
 Notation " 'pk p " := ('fin #|PK p|)
   (at level 3) : package_scope.
 
-Notation " 'sk p " := (SK p)
+Notation " 'sk p " := ('fin #|SK p|)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'sk p " := (SK p)
+Notation " 'sk p " := ('fin #|SK p|)
   (at level 3) : package_scope.
 
 Notation " 'm p " := (M p)
@@ -79,6 +80,10 @@ Instance pk_posi p : Positive #|PK p|.
 Proof.
 apply PK_pos. Defined.
 
+Instance sk_posi p : Positive #|SK p|.
+Proof.
+apply SK_pos. Defined.
+
 Definition PK_loc (P : crypto_box_scheme): Location := (chMap 'pk P 'bool ; 0).
 
 (*Definition PK_loc (P : crypto_box_scheme): Location := ('set ('pk P × 'bool) ; 0).*)
@@ -93,12 +98,26 @@ Definition PKEY_locs_ff (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P].
 
 Definition GEN := 2%N.
 Definition CSETPK := 3%N.
+Definition GETSK := 3%N.
 
 Definition I_PKEY (P: crypto_box_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'pk P ;
-    #val #[ CSETPK ]: 'pk P → 'unit
+    #val #[ CSETPK ]: 'pk P → 'unit ;
+    #val #[ GETSK ]: 'pk P → 'sk P
 ].
+
+Check getSome.
+
+Notation "x ← 'getSome' n ;; c" :=
+  ( v ← get n ;;
+    #assert (isSome v) as vSome ;;
+    let x := getSome v vSome in
+    c
+  )
+  (at level 100, n at next level, right associativity,
+  format "x  ←  getSome  n  ;;  '//' c")
+  : package_scope.
 
 Definition PKEY (P : crypto_box_scheme):
   game (I_PKEY P) :=
@@ -126,6 +145,16 @@ Definition PKEY (P : crypto_box_scheme):
       #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk false ;;
       ret (Datatypes.tt : 'unit)
 (*I don't know what this Datatypes.tt is, so ask Markus, but it will not let me return unit without this*)
+    } ;
+
+    #def #[ GETSK ] (pk : 'pk P) : ('sk P) {
+      SKLOC ← get SK_loc P ;;
+      #assert isSome (SKLOC pk) as someSK;;
+      sk ← getSome (getm SKLOC pk) someSK ;;
+      ret sk
+      
+      (*sk := getm SKLOC pk;;
+      ret sk*)
     }
   ].
 
