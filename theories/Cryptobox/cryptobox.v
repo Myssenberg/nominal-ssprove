@@ -23,8 +23,6 @@ Import PackageNotation.
 
 #[local] Open Scope package_scope.
 
-(*testing  yeyyy*)
-
 Module crypto_box_scheme.
 
 Record crypto_box_scheme :=
