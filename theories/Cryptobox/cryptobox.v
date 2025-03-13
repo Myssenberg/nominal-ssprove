@@ -100,12 +100,14 @@ Definition PKEY_locs_ff (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P].
 Definition GEN := 2%N.
 Definition CSETPK := 3%N.
 Definition GETSK := 4%N.
+Definition HONPK := 5%N.
 
 Definition I_PKEY (P: crypto_box_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'pk P ;
     #val #[ CSETPK ]: 'pk P → 'unit ;
-    #val #[ GETSK ]: 'pk P → 'sk P
+    #val #[ GETSK ]: 'pk P → 'sk P ;
+    #val #[ HONPK ]: 'pk P → 'bool 
 ].
 
 Check getSome.
@@ -154,34 +156,19 @@ Definition PKEY (P : crypto_box_scheme):
 
       let sk := getSome (SKLOC pk) someSK in
       @ret ('sk P) sk
-    }
-  ].
-
-
-Definition PKEY (P : crypto_box_scheme):
-  game (I_PKEY P) :=
-  [module PKEY_locs_tt P ; 
-    #def #[ GEN ] (_ : 'unit): ('pk P) {
-      '(pk, sk) ← P.(pkgen) ;;
-      PKLOC ← get PK_loc P;;
-      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;
-
-      
-      SKLOC ← get SK_loc P ;;
-      #put (SK_loc P) := setm SKLOC pk sk ;;
-      ret pk
     } ;
 
-    #def #[ CSETPK ] (pk : 'pk P) : 'unit {
-      PKLOC ← get PK_loc P;;
-      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;
-      ret Datatypes.tt (*I don't know what this is, so ask Markus, but it will not let me return unit without this*)
-      
-      (*PKLOC ← get PK_loc P ;;
-      if getm PKLOC pk then
-        #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk false*)
+    #def #[ HONPK ] (pk : 'pk P) : 'bool {
+      PKLOC ← get PK_loc P ;;
+      #assert isSome (PKLOC pk) as someBool;;
+      let b := getSome (PKLOC pk) someBool in
+
+      @ret ('bool) b 
     }
+    
   ].
+
+
 
 Definition GPKAE_tt_PKEY_tt :=
   True. (*TEMPORARY*)
