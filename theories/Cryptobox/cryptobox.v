@@ -72,6 +72,12 @@ Notation " 'c p " := (C p)
 Notation " 'c p " := (C p)
   (at level 3) : package_scope.
 
+Notation " 'n p " := (Nonce p)
+  (in custom pack_type at level 2, p constr at level 20).
+
+Notation " 'n p " := (Nonce p)
+  (at level 3) : package_scope.
+
 
 (*Definition PK_loc (P : crypto_box_scheme): Location := ('option ('pk P) ; 0%N).*)(*Trying to use option instead of true/false from the paper*)
 
@@ -100,12 +106,28 @@ Definition CSETPK := 3%N.
 Definition GETSK := 4%N.
 Definition HONPK := 5%N.
 
+Definition PKENC := 6%N.
+Definition PKDEC := 7%N.
+
 Definition I_PKEY (P: crypto_box_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'pk P ;
     #val #[ CSETPK ]: 'pk P → 'unit ;
     #val #[ GETSK ]: 'pk P → 'sk P ;
     #val #[ HONPK ]: 'pk P → 'bool 
+].
+
+Definition I_PKAE_IN (P: crypto_box_scheme) :=
+  [interface
+    #val #[ GETSK ]: 'pk P → 'sk P ;  (*Delete the in interface?*)
+    #val #[ HONPK ]: 'pk P → 'bool 
+   
+].
+
+Definition I_PKAE_OUT (P: crypto_box_scheme) :=
+  [interface
+    #val #[ PKENC ]: ('sk P × 'pk P × 'm P × 'n P) → 'c P ;
+    #val #[ PKDEC ]: ('sk P × 'pk P × 'c P × 'n P) → 'm P 
 ].
 
 Check getSome.
@@ -166,6 +188,19 @@ Definition PKEY (P : crypto_box_scheme):
     
   ].
 
+Definition PKAE (E: NBPES, P : crypto_box_scheme):
+  game (I_PKAE_IN P) (I_PKAE_OUT P) :=
+  [module PKEY_locs_tt P ; 
+    #def #[ PKENC ] (SKs : 'sk P, PKr: 'pk P, m : 'm P, n: 'n p): ('c P) {
+      true.     
+    } ;
+
+    #def #[ PKDEC ] (SKr : 'sk P, PKs : 'pk P, c : 'c P, n : 'n p) : ('m P) {
+      true.
+
+    } ;
+    
+  ].
 
 
 Definition GPKAE_tt_PKEY_tt :=
