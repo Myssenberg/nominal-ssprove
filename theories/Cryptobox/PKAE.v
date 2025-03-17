@@ -123,7 +123,7 @@ Definition I_PKAE_OUT (E: NBPES) :=
 
 Definition I_PKAE_OUT_TEMP (E: NBPES) :=
   [interface
-    #val #[ PKENC ]: 'pk E → 'sk E
+    #val #[ PKENC ]: ('pk E × 'pk E) → 'bool
 ].
 
 Notation "'getNone' n ;; c" :=
@@ -145,56 +145,17 @@ Notation "x ← 'getSome' n ;; c" :=
   format "x  ←  getSome  n  ;;  '//' c")
   : package_scope.
 
-
-
 Definition PKAE (E: NBPES):
   module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
   [module PKAE_locs_tt E ;
-    #def #[ PKENC ] (PKs : 'pk E) : ('sk E) {
+    #def #[ PKENC ] ('(PKs, PKr): 'pk E × 'pk E) : 'bool {
       #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
-    
+      #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKs ← getsk PKs ;;
-      ret SKs
+      HONpkr ← honpk PKr ;;
+      ret HONpkr
     }
   ].
-  
-
-
-Definition PKAE (E: NBPES) (PK: I_PKAE_IN E):
-  game (I_PKAE_OUT_TEMP E) :=
-  [module PKAE_locs_tt E ;
-    #def #[ PKENC ] (PKs : 'pk E, PKr : 'pk E, m : 'm E, n : 'n E) : ('c E) {
-      SKs ← GETSK(PKs) ;;
-      HONpkr ← HONPK(PKr) ;;
-      h ←
-    }
-  ].
-
-(*Definition PKAE (E: NBPES):
-  game (I_PKAE_OUT E) :=
-  [module PKAE_locs_tt E ;
-    #def #[ PKENC ] (PKs : 'pk E, PKr : 'pk E, m : 'm E, n : 'n E) : ('c E) {
-      True.  
-    };
-
-    #def #[ PKDEC ] (PKr : 'pk E, PKs : 'pk E, c : 'c E, n : 'n E) : ('m E) {
-      True.
-    }
-  ].*)
-
-(*Definition PKAE (E: NBPES):
-  game (I_PKAE_IN E) (I_PKAE_OUT E) :=
-  [module PKAE_locs_tt E ; 
-    #def #[ PKENC ] (SKs : 'sk E, PKr: 'pk E, m : 'm E, n: 'n E): ('c E) {
-      True.     
-    } ;
-
-    #def #[ PKDEC ] (SKr : 'sk E, PKs : 'pk E, c : 'c E, n : 'n E) : ('m E) {
-      True.
-
-    } ;
-    
-  ].*)
 
 
 Definition GPKAE_tt_PKEY_tt :=
@@ -206,7 +167,7 @@ Definition GPKAE_tt_PKEY_ff :=
 
 
 
-Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.
+(*Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.*)
 
 
 Lemma PK_coll_bound:
