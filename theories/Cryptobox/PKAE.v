@@ -83,22 +83,23 @@ Instance sk_posi p : Positive #|SK p|.
 Proof.
 apply SK_pos. Defined.
 
+Definition chSet t := chMap t 'unit.
+
+Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
+Notation " 'set t " := (chSet t) (at level 2): package_scope.
+
+Definition h (E: NBPES) : choice_type := ('set ('pk E × 'pk E)).
+
 
 Definition PK_loc (E : NBPES): Location := (chMap 'pk E 'bool ; 0).
 
 Definition SK_loc (E : NBPES): Location := (chMap 'pk E 'sk E ; 1).
 
-(*Definition chSet t := chMap t 'unit.
+Definition M_loc (E: NBPES): Location := (chMap ('set (h E × 'n E)) ('set ('m E × 'c E)) ; 2). 
 
-Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
-Notation " 'set t " := (chSet t) (at level 2): package_scope.
 
-Definition M_loc (E: NBPES): Location := (chMap ('set ('h × 'n E)) ('set ('m E × 'c E)) ; 2). 
-
-Definition M_loc (E: NBPES): Location := (chMap ('h, 'n E) ('m E, 'c E) ; 2).*)
-
-Definition PKAE_locs_tt (E : NBPES):= fset [:: PK_loc E ; SK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKAE_locs_ff (E : NBPES):= fset [:: PK_loc E ; SK_loc E].
+Definition PKAE_locs_tt (E : NBPES):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition PKAE_locs_ff (E : NBPES):= fset [:: PK_loc E ; SK_loc E ; M_loc E].
 
 Definition GEN := 2%N.
 Definition GETSK := 4%N.
@@ -122,7 +123,7 @@ Definition I_PKAE_OUT (E: NBPES) :=
 
 Definition I_PKAE_OUT_TEMP (E: NBPES) :=
   [interface
-    #val #[ PKENC ]: ('pk E × 'pk E × 'm E × 'n E) → 'c E
+    #val #[ PKENC ]: 'pk E → 'sk E
 ].
 
 Notation "'getNone' n ;; c" :=
@@ -144,7 +145,22 @@ Notation "x ← 'getSome' n ;; c" :=
   format "x  ←  getSome  n  ;;  '//' c")
   : package_scope.
 
+
+
 Definition PKAE (E: NBPES):
+  module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
+  [module PKAE_locs_tt E ;
+    #def #[ PKENC ] (PKs : 'pk E) : ('sk E) {
+      #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
+    
+      SKs ← getsk PKs ;;
+      ret SKs
+    }
+  ].
+  
+
+
+Definition PKAE (E: NBPES) (PK: I_PKAE_IN E):
   game (I_PKAE_OUT_TEMP E) :=
   [module PKAE_locs_tt E ;
     #def #[ PKENC ] (PKs : 'pk E, PKr : 'pk E, m : 'm E, n : 'n E) : ('c E) {
