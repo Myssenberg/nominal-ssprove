@@ -43,36 +43,61 @@ Record NIKE_scheme :=
     kdist : *) (*currently have no clue how to represent kdist*)
   }.
 
-Notation " 'pk p " := ('fin #|PK p|)
-  (in custom pack_type at level 2, p constr at level 20).
+Notation " 'pk n " := ('fin #|PK n|)
+  (in custom pack_type at level 2, n constr at level 20).
 
-Notation " 'pk p " := ('fin #|PK p|)
+Notation " 'pk n " := ('fin #|PK n|)
   (at level 3) : package_scope.
 
-Notation " 'sk p " := ('fin #|SK p|)
-  (in custom pack_type at level 2, p constr at level 20).
+Notation " 'sk n " := ('fin #|SK n|)
+  (in custom pack_type at level 2, n constr at level 20).
 
-Notation " 'sk p " := ('fin #|SK p|)
+Notation " 'sk n " := ('fin #|SK n|)
   (at level 3) : package_scope.
 
-Notation " 'shared_key p " := ('fin #|Shared_Key p|)
-  (in custom pack_type at level 2, p constr at level 20).
+Notation " 'shared_key n " := ('fin #|Shared_Key n|)
+  (in custom pack_type at level 2, n constr at level 20).
 
-Notation " 'shared_key p " := ('fin #|Shared_Key p|)
+Notation " 'shared_key n " := ('fin #|Shared_Key n|)
   (at level 3) : package_scope.
 
 
-Instance pk_posi p : Positive #|PK p|.
+Instance pk_posi n : Positive #|PK n|.
 Proof.
 apply PK_pos. Defined.
 
-Instance sk_posi p : Positive #|SK p|.
+Instance sk_posi n : Positive #|SK n|.
 Proof.
 apply SK_pos. Defined.
 
-Instance sharedkey_posi p : Positive #|Shared_Key p|.
+Instance sharedkey_posi n : Positive #|Shared_Key n|.
 Proof.
 apply Shared_Key_pos. Defined.
+
+
+
+Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 0).
+
+Definition SK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'sk N ; 1).
+
+
+Definition NIKE_locs_tt (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition NIKE_locs_ff (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N].
+
+
+Definition PKGEN := 2%N.
+Definition SHAREDKEY := 3%N.
+
+
+Definition I_GNIKE (N: NIKE_scheme) :=
+  [interface
+    #val #[ PKGEN ]: 'unit → ('pk N × 'sk N) ;
+    #val #[ SHAREDKEY ]: ('pk N × 'sk N) → 'shared_key N
+].
+
+
+Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
+  game (I_GNIKE N) := .
 
 
 End NIKE_scheme.
