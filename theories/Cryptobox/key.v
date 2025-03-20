@@ -26,35 +26,6 @@ Import PackageNotation.
 Module KEY.
 
 
-Notation " 'pk p " := ('fin #|PK p|)
-  (in custom pack_type at level 2, p constr at level 20).
-
-Notation " 'pk p " := ('fin #|PK p|)
-  (at level 3) : package_scope.
-
-Notation " 'sk p " := ('fin #|SK p|)
-  (in custom pack_type at level 2, p constr at level 20).
-
-Notation " 'sk p " := ('fin #|SK p|)
-  (at level 3) : package_scope.
-
-Notation " 'm p " := (M p)
-  (in custom pack_type at level 2, p constr at level 20).
-
-Notation " 'm p " := (M p)
-  (at level 3) : package_scope.
-
-Notation " 'c p " := (C p)
-  (in custom pack_type at level 2, p constr at level 20).
-
-Notation " 'c p " := (C p)
-  (at level 3) : package_scope.
-
-Notation " 'n p " := (Nonce p)
-  (in custom pack_type at level 2, p constr at level 20).
-
-Notation " 'n p " := (Nonce p)
-  (at level 3) : package_scope.
 
 Instance pk_posi p : Positive #|PK p|.
 Proof.
@@ -69,7 +40,7 @@ Definition chSet t := chMap t 'unit.
 Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
 Notation " 'set t " := (chSet t) (at level 2): package_scope.
 
-Definition h : choice_type := ('set ('pk E × 'pk E)).
+Definition h : choice_type := ('set ('pk × 'pk)).
 Definition key : choice_type := ().
 
 Definition K_loc : Location := (chMap 'key E 'bool ; 0). (*How to define the key?*)
@@ -77,9 +48,7 @@ Definition K_loc : Location := (chMap 'key E 'bool ; 0). (*How to define the key
 
 
 
-
-
-Definition KEY_locs_tt := fset [:: K_loc ]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition KEY_locs_tt := fset [:: K_loc ].  
 Definition KEY_locs_ff := fset [:: K_loc ].
 
 Definition SET := 2%N.
@@ -91,10 +60,10 @@ Definition CSET := 6%N.
 
 Definition I_KEY_OUT :=
   [interface
-    #val #[ SET ]: ('h × key) → 'unit ;
-    #val #[ GET ]: ('h × key) → 'unit ;
-    #val #[ HON ]: ('h) → 'unit ;(*key option*)
-    #val #[ CSET ]: ('h) → 'unit  (*bool option*)
+    #val #[ SET ]:  (h × key) → 'unit ;
+    #val #[ GET ]:  (h × key) → 'unit ;
+    #val #[ HON ]:  (h) → 'unit ;(*key option*)
+    #val #[ CSET ]: (h) → 'unit  (*bool option*)
 
 ].
 
