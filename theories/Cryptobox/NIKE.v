@@ -85,8 +85,38 @@ Definition NIKE_locs_tt (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N]. (*If 
 Definition NIKE_locs_ff (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N].
 
 
-Definition PKGEN := 2%N.
-Definition SHAREDKEY := 3%N.
+Definition GETSK := 2%N.
+Definition HONPK := 3%N.
+Definition SET := 4%N.
+Definition CSET := 5%N.
+Definition SHAREDKEY := 6%N.
+
+
+Definition I_NIKE_IN (N: NIKE_scheme) :=
+  [interface
+    #val #[ GETSK ]: 'pk N → 'sk N (*;
+    #val #[ HONPK ]: 'pk N → 'bool (*lacks the SET and CSET from the KEY package*)*)
+].
+
+Definition I_NIKE_OUT (N: NIKE_scheme) :=
+  [interface
+    #val #[ SHAREDKEY ]: ('pk N × 'sk N) → 'shared_key N
+].
+
+Definition NIKE (N : NIKE_scheme):
+  game (I_NIKE_IN N) (I_NIKE_OUT N) :=
+  [module no_locs ; 
+    #def #[ GETSK ] (pk : 'pk N): ('sk N) {
+      #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
+      sk ← getsk pk ;;
+      ret sk
+    } ;
+    
+    #def #[ SHAREDKEY ] (pk : 'pk N, sk : 'sk N) : ('shared_key N) {
+      shared_key ← N.(sharedkey) pk sk ;;
+      ret shared_key
+    }
+  ].
 
 
 Definition I_GNIKE (N: NIKE_scheme) :=
