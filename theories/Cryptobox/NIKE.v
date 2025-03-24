@@ -37,10 +37,12 @@ Record NIKE_scheme :=
     pkgen : 
       code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
 
-    sharedkey : forall (pk : PK) (sk : SK),
-      code fset0 [interface] ('fin #|Shared_Key|) (*;
+    sharedkey : forall (pk : 'fin #|PK|) (sk : 'fin #|SK|),
+      code fset0 [interface] ('fin #|Shared_Key|) ;
     
-    kdist : *) (*currently have no clue how to represent kdist*)
+    kdist : 
+      code fset0 [interface] 'fin #|Shared_Key| ;
+(*thinking kdist should return a value the same type as a shared key, as it's sampling a value uniformly to look like the shared key in the ideal version*)
   }.
 
 Notation " 'pk n " := ('fin #|PK n|)
@@ -102,6 +104,21 @@ Definition I_NIKE_OUT (N: NIKE_scheme) :=
   [interface
     #val #[ SHAREDKEY ]: ('pk N × 'sk N) → 'shared_key N
 ].
+
+Definition NIKE (N : NIKE_scheme):
+  game (*(I_NIKE_IN N) *)(I_NIKE_OUT N) :=
+  [module no_locs ; 
+    #def #[ SHAREDKEY ] ('(pk, sk) : 'pk N × 'sk N ) : ('shared_key N) {
+      (*#import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
+      ski ← getsk pk ;;*)
+      shared_key ← N.(sharedkey) pk sk ;;
+      ret shared_key
+    }
+  ].
+
+
+
+
 
 Definition NIKE (N : NIKE_scheme):
   game (I_NIKE_IN N) (I_NIKE_OUT N) :=
