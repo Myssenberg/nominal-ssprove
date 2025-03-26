@@ -31,6 +31,8 @@ Definition Big_N: nat := 2^n.
 Definition Key: choice_type := chFin (mkpos Big_N).
 Definition PK: choice_type := chFin (mkpos Big_N).
 Definition SessionID : choice_type := (PK × PK).
+(*Definition kdist : code fset0 [interface] Key.*)
+
 
 Notation " 'key " := (Key) (in custom pack_type at level 2).
 Notation " 'key " := (Key) (at level 2): package_scope.
@@ -51,6 +53,10 @@ Definition SET := 2%N.
 Definition CSET := 3%N.
 Definition GET := 4%N.
 Definition HON := 5%N.
+
+(*Definition kdist := {code 
+                      key ← sample uniform #|el| ;;   
+                      ret ('key)}. *)
 
 Definition I_KEY_OUT :=
   [interface
@@ -87,6 +93,47 @@ Definition KEY0:
       #assert isSome (KLOC SID) as someKey ;;
       SIDLOC ← get SID_loc ;;
       #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
+      #put (K_loc) := setm KLOC SID k ;;
+      ret (Datatypes.tt : 'unit)
+    } ;
+
+    #def #[ CSET ] ('(SID, k) : 'SID × 'key): ('unit) {
+      KLOC ← get K_loc ;;
+      #assert isSome (KLOC SID) as someKey ;;
+      SIDLOC ← get SID_loc ;;
+      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID false ;;
+      ret (Datatypes.tt : 'unit)
+    } ;
+
+    #def #[ GET ] (SID : 'SID): ('key) {
+      KLOC ← get K_loc ;;
+      #assert isSome (KLOC SID) as someKey ;;
+      let key := getSome (KLOC SID) someKey in
+      @ret ('key) key
+
+    } ;
+
+    #def #[ HON ] (SID : 'SID): ('bool) {
+      SIDLOC ← get SID_loc ;;
+      #assert isSome (SIDLOC SID) as someBool ;;
+      let bool := getSome (SIDLOC SID) someBool in
+      @ret ('bool) bool
+
+    }
+
+  ].
+
+Definition KEY1:
+  game (I_KEY_OUT) :=
+  [module KEY_locs_tt ;
+    #def #[ SET ] ('(SID, k) : 'SID × 'key): ('unit) {
+      KLOC ← get K_loc ;;
+      #assert isSome (KLOC SID) as someKey ;;
+      SIDLOC ← get SID_loc ;;
+      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
+      
+      (*key ← kdist ;;
+      #put (K_loc) := setm KLOC SID key ;; *)(*This needs to put a uniformly chosen key*)
       ret (Datatypes.tt : 'unit)
     } ;
 
