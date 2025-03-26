@@ -79,12 +79,42 @@ Notation "x ← 'getSome' n ;; c" :=
   format "x  ←  getSome  n  ;;  '//' c")
   : package_scope.
 
-(*Definition KEY:
-  module (I_KEY_OUT) := 
+Definition KEY0:
+  game (I_KEY_OUT) :=
   [module KEY_locs_tt ;
-    #def #[ SET ] ('(h, key): 'h  × key) : 'bool {
-     
+    #def #[ SET ] ('(SID, k) : 'SID × 'key): ('unit) {
+      KLOC ← get K_loc ;;
+      #assert isSome (KLOC SID) as someKey ;;
+      SIDLOC ← get SID_loc ;;
+      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
+      ret (Datatypes.tt : 'unit)
+    } ;
+
+    #def #[ CSET ] ('(SID, k) : 'SID × 'key): ('unit) {
+      KLOC ← get K_loc ;;
+      #assert isSome (KLOC SID) as someKey ;;
+      SIDLOC ← get SID_loc ;;
+      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID false ;;
+      ret (Datatypes.tt : 'unit)
+    } ;
+
+    #def #[ GET ] (SID : 'SID): ('key) {
+      KLOC ← get K_loc ;;
+      #assert isSome (KLOC SID) as someKey ;;
+      let key := getSome (KLOC SID) someKey in
+      @ret ('key) key
+
+    } ;
+
+    #def #[ HON ] (SID : 'SID): ('bool) {
+      SIDLOC ← get SID_loc ;;
+      #assert isSome (SIDLOC SID) as someBool ;;
+      let bool := getSome (SIDLOC SID) someBool in
+      @ret ('bool) bool
+
     }
-  ].*)
+
+  ].
+
 
 End KEY.
