@@ -20,6 +20,7 @@ Set Default Goal Selector "!".
 Set Primitive Projections.
 
 From NominalSSP Require Import Prelude Group Misc.
+
 Import PackageNotation.
 
 #[local] Open Scope package_scope.
@@ -37,7 +38,7 @@ Record NIKE_scheme :=
     pkgen : 
       code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
 
-    sharedkey : forall (pk : 'fin #|PK|) (sk : 'fin #|SK|),
+    sharedkey : forall (pk : 'fin #|PK|) (sk : 'fin #|SK|), (*unsure here whether this is supposed to make the shared key from two public keys or a public and a secret, from the sender and receiver, respectively*)
       code fset0 [interface] ('fin #|Shared_Key|) ;
     
     kdist : 
@@ -77,9 +78,33 @@ Proof.
 apply Shared_Key_pos. Defined.
 
 
+Variable (n: nat).
+
+Definition Big_N: nat := 2^n.
+Definition Key: finType := chFin (mkpos Big_N).
+Definition PK_N: finType := chFin (mkpos Big_N).
+Definition PK_N_pos: Positive #|PK_N|. Admitted. (*How do we prove this or is there a better way of going about it?*)
+
+Instance PK_N_posi: Positive #|PK_N|. Proof. apply PK_N_pos. Qed.
+
+Definition SessionID : finType := ('fin #|PK_N| × 'fin #|PK_N|).
+(*Definition kdist : code fset0 [interface] Key.*)
+
+
+Notation " 'key " := (Key) (in custom pack_type at level 2).
+Notation " 'key " := (Key) (at level 2): package_scope.
+
+Notation " 'pkn " := (PK_N) (in custom pack_type at level 2).
+Notation " 'pkn " := (PK_N) (at level 2): package_scope.
+
+Notation " 'SID " := (SessionID) (in custom pack_type at level 2).
+Notation " 'SID " := (SessionID) (at level 2): package_scope.
+
+Definition SID_loc : Location := (chMap 'SID 'bool ; 0).
+Definition K_loc : Location := (chMap 'SID 'key ; 1).
+
 
 Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 0).
-
 Definition SK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'sk N ; 1).
 
 
@@ -96,42 +121,36 @@ Definition SHAREDKEY := 6%N.
 
 Definition I_NIKE_IN (N: NIKE_scheme) :=
   [interface
-    #val #[ GETSK ]: 'pk N → 'sk N (*;
-    #val #[ HONPK ]: 'pk N → 'bool (*lacks the SET and CSET from the KEY package*)*)
+    #val #[ GETSK ]: 'pk N → 'sk N ;
+    #val #[ HONPK ]: 'pk N → 'bool ;
+    #val #[ SET ]:  ('SID × 'key) → 'unit (*; (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
+    #val #[ CSET ]: *)
 ].
 
 Definition I_NIKE_OUT (N: NIKE_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: ('pk N × 'sk N) → 'shared_key N
+    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit
 ].
 
 Definition NIKE (N : NIKE_scheme):
-  game (*(I_NIKE_IN N) *)(I_NIKE_OUT N) :=
+  module (I_NIKE_IN N) (I_NIKE_OUT N) :=
   [module no_locs ; 
-    #def #[ SHAREDKEY ] ('(pk, sk) : 'pk N × 'sk N ) : ('shared_key N) {
-      (*#import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
-      ski ← getsk pk ;;*)
-      shared_key ← N.(sharedkey) pk sk ;;
-      ret shared_key
-    }
-  ].
-
-
-
-
-
-Definition NIKE (N : NIKE_scheme):
-  game (I_NIKE_IN N) (I_NIKE_OUT N) :=
-  [module no_locs ; 
-    #def #[ GETSK ] (pk : 'pk N): ('sk N) {
+    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'unit {
+      #import {sig #[ HONPK ]: 'pk N → 'bool } as honpk ;;
       #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
-      sk ← getsk pk ;;
-      ret sk
-    } ;
-    
-    #def #[ SHAREDKEY ] (pk : 'pk N, sk : 'sk N) : ('shared_key N) {
-      shared_key ← N.(sharedkey) pk sk ;;
-      ret shared_key
+      #import {sig #[ SET ]: ('SID × 'key) → 'unit} as set ;;
+      hs ← honpk pks ;;
+      hr ← honpk pkr ;;
+      
+      if (hs && hr) then
+        sks ← getsk pks ;;
+        shared_key ← N.(sharedkey) pkr sks ;;
+        set ((pks, pkr), shared_key) ;;
+
+        ret (Datatypes.tt : 'unit)
+      else
+        ret (Datatypes.tt : 'unit)
+      
     }
   ].
 
