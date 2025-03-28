@@ -77,19 +77,32 @@ Instance sharedkey_posi n : Positive #|Shared_Key n|.
 Proof.
 apply Shared_Key_pos. Defined.
 
-
+(*
 Variable (n: nat).
+
+Check chFin.
 
 Definition Big_N: nat := 2^n.
 Definition Key: finType := chFin (mkpos Big_N).
+Definition Key_pos: Positive #|Key|. Admitted.
 Definition PK_N: finType := chFin (mkpos Big_N).
 Definition PK_N_pos: Positive #|PK_N|. Admitted. (*How do we prove this or is there a better way of going about it?*)
 
+Instance Key_posi: Positive #|Key|. Proof. apply Key_pos. Qed.
 Instance PK_N_posi: Positive #|PK_N|. Proof. apply PK_N_pos. Qed.
+
+Check chFin (mkpos Big_N).
+
+Definition Test: finType. Admitted.
+
+Definition Test2: finType := [finType of (Test * Test)].
+
 
 Definition SessionID : finType := ('fin #|PK_N| × 'fin #|PK_N|).
 (*Definition kdist : code fset0 [interface] Key.*)
 
+Definition SessionID_pos: Positive #|SessionID|. Admitted.
+Instance SessionID_posi: Positive #|SessionID|. Proof. apply SessionID_pos. Qed.
 
 Notation " 'key " := (Key) (in custom pack_type at level 2).
 Notation " 'key " := (Key) (at level 2): package_scope.
@@ -100,8 +113,41 @@ Notation " 'pkn " := (PK_N) (at level 2): package_scope.
 Notation " 'SID " := (SessionID) (in custom pack_type at level 2).
 Notation " 'SID " := (SessionID) (at level 2): package_scope.
 
-Definition SID_loc : Location := (chMap 'SID 'bool ; 0).
-Definition K_loc : Location := (chMap 'SID 'key ; 1).
+Type chMap.
+Search "finMap".
+Search chMap.
+Type Location.
+
+Definition SID_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'bool ; 0).
+Definition K_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'fin #|Key| ; 1).
+*)
+
+Definition Key : finType. Admitted.
+Definition PK_N : finType. Admitted.
+Definition SessionID (N: NIKE_scheme) : finType := ('pk N × 'pk N).
+
+Notation " 'key " := ('fin #|Key|) (in custom pack_type at level 2).
+Notation " 'key " := ('fin #|Key|) (at level 2): package_scope.
+
+Notation " 'pkn " := ('fin #|PK_N|) (in custom pack_type at level 2).
+Notation " 'pkn " := ('fin #|PK_N|) (at level 2): package_scope.
+
+Notation " 'SID n " := ('fin #|SessionID n|) (in custom pack_type at level 2).
+Notation " 'SID n " := ('fin #|SessionID n|) (at level 2): package_scope.
+
+Definition Ns (N : NIKE_scheme) := PK N.
+
+Type Ns.
+
+Instance Key_pos: Positive #|Key|. Admitted.
+Instance PK_N_pos: Positive #|PK_N|. Admitted.
+Instance SessionID_pos (N: NIKE_scheme) : Positive #|SessionID N|. Admitted.
+
+Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('SID N) 'bool ; 0).
+Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'key ; 1).
+
+(*Definition SID_loc : Location := (chMap 'SID 'bool ; 0).*)
+(*Definition K_loc : Location := (chMap 'SID 'key ; 1).*)
 
 
 Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 0).
@@ -118,12 +164,11 @@ Definition SET := 4%N.
 Definition CSET := 5%N.
 Definition SHAREDKEY := 6%N.
 
-
 Definition I_NIKE_IN (N: NIKE_scheme) :=
   [interface
     #val #[ GETSK ]: 'pk N → 'sk N ;
     #val #[ HONPK ]: 'pk N → 'bool ;
-    #val #[ SET ]:  ('SID × 'key) → 'unit (*; (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
+    #val #[ SET ]:  'SID N → 'unit (*; (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
     #val #[ CSET ]: *)
 ].
 
