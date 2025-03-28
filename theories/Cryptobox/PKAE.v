@@ -148,14 +148,32 @@ Notation "x ← 'getSome' n ;; c" :=
 Definition PKAE (E: NBPES):
   module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
   [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('(PKs, PKr): 'pk E × 'pk E) : 'bool {
+    #def #[ PKENC ] ('(PKs, PKr) : 'pk E × 'pk E) : 'bool {
       #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
       #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKs ← getsk PKs ;;
       HONpkr ← honpk PKr ;;
+      (*let h := if (PKs < PKr) then (PKs, PKr) else (PKr, PKs) in*)
       ret HONpkr
     }
   ].
+
+(*Definition PKAE (E: NBPES):
+  module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
+  [module PKAE_locs_tt E ;
+    #def #[ PKENC ] ('(PKs, PKr) : 'pk E × 'pk E) : 'bool {
+      (*#import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
+      #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
+      SKs ← getsk PKs ;;
+      HONpkr ← honpk PKr ;;*)
+      let h := if (PKs < PKr) then (PKs, PKr) else (PKr, PKs) in
+      (*let h := if (PKs < PKr) then '(PKs, PKr) else '(PKr, PKs) in
+      MLOC ← get M_loc E ;;
+      #assert MLOC (h, N) == None ;;*)
+      (*ret HONpkr*)
+      ret true
+    }
+  ].*)
 
 
 Definition GPKAE_tt_PKEY_tt :=
@@ -170,11 +188,11 @@ Definition GPKAE_tt_PKEY_ff :=
 (*Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.*)
 
 
-Lemma PK_coll_bound:
+(*Lemma PK_coll_bound:
   forall (A : adversary [interface]),
   AdvFor GPKAE A <=
   AdvFor GPKAE A.
-Proof.
+Proof.*)
 
 
-End crypto_box_scheme.
+(*End crypto_box_scheme.*)
