@@ -68,3 +68,5 @@ Notation " 'n e " := (Nonce e)
 Instance k_posi e : Positive #|K e|.
 Proof.
 apply K_pos. Defined.
+
+End NBSES.
