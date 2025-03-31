@@ -25,69 +25,67 @@ Import PackageNotation.
 
 From NominalSSP Require Import NBSES.
 
+Import NBSES.
+
 Module AE.
 
 (*
+Variable (n: nat).
+Definition Big_N: nat := 2^n.
+Definition PK: choice_type := chFin (mkpos Big_N).
+Definition SessionID : choice_type := (PK × PK).
 
-Definition ae : NBSES := {|
-    K         : 'fin #|el| ;
-    K_pos     : Positive #|K| ;
-    Nonce     : 'fin #|el| ;
-    M         : 'fin #|el| ;
-    C         : 'fin #|el| ;
-    sample_C  := 
-      {code
-          c ← sample uniform #|el| ;;
-          ret c
-      } ;
-    kgen      :
+Notation " 'pk " := (PK) (in custom pack_type at level 2).
+Notation " 'pk " := (PK) (at level 2): package_scope.
+Notation " 'SID " := (SessionID) (in custom pack_type at level 2).
+Notation " 'SID " := (SessionID) (at level 2): package_scope. *)
+
+Notation " 'k E " := ('fin #|K E|)
+  (in custom pack_type at level 2, E constr at level 20).
+
+Notation " 'k E " := ('fin #|K E|)
+  (at level 3) : package_scope.
 
 
-
-} 
-
+(*Definition length(m: M): Int := code {∀ p, 0 <= length p} 
+Parameter length : M -> int.
+Axiom length : forall p : ptxt, 0 <= length p. *)
 
 Definition chSet t := chMap t 'unit.
 
 Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
-Notation " 'set t " := (chSet t) (at level 2): package_scope.
+Notation " 'set t " := (chSet t) (at level 2): package_scope. 
+
+Definition SID (E: NBSES_scheme) : choice_type := 'set('k E × 'k E). 
 
 
 
-Definition PK_loc (E : NBPES): Location := (chMap 'pk E 'bool ; 0).
 
-Definition SK_loc (E : NBPES): Location := (chMap 'pk E 'sk E ; 1).
-
-Definition M_loc (E: NBPES): Location := (chMap ('set (h E × 'n E)) ('set ('m E × 'c E)) ; 2). 
+Definition M_loc (E: NBSES_scheme): Location := (chMap (SID E × 'n E) ('m E × 'c E) ; 0). 
 
 
-Definition PKAE_locs_tt (E : NBPES):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKAE_locs_ff (E : NBPES):= fset [:: PK_loc E ; SK_loc E ; M_loc E].
+Definition AE_locs_tt (E : NBSES_scheme):= fset [::  M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition AE_locs_ff (E : NBSES_scheme):= fset [::  M_loc E].
 
-Definition GEN := 2%N.
-Definition GETSK := 4%N.
-Definition HONPK := 5%N.
+Definition GET := 1%N.
+Definition HON := 2%N.
 
-Definition PKENC := 6%N.
-Definition PKDEC := 7%N.
+Definition ENC := 3%N.
+Definition DEC := 4%N.
 
 
-Definition I_AE_IN (E: NBPES) :=
+Definition I_AE_IN (E: NBSES_scheme) :=
   [interface
-    #val #[ GETSK ]: 'pk E → 'sk E ;  
-    #val #[ HONPK ]: 'pk E → 'bool 
+    #val #[ GET ]: SID E → 'k E ;  
+    #val #[ HON ]: SID E → 'bool 
 ].
 
-Definition I_AE_OUT (E: NBPES) :=
+Definition I_AE_OUT (E: NBSES_scheme) :=
   [interface
-    #val #[ PKENC ]: ('pk E × 'pk E × 'm E × 'n E) → 'c E ;
-    #val #[ PKDEC ]: ('pk E × 'pk E × 'c E × 'n E) → 'm E 
+    #val #[ ENC ]: ('SID × 'm E × 'n E) → 'c E ;
+    #val #[ DEC ]: ('SID × 'c E × 'n E) → 'm E 
 ].
 
-Definition I_AE_OUT_TEMP (E: NBPES) :=
-  [interface
-    #val #[ PKENC ]: ('pk E × 'pk E) → 'bool
-].
 
 Notation "'getNone' n ;; c" :=
   ( v ← get n ;;
@@ -108,16 +106,13 @@ Notation "x ← 'getSome' n ;; c" :=
   format "x  ←  getSome  n  ;;  '//' c")
   : package_scope.
 
-Definition AE (E: NBSES):
-  module (I_AE_IN E) (I_AE_OUT_TEMP E)  := 
+Definition AE (E: NBSES_scheme):
+  module (I_AE_IN E) (I_AE_OUT E)  := 
   [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('(PKs, PKr) : 'pk E × 'pk E) : 'bool {
-      #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
-      #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
-      SKs ← getsk PKs ;;
-      HONpkr ← honpk PKr ;;
-      (*let h := if (PKs < PKr) then (PKs, PKr) else (PKr, PKs) in*)
-      ret HONpkr
+    #def #[ ENC ] ('(PKs, PKr) : 'pk E × 'pk E) : 'bool {
+      #import {sig #[ GET ]: 'SID → 'k E } as get ;;
+      #import {sig #[ HON ]: 'SID → 'bool } as hon ;;
+     
     }
   ].
 
@@ -132,4 +127,4 @@ Definition GPKAE_tt_PKEY_ff :=
 
 
 
-End AE. *)
+End AE.

@@ -23,16 +23,13 @@ Import PackageNotation.
 
 Module NBSES.
 
-Record NBSES :=
+Record NBSES_scheme :=
   { K        : finType ;
     K_pos    : Positive #|K|;
     Nonce    : choice_type ;
     M        : choice_type ;
     C        : choice_type ;
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
-
-    kgen : 
-      code fset0 [interface] ('fin #|K|) ;
 
     enc : forall (m : M) (k : K) (n : Nonce),
       code fset0 [interface] C ;
