@@ -103,17 +103,4 @@ Definition PKEY (b : bool) (P : crypto_box_scheme):
     
   ].
 
-
-
-Definition GPKAE_tt_PKEY_tt :=
-  True. (*TEMPORARY*)
-
-Definition GPKAE_tt_PKEY_ff :=
-  False. (*TEMPORARY*)
-
-
-Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.
-
-
-
 End PKEY.
