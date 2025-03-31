@@ -89,131 +89,7 @@ Instance sk_posi p : Positive #|SK p|.
 Proof.
 apply SK_pos. Defined.
 
-Definition PK_loc (P : crypto_box_scheme): Location := (chMap 'pk P 'bool ; 0).
-
-(*Definition PK_loc (P : crypto_box_scheme): Location := ('set ('pk P × 'bool) ; 0).*)
-
-Definition SK_loc (P : crypto_box_scheme): Location := (chMap 'pk P 'sk P ; 1). 
-
-
-Definition PKEY_locs_tt (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKEY_locs_ff (P : crypto_box_scheme):= fset [:: PK_loc P ; SK_loc P].
-
-(*Context (PKgen : crypto_box_scheme -> (PK × SK)).*)
-
-Definition GEN := 2%N.
-Definition CSETPK := 3%N.
-Definition GETSK := 4%N.
-Definition HONPK := 5%N.
-
-Definition PKENC := 6%N.
-Definition PKDEC := 7%N.
-
-Definition I_PKEY (P: crypto_box_scheme) :=
-  [interface
-    #val #[ GEN ]: 'unit → 'pk P ;
-    #val #[ CSETPK ]: 'pk P → 'unit ;
-    #val #[ GETSK ]: 'pk P → 'sk P ;
-    #val #[ HONPK ]: 'pk P → 'bool 
-].
-
-Definition I_PKAE_IN (P: crypto_box_scheme) :=
-  [interface
-    #val #[ GETSK ]: 'pk P → 'sk P ;  (*Delete the in interface?*)
-    #val #[ HONPK ]: 'pk P → 'bool 
-   
-].
-
-Definition I_PKAE_OUT (P: crypto_box_scheme) :=
-  [interface
-    #val #[ PKENC ]: ('sk P × 'pk P × 'm P × 'n P) → 'c P ;
-    #val #[ PKDEC ]: ('sk P × 'pk P × 'c P × 'n P) → 'm P 
-].
-
-Check getSome.
-
-Notation "x ← 'getSome' n ;; c" :=
-  ( v ← get n ;;
-    #assert (isSome v) as vSome ;;
-    let x := getSome v vSome in
-    c
-  )
-  (at level 100, n at next level, right associativity,
-  format "x  ←  getSome  n  ;;  '//' c")
-  : package_scope.
-
-Definition PKEY (P : crypto_box_scheme):
-  game (I_PKEY P) :=
-  [module PKEY_locs_tt P ; 
-    #def #[ GEN ] (_ : 'unit): ('pk P) {
-      '(pk, sk) ← P.(pkgen) ;;
-      PKLOC ← get PK_loc P;;
-      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;
-
-      
-      SKLOC ← get SK_loc P ;;
-      #put (SK_loc P) := setm SKLOC pk sk ;;
-      ret pk
-    } ;
-
-    #def #[ CSETPK ] (pk : 'pk P) : 'unit {
-      (*(if #assert (PKLOC pk == None) then
-        #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk false ;;
-        ret Datatypes.tt
-      else
-        ret Datatypes.tt) ;;*)
-
-      PKLOC ← get PK_loc P;;
-      #assert PKLOC pk == None ;;
-      #put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk false ;;
-      ret (Datatypes.tt : 'unit)
-(*I don't know what this Datatypes.tt is, so ask Markus, but it will not let me return unit without this*)
-    } ;
-
-    #def #[ GETSK ] (pk : 'pk P) : ('sk P) {
-      SKLOC ← get SK_loc P ;;
-      #assert isSome (SKLOC pk) as someSK;;
-
-      let sk := getSome (SKLOC pk) someSK in
-      @ret ('sk P) sk
-    } ;
-
-    #def #[ HONPK ] (pk : 'pk P) : 'bool {
-      PKLOC ← get PK_loc P ;;
-      #assert isSome (PKLOC pk) as someBool;;
-      let b := getSome (PKLOC pk) someBool in
-
-      @ret ('bool) b 
-    }
-    
-  ].
-
-Definition PKAE (E: NBPES, P : crypto_box_scheme):
-  game (I_PKAE_IN P) (I_PKAE_OUT P) :=
-  [module PKEY_locs_tt P ; 
-    #def #[ PKENC ] (SKs : 'sk P, PKr: 'pk P, m : 'm P, n: 'n p): ('c P) {
-      true.     
-    } ;
-
-    #def #[ PKDEC ] (SKr : 'sk P, PKs : 'pk P, c : 'c P, n : 'n p) : ('m P) {
-      true.
-
-    } ;
-    
-  ].
-
-
-Definition GPKAE_tt_PKEY_tt :=
-  True. (*TEMPORARY*)
-
-Definition GPKAE_tt_PKEY_ff :=
-  False. (*TEMPORARY*)
-
-
-
-
-Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.
-
+(*
 
 Lemma PK_coll_bound:
   forall (A : adversary [interface]),
@@ -221,5 +97,5 @@ Lemma PK_coll_bound:
   AdvFor GPKAE A.
 Proof.
 
-
+*)
 End crypto_box_scheme.
