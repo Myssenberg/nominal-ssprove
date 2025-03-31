@@ -21,9 +21,9 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group Misc.
 Import PackageNotation.
 
-#[local] Open Scope package_scope.
-
 Module NBPES.
+
+#[local] Open Scope package_scope.
 
 Record NBPES :=
   { PK       : finType ;
@@ -145,6 +145,10 @@ Notation "x ← 'getSome' n ;; c" :=
   format "x  ←  getSome  n  ;;  '//' c")
   : package_scope.
 
+Definition SORT (E: NBPES) (PKs PKr : 'pk E) : ('pk E × 'pk E) :=
+  if (PKs < PKr) then (PKs, PKr) : (prod _ _) else (PKr, PKs) : (prod _ _).
+  
+
 Definition PKAE (E: NBPES):
   module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
   [module PKAE_locs_tt E ;
@@ -153,7 +157,7 @@ Definition PKAE (E: NBPES):
       #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKs ← getsk PKs ;;
       HONpkr ← honpk PKr ;;
-      (*let h := if (PKs < PKr) then (PKs, PKr) else (PKr, PKs) in*)
+      let h := SORT E PKs PKr in
       ret HONpkr
     }
   ].
