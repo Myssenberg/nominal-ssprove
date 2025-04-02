@@ -54,9 +54,31 @@ Definition CSET := 3%N.
 Definition GET := 4%N.
 Definition HON := 5%N.
 
-(*Definition kdist := {code 
-                      key ← sample uniform #|el| ;;   
-                      ret ('key)}. *)
+
+Definition kdist : 'key :=
+  rc <$ uniform Big_N ;;
+  match rc with
+    | raw_code (Arit key) => key
+    | _ => None 
+  end ;;
+  ret key.
+
+ (*don't know if we're sampling the correct this here as we need to sample from the keys? Or at least something that looks like the keys*)
+
+
+(*
+Definition sharedkey : finType. Admitted.
+Definition sharedkey_pos : Positive #|sharedkey|. Admitted.
+Instance sharedkey_posi : Positive #|sharedkey|. apply sharedkey_pos. Qed.
+
+Notation " 'sharedkey " := ('fin #|sharedkey|) (in custom pack_type at level 2).
+Notation " 'sharedkey " := ('fin #|sharedkey|) (at level 2): package_scope.
+
+Definition kdist := 
+  key <$ uniform #|sharedkey| ;;
+  ret key.
+*)
+
 
 Definition I_KEY_OUT :=
   [interface
@@ -65,25 +87,6 @@ Definition I_KEY_OUT :=
     #val #[ GET ]:  ('SID) → 'key ;
     #val #[ HON ]:  ('SID) → 'bool
 ].
-
-Notation "'getNone' n ;; c" :=
-  ( v ← get n ;;
-    #assert (v == None) ;;
-    c
-  )
-  (at level 100, n at next level, right associativity,
-  format "getNone  n  ;;  '//' c")
-  : package_scope.
-
-Notation "x ← 'getSome' n ;; c" :=
-  ( v ← get n ;;
-    #assert (isSome v) as vSome ;;
-    let x := getSome v vSome in
-    c
-  )
-  (at level 100, n at next level, right associativity,
-  format "x  ←  getSome  n  ;;  '//' c")
-  : package_scope.
 
 Definition KEY0:
   game (I_KEY_OUT) :=
@@ -132,8 +135,8 @@ Definition KEY1:
       SIDLOC ← get SID_loc ;;
       #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
       
-      (*key ← kdist ;;
-      #put (K_loc) := setm KLOC SID key ;; *)(*This needs to put a uniformly chosen key*)
+      let key := kdist in
+        #put (K_loc) := @setm ('SID : choiceType) ('key : choiceType) KLOC SID key ;;(*This needs to put a uniformly chosen key*)
       ret (Datatypes.tt : 'unit)
     } ;
 
