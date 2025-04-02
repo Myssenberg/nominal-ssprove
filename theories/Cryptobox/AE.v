@@ -29,7 +29,7 @@ Import NBSES.
 
 Module AE.
 
-(*
+
 Variable (n: nat).
 Definition Big_N: nat := 2^n.
 Definition PK: choice_type := chFin (mkpos Big_N).
@@ -38,7 +38,7 @@ Definition SessionID : choice_type := (PK × PK).
 Notation " 'pk " := (PK) (in custom pack_type at level 2).
 Notation " 'pk " := (PK) (at level 2): package_scope.
 Notation " 'SID " := (SessionID) (in custom pack_type at level 2).
-Notation " 'SID " := (SessionID) (at level 2): package_scope. *)
+Notation " 'SID " := (SessionID) (at level 2): package_scope.
 
 Notation " 'k E " := ('fin #|K E|)
   (in custom pack_type at level 2, E constr at level 20).
@@ -46,17 +46,31 @@ Notation " 'k E " := ('fin #|K E|)
 Notation " 'k E " := ('fin #|K E|)
   (at level 3) : package_scope.
 
+Notation " 'm E " := (M E)
+  (in custom pack_type at level 2, E constr at level 20).
 
-(*Definition length(m: M): Int := code {∀ p, 0 <= length p} 
-Parameter length : M -> int.
-Axiom length : forall p : ptxt, 0 <= length p. *)
+Notation " 'm E " := (M E)
+  (at level 3) : package_scope.
+
+Notation " 'c E " := (C E)
+  (in custom pack_type at level 2, E constr at level 20).
+
+Notation " 'c E " := (C E)
+  (at level 3) : package_scope.
+
+Notation " 'n E " := (Nonce E)
+  (in custom pack_type at level 2, E constr at level 20).
+
+Notation " 'n E " := (Nonce E)
+  (at level 3) : package_scope.
+
 
 Definition chSet t := chMap t 'unit.
 
 Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
 Notation " 'set t " := (chSet t) (at level 2): package_scope. 
 
-Definition SID (E: NBSES_scheme) : choice_type := 'set('k E × 'k E). 
+Definition SID (E: NBSES_scheme) : choice_type := ('k E × 'k E). 
 
 
 
@@ -76,13 +90,13 @@ Definition DEC := 4%N.
 
 Definition I_AE_IN (E: NBSES_scheme) :=
   [interface
-    #val #[ GET ]: SID E → 'k E ;  
-    #val #[ HON ]: SID E → 'bool 
+    #val #[ GET ]: 'SID → 'k E ;
+    #val #[ HON ]: 'SID  → 'bool 
 ].
 
 Definition I_AE_OUT (E: NBSES_scheme) :=
   [interface
-    #val #[ ENC ]: ('SID × 'm E × 'n E) → 'c E ;
+    #val #[ ENC ]: (('SID × 'm E) × 'n E) → 'c E ;
     #val #[ DEC ]: ('SID × 'c E × 'n E) → 'm E 
 ].
 
