@@ -122,15 +122,13 @@ Definition SID_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'bool ; 0
 Definition K_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'fin #|Key| ; 1).
 *)
 
-Definition SessionID (N: NIKE_scheme) : finType := ('pk N × 'pk N).
-
-Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (in custom pack_type at level 2).
-Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (at level 2): package_scope.
+Notation " 'S n " := ('fin #|PK n| × 'fin #|PK n|) (in custom pack_type at level 2, n constr at level 20).
+Notation " 'S n " := ('fin #|PK n| × 'fin #|PK n|) (at level 2): package_scope.
 
 (*Instance SessionID_pos (N: NIKE_scheme) : Positive 'fin #|PK N| × 'fin #|PK N|. Admitted.*)
 
-Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('SID N) 'bool ; 0).
-Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 1).
+Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('S N) 'bool ; 0).
+Definition K_loc (N: NIKE_scheme) : Location := (chMap 'S N 'shared_key N ; 1).
 
 
 Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 2).
@@ -151,7 +149,7 @@ Definition I_NIKE_IN (N: NIKE_scheme) :=
   [interface
     #val #[ GETSK ]: 'pk N → 'sk N ;
     #val #[ HONPK ]: 'pk N → 'bool ;
-    #val #[ SET ]:   ('pk N × 'pk N) × ('shared_key N) → 'unit (*WHY THE F IS 'SID N NOT WORKING HERE?!?!?!?!?*)
+    #val #[ SET ]:   ('S N × 'shared_key N) → 'unit (*WHY THE F IS 'SID N NOT WORKING HERE?!?!?!?!?*)
 (*; (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
     #val #[ CSET ]: *)
 ].
