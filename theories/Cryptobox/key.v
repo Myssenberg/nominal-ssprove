@@ -54,14 +54,17 @@ Definition CSET := 3%N.
 Definition GET := 4%N.
 Definition HON := 5%N.
 
+Notation kdist :=
+  (key ← sample uniform Big_N ;;
+  ret key).
 
-Definition kdist : 'key :=
+(*Definition kdist : 'key :=
   rc <$ uniform Big_N ;;
   match rc with
     | raw_code (Arit key) => key
     | _ => None 
   end ;;
-  ret key.
+  ret key.*)
 
  (*don't know if we're sampling the correct this here as we need to sample from the keys? Or at least something that looks like the keys*)
 
@@ -135,10 +138,10 @@ Definition KEY1:
       SIDLOC ← get SID_loc ;;
       #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
       
-      let key := kdist in
-        #put (K_loc) := @setm ('SID : choiceType) ('key : choiceType) KLOC SID key ;;(*This needs to put a uniformly chosen key*)
+      key ← kdist ;;
+      #put (K_loc) := @setm ('SID : choiceType) _ KLOC SID key ;;(*This needs to put a uniformly chosen key*)
       ret (Datatypes.tt : 'unit)
-    } ;
+    } ;s
 
     #def #[ CSET ] ('(SID, k) : 'SID × 'key): ('unit) {
       KLOC ← get K_loc ;;
