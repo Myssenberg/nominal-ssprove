@@ -122,53 +122,37 @@ Definition SID_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'bool ; 0
 Definition K_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'fin #|Key| ; 1).
 *)
 
-Definition Key : finType. Admitted.
-Definition PK_N : finType. Admitted.
 Definition SessionID (N: NIKE_scheme) : finType := ('pk N × 'pk N).
 
-Notation " 'key " := ('fin #|Key|) (in custom pack_type at level 2).
-Notation " 'key " := ('fin #|Key|) (at level 2): package_scope.
+Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (in custom pack_type at level 2).
+Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (at level 2): package_scope.
 
-Notation " 'pkn " := ('fin #|PK_N|) (in custom pack_type at level 2).
-Notation " 'pkn " := ('fin #|PK_N|) (at level 2): package_scope.
-
-Notation " 'SID n " := ('fin #|SessionID n|) (in custom pack_type at level 2).
-Notation " 'SID n " := ('fin #|SessionID n|) (at level 2): package_scope.
-
-Definition Ns (N : NIKE_scheme) := PK N.
-
-Type Ns.
-
-Instance Key_pos: Positive #|Key|. Admitted.
-Instance PK_N_pos: Positive #|PK_N|. Admitted.
-Instance SessionID_pos (N: NIKE_scheme) : Positive #|SessionID N|. Admitted.
+(*Instance SessionID_pos (N: NIKE_scheme) : Positive 'fin #|PK N| × 'fin #|PK N|. Admitted.*)
 
 Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('SID N) 'bool ; 0).
-Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'key ; 1).
-
-(*Definition SID_loc : Location := (chMap 'SID 'bool ; 0).*)
-(*Definition K_loc : Location := (chMap 'SID 'key ; 1).*)
+Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 1).
 
 
-Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 0).
-Definition SK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'sk N ; 1).
+Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 2).
+Definition SK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'sk N ; 3).
 
 
 Definition NIKE_locs_tt (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 Definition NIKE_locs_ff (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N].
 
 
-Definition GETSK := 2%N.
-Definition HONPK := 3%N.
-Definition SET := 4%N.
-Definition CSET := 5%N.
-Definition SHAREDKEY := 6%N.
+Definition GETSK := 4%N.
+Definition HONPK := 5%N.
+Definition SET := 6%N.
+Definition CSET := 7%N.
+Definition SHAREDKEY := 8%N.
 
 Definition I_NIKE_IN (N: NIKE_scheme) :=
   [interface
     #val #[ GETSK ]: 'pk N → 'sk N ;
     #val #[ HONPK ]: 'pk N → 'bool ;
-    #val #[ SET ]:  'SID N → 'unit (*; (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
+    #val #[ SET ]:   ('pk N × 'pk N) × ('shared_key N) → 'unit (*WHY THE F IS 'SID N NOT WORKING HERE?!?!?!?!?*)
+(*; (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
     #val #[ CSET ]: *)
 ].
 
@@ -183,14 +167,16 @@ Definition NIKE (N : NIKE_scheme):
     #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'unit {
       #import {sig #[ HONPK ]: 'pk N → 'bool } as honpk ;;
       #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
-      #import {sig #[ SET ]: ('SID × 'key) → 'unit} as set ;;
+      #import {sig #[ SET ]: (('pk N × 'pk N) × 'shared_key N) → 'unit} as set ;;
       hs ← honpk pks ;;
       hr ← honpk pkr ;;
       
       if (hs && hr) then
         sks ← getsk pks ;;
         shared_key ← N.(sharedkey) pkr sks ;;
-        set ((pks, pkr), shared_key) ;;
+        
+        let sid := (pks, pkr) in
+          set (sid, shared_key) ;;
 
         ret (Datatypes.tt : 'unit)
       else
