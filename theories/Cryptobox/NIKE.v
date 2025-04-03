@@ -122,13 +122,13 @@ Definition SID_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'bool ; 0
 Definition K_loc : Location := (chMap ('fin #|PK_N| × 'fin #|PK_N|) 'fin #|Key| ; 1).
 *)
 
-Notation " 'S n " := ('fin #|PK n| × 'fin #|PK n|) (in custom pack_type at level 2, n constr at level 20).
-Notation " 'S n " := ('fin #|PK n| × 'fin #|PK n|) (at level 2): package_scope.
+Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (in custom pack_type at level 2, n constr at level 20).
+Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (at level 2): package_scope.
 
 (*Instance SessionID_pos (N: NIKE_scheme) : Positive 'fin #|PK N| × 'fin #|PK N|. Admitted.*)
 
-Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('S N) 'bool ; 0).
-Definition K_loc (N: NIKE_scheme) : Location := (chMap 'S N 'shared_key N ; 1).
+Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('SID N) 'bool ; 0).
+Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 1).
 
 
 Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 2).
@@ -149,9 +149,9 @@ Definition I_NIKE_IN (N: NIKE_scheme) :=
   [interface
     #val #[ GETSK ]: 'pk N → 'sk N ;
     #val #[ HONPK ]: 'pk N → 'bool ;
-    #val #[ SET ]:   ('S N × 'shared_key N) → 'unit (*WHY THE F IS 'SID N NOT WORKING HERE?!?!?!?!?*)
-(*; (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
-    #val #[ CSET ]: *)
+    #val #[ SET ]:   ('SID N × 'shared_key N) → 'unit ;
+(*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
+    #val #[ CSET ]: ('SID N × 'shared_key N) → 'unit
 ].
 
 Definition I_NIKE_OUT (N: NIKE_scheme) :=
@@ -166,18 +166,21 @@ Definition NIKE (N : NIKE_scheme):
       #import {sig #[ HONPK ]: 'pk N → 'bool } as honpk ;;
       #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
       #import {sig #[ SET ]: (('pk N × 'pk N) × 'shared_key N) → 'unit} as set ;;
+      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'shared_key N) → 'unit} as cset ;;
       hs ← honpk pks ;;
       hr ← honpk pkr ;;
       
+      sks ← getsk pks ;;
+       shared_key ← N.(sharedkey) pkr sks ;;
+      
       if (hs && hr) then
-        sks ← getsk pks ;;
-        shared_key ← N.(sharedkey) pkr sks ;;
-        
         let sid := (pks, pkr) in
           set (sid, shared_key) ;;
 
         ret (Datatypes.tt : 'unit)
       else
+        let sid := (pks, pkr) in
+          cset (sid, shared_key) ;;
         ret (Datatypes.tt : 'unit)
       
     }
