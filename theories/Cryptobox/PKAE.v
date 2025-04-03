@@ -155,14 +155,12 @@ Definition PKAE (b : bool) (E: NBPES):
       #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
       #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKs ← getsk PKs ;;
-      SKr ← getsk PKr ;; (*DELETE*)
       HONpkr ← honpk PKr ;;
-      HONpks ← honpk PKs ;; (*DELETE*)
       let h := SORT E PKs PKr in
       MLOC ← get M_loc E ;;
       #assert MLOC (h, n) == None ;;
       if (b && HONpkr) then
-        c ← E.(enc) SKr PKs m n ;; (*REPLACE WITH Dc(|M|)*)
+        c ← E.(sample_C) ;;        
         #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
         ret c
       else
@@ -174,17 +172,12 @@ Definition PKAE (b : bool) (E: NBPES):
       #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
       #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKr ← getsk PKr ;;
-      SKs ← getsk PKs ;; (*DELETE*)
       HONpks ← honpk PKs ;;
-      HONpkr ← honpk PKr ;; (*DELETE*)
-      (*m ← None ;;*)
       if (b && HONpks) then
-        (*let h := SORT E PKs PKr in
+        let h := SORT E PKs PKr in
         MLOC ← get M_loc E ;;        
         #assert isSome (MLOC (h, n)) as MC ;;
-        let (cip, mes) := getSome (MLOC (h, n)) MC in
-        ret ('m E) mes*)
-        m ← E.(dec) SKs PKr c n ;; (*DELETE*)
+        let (m, c') := getSome (MLOC (h, n)) MC in
         ret m
       else
         m ← E.(dec) SKr PKs c n ;;
