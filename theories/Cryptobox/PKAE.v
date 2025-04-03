@@ -21,16 +21,17 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group Misc.
 Import PackageNotation.
 
-#[local] Open Scope package_scope.
-
 Module NBPES.
+
+#[local] Open Scope package_scope.
 
 Record NBPES :=
   { PK       : finType ;
     PK_pos   : Positive #|PK|;
     SK       : finType ;
     SK_pos   : Positive #|SK|;
-    Nonce    : choice_type ;
+    Nonce    : finType ;
+    Nonce_pos: Positive #|Nonce|;
     M        : choice_type ;
     C        : choice_type ;
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
@@ -38,10 +39,10 @@ Record NBPES :=
     pkgen : 
       code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
 
-    enc : forall (m : M) (pk_s : PK) (pk_r : PK) (n : Nonce),
+    enc : forall (sk : 'fin #|SK|) (pk : 'fin #|PK|) (m : M) (n : 'fin #|Nonce|),
       code fset0 [interface] C ;
 
-    dec : forall (c : C) (pk_s : PK) (pk_r : PK) (n : Nonce),
+    dec : forall (sk : 'fin #|SK|) (pk : 'fin #|PK|) (c : C) (n : 'fin #|Nonce|),
       code fset0 [interface] M 
   }.
 
@@ -69,10 +70,10 @@ Notation " 'c p " := (C p)
 Notation " 'c p " := (C p)
   (at level 3) : package_scope.
 
-Notation " 'n p " := (Nonce p)
+Notation " 'n p " := ('fin #|Nonce p|)
   (in custom pack_type at level 2, p constr at level 20).
 
-Notation " 'n p " := (Nonce p)
+Notation " 'n p " := ('fin #|Nonce p|)
   (at level 3) : package_scope.
 
 Instance pk_posi p : Positive #|PK p|.
@@ -83,19 +84,23 @@ Instance sk_posi p : Positive #|SK p|.
 Proof.
 apply SK_pos. Defined.
 
+Instance nonce_posi p : Positive #|Nonce p|.
+Proof.
+apply Nonce_pos. Defined.
+
 Definition chSet t := chMap t 'unit.
 
 Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
 Notation " 'set t " := (chSet t) (at level 2): package_scope.
 
-Definition h (E: NBPES) : choice_type := ('set ('pk E × 'pk E)).
+Definition h (E: NBPES) : choice_type := ('pk E × 'pk E).
 
 
 Definition PK_loc (E : NBPES): Location := (chMap 'pk E 'bool ; 0).
 
 Definition SK_loc (E : NBPES): Location := (chMap 'pk E 'sk E ; 1).
 
-Definition M_loc (E: NBPES): Location := (chMap ('set (h E × 'n E)) ('set ('m E × 'c E)) ; 2). 
+Definition M_loc (E: NBPES): Location := (chMap (h E × 'n E) ('m E × 'c E) ; 2). 
 
 
 Definition PKAE_locs_tt (E : NBPES):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
@@ -117,13 +122,8 @@ Definition I_PKAE_IN (E: NBPES) :=
 
 Definition I_PKAE_OUT (E: NBPES) :=
   [interface
-    #val #[ PKENC ]: ('pk E × 'pk E × 'm E × 'n E) → 'c E ;
-    #val #[ PKDEC ]: ('pk E × 'pk E × 'c E × 'n E) → 'm E 
-].
-
-Definition I_PKAE_OUT_TEMP (E: NBPES) :=
-  [interface
-    #val #[ PKENC ]: ('pk E × 'pk E) → 'bool
+    #val #[ PKENC ]: ((('pk E × 'pk E) × 'm E) × 'n E) → 'c E ;
+    #val #[ PKDEC ]: ((('pk E × 'pk E) × 'c E) × 'n E) → 'm E 
 ].
 
 Notation "'getNone' n ;; c" :=
@@ -145,18 +145,45 @@ Notation "x ← 'getSome' n ;; c" :=
   format "x  ←  getSome  n  ;;  '//' c")
   : package_scope.
 
-Definition PKAE (E: NBPES):
-  module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
+Definition SORT (E: NBPES) (PKs PKr : 'pk E) : h E :=
+  if (PKs < PKr) then (PKs, PKr) : (prod _ _) else (PKr, PKs) : (prod _ _).
+
+Definition PKAE (b : bool) (E: NBPES):
+  module (I_PKAE_IN E) (I_PKAE_OUT E)  := 
   [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('(PKs, PKr): 'pk E × 'pk E) : 'bool {
+    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk E × 'pk E) × 'm E) × 'n E) : ('c E) {
       #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
       #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKs ← getsk PKs ;;
       HONpkr ← honpk PKr ;;
-      ret HONpkr
+      let h := SORT E PKs PKr in
+      MLOC ← get M_loc E ;;
+      #assert MLOC (h, n) == None ;;
+      if (b && HONpkr) then
+        c ← E.(sample_C) ;;        
+        #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
+        ret c
+      else
+        c ← E.(enc) SKs PKr m n ;;
+        #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
+        ret c
+    } ;
+    #def #[ PKDEC ] ('(((PKr, PKs), c), n) : (('pk E × 'pk E) × 'c E) × 'n E) : ('m E) {
+      #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
+      #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
+      SKr ← getsk PKr ;;
+      HONpks ← honpk PKs ;;
+      if (b && HONpks) then
+        let h := SORT E PKs PKr in
+        MLOC ← get M_loc E ;;        
+        #assert isSome (MLOC (h, n)) as MC ;;
+        let (m, c') := getSome (MLOC (h, n)) MC in
+        ret m
+      else
+        m ← E.(dec) SKr PKs c n ;;
+        ret m
     }
   ].
-
 
 Definition GPKAE_tt_PKEY_tt :=
   True. (*TEMPORARY*)
@@ -170,11 +197,11 @@ Definition GPKAE_tt_PKEY_ff :=
 (*Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.*)
 
 
-Lemma PK_coll_bound:
+(*Lemma PK_coll_bound:
   forall (A : adversary [interface]),
   AdvFor GPKAE A <=
   AdvFor GPKAE A.
-Proof.
+Proof.*)
 
 
-End crypto_box_scheme.
+(*End crypto_box_scheme.*)
