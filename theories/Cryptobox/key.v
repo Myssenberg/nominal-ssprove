@@ -29,16 +29,11 @@ Variable (n: nat).
 
 Definition Big_N: nat := 2^n.
 Definition Key: choice_type := chFin (mkpos Big_N).
-Definition PK: choice_type := chFin (mkpos Big_N).
+Definition PK: choice_type := chFin (mkpos Big_N). (*might need to import a PK from a scheme here instead*)
 Definition SessionID : choice_type := (PK × PK).
-(*Definition kdist : code fset0 [interface] Key.*)
-
 
 Notation " 'key " := (Key) (in custom pack_type at level 2).
 Notation " 'key " := (Key) (at level 2): package_scope.
-
-Notation " 'pk " := (PK) (in custom pack_type at level 2).
-Notation " 'pk " := (PK) (at level 2): package_scope.
 
 Notation " 'SID " := (SessionID) (in custom pack_type at level 2).
 Notation " 'SID " := (SessionID) (at level 2): package_scope.
@@ -54,34 +49,10 @@ Definition CSET := 3%N.
 Definition GET := 4%N.
 Definition HON := 5%N.
 
-Notation kdist :=
+Notation kdist := (*for report, figure out difference between notation and definition here, as this does not work as a definition*)
   (key ← sample uniform Big_N ;;
   ret key).
-
-(*Definition kdist : 'key :=
-  rc <$ uniform Big_N ;;
-  match rc with
-    | raw_code (Arit key) => key
-    | _ => None 
-  end ;;
-  ret key.*)
-
  (*don't know if we're sampling the correct this here as we need to sample from the keys? Or at least something that looks like the keys*)
-
-
-(*
-Definition sharedkey : finType. Admitted.
-Definition sharedkey_pos : Positive #|sharedkey|. Admitted.
-Instance sharedkey_posi : Positive #|sharedkey|. apply sharedkey_pos. Qed.
-
-Notation " 'sharedkey " := ('fin #|sharedkey|) (in custom pack_type at level 2).
-Notation " 'sharedkey " := ('fin #|sharedkey|) (at level 2): package_scope.
-
-Definition kdist := 
-  key <$ uniform #|sharedkey| ;;
-  ret key.
-*)
-
 
 Definition I_KEY_OUT :=
   [interface
@@ -91,16 +62,22 @@ Definition I_KEY_OUT :=
     #val #[ HON ]:  ('SID) → 'bool
 ].
 
-Definition KEY0:
+Definition KEY b:
   game (I_KEY_OUT) :=
   [module KEY_locs_tt ;
     #def #[ SET ] ('(SID, k) : 'SID × 'key): ('unit) {
       KLOC ← get K_loc ;;
-      #assert isSome (KLOC SID) as someKey ;;
       SIDLOC ← get SID_loc ;;
-      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
-      #put (K_loc) := setm KLOC SID k ;;
-      ret (Datatypes.tt : 'unit)
+
+      if b then
+        key ← kdist ;;
+        #put (K_loc) := @setm ('SID : choiceType) _ KLOC SID key ;;(*This needs to put a uniformly chosen key*)
+        ret (Datatypes.tt : 'unit)
+      else
+        #assert isSome (KLOC SID) as someKey ;;
+        #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
+        #put (K_loc) := setm KLOC SID k ;;
+        ret (Datatypes.tt : 'unit)
     } ;
 
     #def #[ CSET ] ('(SID, k) : 'SID × 'key): ('unit) {
@@ -126,47 +103,6 @@ Definition KEY0:
       @ret ('bool) bool
 
     }
-
-  ].
-
-Definition KEY1:
-  game (I_KEY_OUT) :=
-  [module KEY_locs_tt ;
-    #def #[ SET ] ('(SID, k) : 'SID × 'key): ('unit) {
-      KLOC ← get K_loc ;;
-      #assert isSome (KLOC SID) as someKey ;;
-      SIDLOC ← get SID_loc ;;
-      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
-      
-      key ← kdist ;;
-      #put (K_loc) := @setm ('SID : choiceType) _ KLOC SID key ;;(*This needs to put a uniformly chosen key*)
-      ret (Datatypes.tt : 'unit)
-    } ;s
-
-    #def #[ CSET ] ('(SID, k) : 'SID × 'key): ('unit) {
-      KLOC ← get K_loc ;;
-      #assert isSome (KLOC SID) as someKey ;;
-      SIDLOC ← get SID_loc ;;
-      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID false ;;
-      ret (Datatypes.tt : 'unit)
-    } ;
-
-    #def #[ GET ] (SID : 'SID): ('key) {
-      KLOC ← get K_loc ;;
-      #assert isSome (KLOC SID) as someKey ;;
-      let key := getSome (KLOC SID) someKey in
-      @ret ('key) key
-
-    } ;
-
-    #def #[ HON ] (SID : 'SID): ('bool) {
-      SIDLOC ← get SID_loc ;;
-      #assert isSome (SIDLOC SID) as someBool ;;
-      let bool := getSome (SIDLOC SID) someBool in
-      @ret ('bool) bool
-
-    }
-
   ].
 
 
