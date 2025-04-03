@@ -26,15 +26,16 @@ Module NBSES.
 Record NBSES_scheme :=
   { K        : finType ;
     K_pos    : Positive #|K|;
-    Nonce    : choice_type ;
+    Nonce    : finType ;
+    Nonce_pos: Positive #|Nonce|;
     M        : choice_type ;
     C        : choice_type ;
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
-    enc : forall (m : M) (k : K) (n : Nonce),
+    enc : forall (m : M) (k : 'fin #|K|) (n : 'fin #|Nonce|),
       code fset0 [interface] C ;
 
-    dec : forall (c : C) (k : K) (n : Nonce),
+    dec : forall (c : C) (k : 'fin #|K|) (n : 'fin #|Nonce|),
       code fset0 [interface] M 
   }.
 
@@ -56,14 +57,18 @@ Notation " 'c e " := (C e)
 Notation " 'c e " := (C e)
   (at level 3) : package_scope.
 
-Notation " 'n e " := (Nonce e)
+Notation " 'n e " := ('fin #|Nonce e|)
   (in custom pack_type at level 2, e constr at level 20).
 
-Notation " 'n e " := (Nonce e)
+Notation " 'n e " := ('fin #|Nonce e|)
   (at level 3) : package_scope.
 
 Instance k_posi e : Positive #|K e|.
 Proof.
 apply K_pos. Defined.
+
+Instance Nonce_posi e : Positive #|Nonce e|.
+Proof.
+apply Nonce_pos. Defined.
 
 End NBSES.
