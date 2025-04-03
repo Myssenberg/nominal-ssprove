@@ -39,10 +39,10 @@ Record NBPES :=
     pkgen : 
       code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
 
-    enc : forall (sk : SK) (pk : PK) (m : M) (n : Nonce),
+    enc : forall (sk : 'fin #|SK|) (pk : 'fin #|PK|) (m : M) (n : 'fin #|Nonce|),
       code fset0 [interface] C ;
 
-    dec : forall (sk : SK) (pk : PK) (c : C) (n : Nonce),
+    dec : forall (sk : 'fin #|SK|) (pk : 'fin #|PK|) (c : C) (n : 'fin #|Nonce|),
       code fset0 [interface] M 
   }.
 
@@ -122,13 +122,8 @@ Definition I_PKAE_IN (E: NBPES) :=
 
 Definition I_PKAE_OUT (E: NBPES) :=
   [interface
-    #val #[ PKENC ]: ('pk E × 'pk E × 'm E × 'n E) → 'c E ;
-    #val #[ PKDEC ]: ('pk E × 'pk E × 'c E × 'n E) → 'm E
-].
-
-Definition I_PKAE_OUT_TEMP (E: NBPES) :=
-  [interface
-    #val #[ PKENC ]: (('pk E × 'pk E) × 'n E) → 'bool
+    #val #[ PKENC ]: ((('pk E × 'pk E) × 'm E) × 'n E) → 'c E ;
+    #val #[ PKDEC ]: ((('pk E × 'pk E) × 'c E) × 'n E) → 'm E 
 ].
 
 Notation "'getNone' n ;; c" :=
@@ -154,40 +149,48 @@ Definition SORT (E: NBPES) (PKs PKr : 'pk E) : h E :=
   if (PKs < PKr) then (PKs, PKr) : (prod _ _) else (PKr, PKs) : (prod _ _).
 
 Definition PKAE (b : bool) (E: NBPES):
-  module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
+  module (I_PKAE_IN E) (I_PKAE_OUT E)  := 
   [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('((PKs, PKr), n) : ('pk E × 'pk E) × 'n E) : 'bool {
+    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk E × 'pk E) × 'm E) × 'n E) : ('c E) {
       #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
       #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKs ← getsk PKs ;;
+      SKr ← getsk PKr ;; (*DELETE*)
       HONpkr ← honpk PKr ;;
+      HONpks ← honpk PKs ;; (*DELETE*)
       let h := SORT E PKs PKr in
       MLOC ← get M_loc E ;;
       #assert MLOC (h, n) == None ;;
-      (*if (b && HONpkr) then
-        c ←  ? ;;
+      if (b && HONpkr) then
+        c ← E.(enc) SKr PKs m n ;; (*REPLACE WITH Dc(|M|)*)
+        #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
+        ret c
       else
-        c ← E.enc SKs PKr m n ;;
-      #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
-      return c*)
-      ret HONpkr
-    }(* ;
-    #def #[ PKDEC ] ('(PKs, PKr) : 'pk E × 'pk E) : 'bool {
+        c ← E.(enc) SKs PKr m n ;;
+        #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
+        ret c
+    } ;
+    #def #[ PKDEC ] ('(((PKr, PKs), c), n) : (('pk E × 'pk E) × 'c E) × 'n E) : ('m E) {
       #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
       #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
       SKr ← getsk PKr ;;
-      HONpks ← PKs ;;
-      m ← None ;;
+      SKs ← getsk PKs ;; (*DELETE*)
+      HONpks ← honpk PKs ;;
+      HONpkr ← honpk PKr ;; (*DELETE*)
+      (*m ← None ;;*)
       if (b && HONpks) then
-        let h := SORT E PKs PKr in
-        m ← (*figure out how to get second value in set*)     
+        (*let h := SORT E PKs PKr in
+        MLOC ← get M_loc E ;;        
+        #assert isSome (MLOC (h, n)) as MC ;;
+        let (cip, mes) := getSome (MLOC (h, n)) MC in
+        ret ('m E) mes*)
+        m ← E.(dec) SKs PKr c n ;; (*DELETE*)
+        ret m
       else
-        m ← E.dec SKr PKs c n ;;
-      return m
-    }*)
+        m ← E.(dec) SKr PKs c n ;;
+        ret m
+    }
   ].
-
-
 
 Definition GPKAE_tt_PKEY_tt :=
   True. (*TEMPORARY*)
