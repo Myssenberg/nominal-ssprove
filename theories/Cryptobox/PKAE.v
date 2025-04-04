@@ -25,7 +25,7 @@ Import PackageNotation.
 
 Module NBPES.
 
-Record NBPES :=
+Record NBPES_scheme :=
   { PK       : finType ;
     PK_pos   : Positive #|PK|;
     SK       : finType ;
@@ -88,18 +88,18 @@ Definition chSet t := chMap t 'unit.
 Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
 Notation " 'set t " := (chSet t) (at level 2): package_scope.
 
-Definition h (E: NBPES) : choice_type := ('set ('pk E × 'pk E)).
+Definition h (E: NBPES_scheme) : choice_type := ('set ('pk E × 'pk E)).
 
 
-Definition PK_loc (E : NBPES): Location := (chMap 'pk E 'bool ; 0).
+Definition PK_loc (E : NBPES_scheme): Location := (chMap 'pk E 'bool ; 0).
 
-Definition SK_loc (E : NBPES): Location := (chMap 'pk E 'sk E ; 1).
+Definition SK_loc (E : NBPES_scheme): Location := (chMap 'pk E 'sk E ; 1).
 
-Definition M_loc (E: NBPES): Location := (chMap ('set (h E × 'n E)) ('set ('m E × 'c E)) ; 2). 
+Definition M_loc (E: NBPES_scheme): Location := (chMap ('set (h E × 'n E)) ('set ('m E × 'c E)) ; 2). 
 
 
-Definition PKAE_locs_tt (E : NBPES):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKAE_locs_ff (E : NBPES):= fset [:: PK_loc E ; SK_loc E ; M_loc E].
+Definition PKAE_locs_tt (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition PKAE_locs_ff (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E].
 
 Definition GEN := 2%N.
 Definition GETSK := 4%N.
@@ -109,19 +109,19 @@ Definition PKENC := 6%N.
 Definition PKDEC := 7%N.
 
 
-Definition I_PKAE_IN (E: NBPES) :=
+Definition I_PKAE_IN (E: NBPES_scheme) :=
   [interface
     #val #[ GETSK ]: 'pk E → 'sk E ;  
     #val #[ HONPK ]: 'pk E → 'bool 
 ].
 
-Definition I_PKAE_OUT (E: NBPES) :=
+Definition I_PKAE_OUT (E: NBPES_scheme) :=
   [interface
     #val #[ PKENC ]: ('pk E × 'pk E × 'm E × 'n E) → 'c E ;
     #val #[ PKDEC ]: ('pk E × 'pk E × 'c E × 'n E) → 'm E 
 ].
 
-Definition I_PKAE_OUT_TEMP (E: NBPES) :=
+Definition I_PKAE_OUT_TEMP (E: NBPES_scheme) :=
   [interface
     #val #[ PKENC ]: ('pk E × 'pk E) → 'bool
 ].
@@ -145,7 +145,7 @@ Notation "x ← 'getSome' n ;; c" :=
   format "x  ←  getSome  n  ;;  '//' c")
   : package_scope.
 
-Definition PKAE (E: NBPES):
+Definition PKAE (E: NBPES_scheme):
   module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
   [module PKAE_locs_tt E ;
     #def #[ PKENC ] ('(PKs, PKr): 'pk E × 'pk E) : 'bool {
@@ -165,7 +165,7 @@ Definition GPKAE_tt_PKEY_ff :=
   False. (*TEMPORARY*)
 
 
-
+(*
 
 (*Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.*)
 
@@ -175,6 +175,6 @@ Lemma PK_coll_bound:
   AdvFor GPKAE A <=
   AdvFor GPKAE A.
 Proof.
+*)
 
-
-End crypto_box_scheme.
+End NBPES.
