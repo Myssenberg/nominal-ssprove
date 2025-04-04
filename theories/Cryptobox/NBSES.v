@@ -30,6 +30,7 @@ Record NBSES_scheme :=
     Nonce_pos: Positive #|Nonce|;
     M        : choice_type ;
     C        : choice_type ;
+    sample_K : code fset0 [interface] 'fin #|K| ;
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
     enc : forall (m : M) (k : 'fin #|K|) (n : 'fin #|Nonce|),
