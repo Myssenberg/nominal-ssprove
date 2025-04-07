@@ -35,12 +35,12 @@ Definition chSet t := chMap t 'unit.
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
-Definition PK_loc (pk : choice_type) : Location := (chMap pk 'bool ; 0).
 
-Definition SK_loc (pk : choice_type) : Location := (chMap pk pk ; 1).  (*should be mapped pk sk instead*)
+Definition PK_loc (pk : finType) `{Positive #|pk|}: Location := (chMap 'fin #|pk| 'bool ; 0).
+Definition SK_loc (pk sk : finType) `{Positive #|pk|} `{Positive #|sk|}: Location := (chMap 'fin #|pk| 'fin #|sk| ; 1).
 
-Definition PKEY_locs_tt (pk : choice_type) := fset [:: PK_loc pk ; SK_loc pk ]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKEY_locs_ff (pk : choice_type) := fset [:: PK_loc pk ; SK_loc pk ]. 
+Definition PKEY_locs_tt (pk sk : finType) `{Positive #|pk|} `{Positive #|sk|} := fset [:: PK_loc pk ; SK_loc pk sk ]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition PKEY_locs_ff (pk sk : finType) `{Positive #|pk|} `{Positive #|sk|} := fset [:: PK_loc pk ; SK_loc pk sk ]. 
 
 Definition GEN := 2%N.
 Definition CSETPK := 3%N.
@@ -58,49 +58,48 @@ Definition I_PKEY_OUT (pk : choice_type) (sk : choice_type) :=
     #val #[ HONPK ]: 'T pk → 'bool 
 ].
 
-Definition PKEY (b : bool) (pk : choice_type) (sk: choice_type) (pkgen : code fset0 [interface] (pk × sk)):
-  game (I_PKEY_OUT pk sk) :=
-  [module PKEY_locs_tt pk; 
-    #def #[ GEN ] (_ : 'unit): ('T pk) {
+Definition PKEY (b : bool) (pk sk : finType) `{Positive #|pk|} `{Positive #|sk|} (pkgen : code fset0 [interface] ('fin #|pk| × 'fin #|sk|)):
+  game (I_PKEY_OUT 'fin #|pk| 'fin #|sk|) :=
+  [module PKEY_locs_tt pk sk ; 
+    #def #[ GEN ] (_ : 'unit): ('fin #|pk|) {
       '(pk', sk') ← pkgen ;; (*in doubt whether this should be from cryptobox/NBPES scheme or just randomly sampled*)
 
       if negb b then (*real*)
         (*#put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;*) (*the easycrypt code does not register the PK as being honest, but shouldn't it do that?*)
-          SKLOC ← get SK_loc pk' ;;
-          #put (SK_loc pk') := setm SKLOC pk' sk' ;;
+          SKLOC ← get SK_loc pk sk ;;
+          #put (SK_loc pk sk) := setm SKLOC pk' sk' ;;
           ret pk'
       else (*ideal*)
-        PKLOC ← get PK_loc pk';;
+        PKLOC ← get PK_loc pk;;
         if (PKLOC pk' != Some false) then
-          #put (PK_loc pk') := @setm (pk : choiceType) _ PKLOC pk' true ;;
-          SKLOC ← get SK_loc pk' sk' ;;
-          #put (SK_loc pk' sk') := setm SKLOC pk' sk' ;;
+          #put (PK_loc pk) := setm PKLOC pk' true ;;
+          SKLOC ← get SK_loc pk sk ;;
+          #put (SK_loc pk sk) := setm SKLOC pk' sk' ;;
           ret pk'
         else
           ret pk'
     } ;
 
-    #def #[ CSETPK ] (pk : 'T PK) : 'unit {
+    #def #[ CSETPK ] (pk' : 'T 'fin #|pk|): 'unit {
       PKLOC ← get PK_loc pk;;
-      #assert PKLOC pk == None ;;
-      #put (PK_loc pk) := @setm ('T pk : choiceType) _ PKLOC pk false ;;
+      #assert PKLOC pk' == None ;;
+      #put (PK_loc pk) := setm PKLOC pk' false ;;
       ret (Datatypes.tt : 'unit)
-(*I don't know what this Datatypes.tt is, so ask Markus, but it will not let me return unit without this*)
     } ;
 
-    #def #[ GETSK ] (pk : 'T PK) : ('T SK) {
+    #def #[ GETSK ] (pk' : 'T 'fin #|pk|) : ('T 'fin #|sk|) {
       PKLOC ← get PK_loc pk ;;
       SKLOC ← get SK_loc pk sk ;;
-      #assert PKLOC pk == Some true ;; (*does #assert fail or break this if it's not true?*)
-      #assert isSome (SKLOC pk) as someSK;;
-      let sk := getSome (SKLOC pk) someSK in
-      @ret ('T SK) sk
+      #assert PKLOC pk' == Some true ;; (*does #assert fail or break this if it's not true?*)
+      #assert isSome (SKLOC pk') as someSK;;
+      let sk' := getSome (SKLOC pk') someSK in
+      @ret ('T 'fin #|sk|) sk'
     } ;
 
-    #def #[ HONPK ] (pk : 'T PK) : 'bool {
-      PKLOC ← get PK_loc PK ;;
-      #assert isSome (PKLOC pk) as someBool;;
-      let b := getSome (PKLOC pk) someBool in
+    #def #[ HONPK ] (pk' : 'T 'fin #|pk|) : 'bool {
+      PKLOC ← get PK_loc pk ;;
+      #assert isSome (PKLOC pk') as someBool;;
+      let b := getSome (PKLOC pk') someBool in
 
       @ret ('bool) b 
     }
