@@ -1,4 +1,4 @@
-(*This is an implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme.*)
+(*This is a part of an implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme. This file contains the KEY package*)
 
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
@@ -25,82 +25,78 @@ Import PackageNotation.
 
 Module KEY.
 
-Variable (n: nat).
+Definition chSet t := chMap t 'unit.
 
-Definition Big_N: nat := 2^n.
-Definition Key: choice_type := chFin (mkpos Big_N).
-Definition PK: choice_type := chFin (mkpos Big_N). (*might need to import a PK from a scheme here instead*)
-Definition SessionID : choice_type := (PK × PK).
+Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
+Notation " 'set t " := (chSet t) (at level 2): package_scope.
 
-Notation " 'key " := (Key) (in custom pack_type at level 2).
-Notation " 'key " := (Key) (at level 2): package_scope.
+(*The SessionID will just be represented by a pair of sender and receiver public keys: (pks, pkr)*)
 
-Notation " 'SID " := (SessionID) (in custom pack_type at level 2).
-Notation " 'SID " := (SessionID) (at level 2): package_scope.
+Definition SID_loc (pks pkr : finType) `{Positive #|pks|} `{Positive #|pkr|} : Location := (chMap ('fin #|pks| × 'fin #|pkr|) 'bool ; 8).
+Definition K_loc (pks pkr shared_key : finType) `{Positive #|pks|} `{Positive #|pkr|} `{Positive #|shared_key|} : Location := (chMap ('fin #|pks| × 'fin #|pkr|) 'fin #|shared_key| ; 9).
 
-Definition SID_loc : Location := (chMap 'SID 'bool ; 0).
-Definition K_loc : Location := (chMap 'SID 'key ; 1).
+Definition KEY_locs_tt (pks pkr shared_key : finType) `{Positive #|pks|} `{Positive #|pkr|} `{Positive #|shared_key|} := fset [:: SID_loc pks pkr ; K_loc pks pkr shared_key].  
+Definition KEY_locs_ff (pks pkr shared_key : finType) `{Positive #|pks|} `{Positive #|pkr|} `{Positive #|shared_key|} := fset [:: SID_loc pks pkr ; K_loc pks pkr shared_key].
 
-Definition KEY_locs_tt := fset [:: SID_loc ; K_loc].  
-Definition KEY_locs_ff := fset [:: SID_loc ; K_loc].
+Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
+Notation " 'T c " := (c) (at level 2): package_scope.
 
-Definition SET := 2%N.
-Definition CSET := 3%N.
-Definition GET := 4%N.
-Definition HON := 5%N.
+Definition SET := 10%N.
+Definition CSET := 11%N.
+Definition GET := 12%N.
+Definition HON := 13%N.
 
-Notation kdist := (*for report, figure out difference between notation and definition here, as this does not work as a definition*)
-  (key ← sample uniform Big_N ;;
-  ret key).
- (*don't know if we're sampling the correct this here as we need to sample from the keys? Or at least something that looks like the keys*)
 
-Definition I_KEY_OUT :=
+Definition I_KEY_OUT (pks pkr shared_key : choice_type):=
   [interface
-    #val #[ SET ]:  ('SID × 'key) → 'unit ;
-    #val #[ CSET ]: ('SID × 'key) → 'unit ;
-    #val #[ GET ]:  ('SID) → 'key ;
-    #val #[ HON ]:  ('SID) → 'bool
+    #val #[ SET ]:  'T ((pks × pkr ) × shared_key) → 'unit ;
+    #val #[ CSET ]: 'T ((pks × pkr ) × shared_key) → 'unit ;
+    #val #[ GET ]:  'T (pks × pkr ) → 'T shared_key ;
+    #val #[ HON ]:  'T (pks × pkr ) → 'bool
 ].
 
-Definition KEY b:
-  game (I_KEY_OUT) :=
-  [module KEY_locs_tt ;
-    #def #[ SET ] ('(SID, k) : 'SID × 'key): ('unit) {
-      KLOC ← get K_loc ;;
-      SIDLOC ← get SID_loc ;;
+
+
+Definition KEY (b : bool) (pks pkr shared_key : finType) `{Positive #|pks|} `{Positive #|pkr|} `{Positive #|shared_key|} (kdist : 
+      code fset0 [interface] 'fin #|shared_key|):
+  game (I_KEY_OUT 'fin #|pks| 'fin #|pkr| 'fin #|shared_key|) :=
+  [module KEY_locs_tt pks pkr shared_key ;
+    #def #[ SET ] ('((pks', pkr'), shared_key') : 'T ( ('fin #|pks| × 'fin #|pkr|) × 'fin #|shared_key|)): ('unit) {
+      KLOC ← get K_loc pks pkr shared_key ;;
+      SIDLOC ← get SID_loc pks pkr ;;
 
       if b then
-        key ← kdist ;;
-        #put (K_loc) := @setm ('SID : choiceType) _ KLOC SID key ;;(*This needs to put a uniformly chosen key*)
+        shared_key'' ← kdist ;;
+        #put (K_loc pks pkr shared_key) := setm KLOC (pks', pkr') shared_key'' ;;(*This needs to put a uniformly chosen key*)
         ret (Datatypes.tt : 'unit)
       else
-        #assert isSome (KLOC SID) as someKey ;;
-        #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID true ;;
-        #put (K_loc) := setm KLOC SID k ;;
+        #assert isSome (KLOC (pks', pkr')) as someKey ;;
+        #put (SID_loc pks pkr) := setm SIDLOC (pks', pkr') true ;;
+        #put (K_loc pks pkr shared_key) := setm KLOC (pks', pkr') shared_key' ;;
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('(SID, k) : 'SID × 'key): ('unit) {
-      KLOC ← get K_loc ;;
-      #assert isSome (KLOC SID) as someKey ;;
-      SIDLOC ← get SID_loc ;;
-      #put (SID_loc) := @setm ('SID : choiceType) _ SIDLOC SID false ;;
+    #def #[ CSET ] ('((pks', pkr'), shared_key') : 'T (('fin #|pks| × 'fin #|pkr|) × 'fin #|shared_key|)): ('unit) {
+      KLOC ← get K_loc pks pkr shared_key ;;
+      #assert isSome (KLOC (pks', pkr')) as someKey ;;
+      SIDLOC ← get SID_loc pks pkr ;;
+      #put (SID_loc pks pkr) := setm SIDLOC (pks', pkr') false ;;
       ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ GET ] (SID : 'SID): ('key) {
-      KLOC ← get K_loc ;;
-      #assert isSome (KLOC SID) as someKey ;;
-      let key := getSome (KLOC SID) someKey in
-      @ret ('key) key
+    #def #[ GET ] ('(pks', pkr') : 'T ('fin #|pks| × 'fin #|pkr|)): ('T 'fin #|shared_key|) {
+      KLOC ← get K_loc pks pkr shared_key ;;
+      #assert isSome (KLOC (pks', pkr')) as someKey ;;
+      let shared_key' := getSome (KLOC (pks', pkr')) someKey in
+      @ret ('T 'fin #|shared_key|) shared_key'
 
     } ;
 
-    #def #[ HON ] (SID : 'SID): ('bool) {
-      SIDLOC ← get SID_loc ;;
-      #assert isSome (SIDLOC SID) as someBool ;;
-      let bool := getSome (SIDLOC SID) someBool in
-      @ret ('bool) bool
+    #def #[ HON ] ('(pks', pkr') : 'T ('fin #|pks| × 'fin #|pkr|)): ('bool) {
+      SIDLOC ← get SID_loc pks pkr ;;
+      #assert isSome (SIDLOC (pks', pkr')) as someBool ;;
+      let b := getSome (SIDLOC (pks', pkr')) someBool in
+      @ret ('bool) b
 
     }
   ].

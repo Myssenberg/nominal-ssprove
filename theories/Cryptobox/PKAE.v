@@ -33,7 +33,6 @@ Record NBPES_scheme :=
     Nonce    : choice_type ;
     M        : choice_type ;
     C        : choice_type ;
-    sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
     pkgen : 
       code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
@@ -42,7 +41,9 @@ Record NBPES_scheme :=
       code fset0 [interface] C ;
 
     dec : forall (c : C) (pk_s : PK) (pk_r : PK) (n : Nonce),
-      code fset0 [interface] M 
+      code fset0 [interface] M; 
+
+    cdist : code fset0 [interface] C ; (*We might need more logs here*)
   }.
 
 Notation " 'pk p " := ('fin #|PK p|)
