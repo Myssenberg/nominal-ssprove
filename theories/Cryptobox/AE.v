@@ -30,55 +30,14 @@ Import NBSES.
 Module AE.
 
 
-Variable (n: nat).
-Definition Big_N: nat := 2^n.
-Definition PK: choice_type := chFin (mkpos Big_N).
+Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
+Notation " 'T c " := (c) (at level 2): package_scope.
 
-Notation " 'pk " := (PK) (in custom pack_type at level 2).
-Notation " 'pk " := (PK) (at level 2): package_scope. 
-
-Definition H : choice_type := ('pk × 'pk).
+Definition M_loc (pk n : finType) (m c : choice_type) `{Positive #|pk|} `{Positive #|n|} : Location := (chMap (('fin #|pk| × 'fin #|pk|) × 'fin #|n|) (m × c); 0).
 
 
-Notation " 'h " := (H) (in custom pack_type at level 2).
-Notation " 'h " := (H) (at level 2): package_scope.
-
-Notation " 'k E " := ('fin #|K E|)
-  (in custom pack_type at level 2, E constr at level 20).
-
-Notation " 'k E " := ('fin #|K E|)
-  (at level 3) : package_scope.
-
-Notation " 'm E " := (M E)
-  (in custom pack_type at level 2, E constr at level 20).
-
-Notation " 'm E " := (M E)
-  (at level 3) : package_scope.
-
-Notation " 'c E " := (C E)
-  (in custom pack_type at level 2, E constr at level 20).
-
-Notation " 'c E " := (C E)
-  (at level 3) : package_scope.
-
-Notation " 'n E " := ('fin #|Nonce E|)
-  (in custom pack_type at level 2, E constr at level 20).
-
-Notation " 'n E " := ('fin #|Nonce E|)
-  (at level 3) : package_scope.
-
-
-Definition chSet t := chMap t 'unit.
-
-Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
-Notation " 'set t " := (chSet t) (at level 2): package_scope. 
-
-
-Definition M_loc (E: NBSES_scheme): Location := (chMap (('pk × 'pk) × 'n E) ('m E × 'c E) ; 0). 
-
-
-Definition AE_locs_tt (E : NBSES_scheme):= fset [::  M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition AE_locs_ff (E : NBSES_scheme):= fset [::  M_loc E].
+Definition AE_locs_tt (pk n : finType) (m c: choice_type) `{Positive #|pk|} `{Positive #|n|}:= fset [::  M_loc pk n m c].
+Definition AE_locs_ff (pk n : finType) (m c: choice_type) `{Positive #|pk|} `{Positive #|n|}:= fset [::  M_loc pk n m c].
 
 Definition GET := 1%N.
 Definition HON := 2%N.
@@ -87,77 +46,64 @@ Definition ENC := 3%N.
 Definition DEC := 4%N.
 
 
-Notation cdist :=
-  (c ← sample uniform Big_N ;;
-  ret c).
-
-
-Definition I_AE_IN (E: NBSES_scheme) :=
+Definition I_AE_IN (pk k : choice_type) :=
   [interface
-    #val #[ GET ]: ('pk × 'pk)→ 'k E ;
-    #val #[ HON ]: ('pk × 'pk)  → 'bool 
+    #val #[ GET ]: ('T pk × 'T pk) → 'T k ;
+    #val #[ HON ]: ('T pk × 'T pk)  → 'bool 
 ].
 
-Definition I_AE_OUT (E: NBSES_scheme) :=
+Definition I_AE_OUT (pk m n c: choice_type) :=
   [interface
-    #val #[ ENC ]: ((('pk × 'pk) × 'm E) × 'n E) → 'c E ;
-    #val #[ DEC ]: ((('pk × 'pk) × 'c E) × 'n E) → 'm E 
+    #val #[ ENC ]: ((('T pk × 'T pk) × 'T m) × 'T n) → 'T c ;
+    #val #[ DEC ]: ((('T pk × 'T pk) × 'T c) × 'T n) → 'T m 
 ].
 
-Notation "x ← 'getSome' n ;; c" :=
-  ( v ← get n ;;
-    #assert (isSome v) as vSome ;;
-    let x := getSome v vSome in
-    c
-  )
-  (at level 100, n at next level, right associativity,
-  format "x  ←  getSome  n  ;;  '//' c")
-  : package_scope.
-
-Definition AE (b : bool) (E: NBSES_scheme):
-  module (I_AE_IN E) (I_AE_OUT E)  := 
-  [module AE_locs_tt E ;
-    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk × 'pk) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ GET ]: ('pk × 'pk) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk × 'pk) → 'bool } as hon ;;
+Definition AE (b : bool) (m c: choice_type) (pk n k: finType) `{Positive #|pk|} `{Positive #|n|} `{Positive #|k|} (sample_C : code fset0 [interface] c) (enc : forall (m' : m) (k' : 'T 'fin #|k|) (n' : 'T 'fin #|n|), code fset0 [interface] c) (dec : forall (c' : c) (k' : 'T 'fin #|k|) (n' : 'fin #|n|), code fset0 [interface] m):
+  module (I_AE_IN 'fin #|pk| 'fin #|k|) (I_AE_OUT 'fin #|pk| m 'fin #|n| c)  := 
+  [module AE_locs_tt pk n m c ;
+    #def #[ ENC ] ('(((PKr, PKs), m'), n') : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'T m) × 'T 'fin #|n|) : ('T c ){
+      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'T 'fin #|k| } as geti ;;
+      #import {sig #[ HON ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'bool } as hon ;;
       
-      k ← geti (PKr, PKs) ;;
-      MLOC ← get M_loc E  ;;
-      HON ← hon (PKr, PKs) ;;
+      k' ← geti (PKr, PKs) ;;
+      
+      MLOC ← get M_loc pk n m c  ;; 
+      HON ← hon (PKr, PKs) ;;   
 
-      #assert MLOC ((PKr, PKs), n) == None ;;
+      #assert MLOC ((PKr, PKs), n') == None ;; 
 
       if (b && HON) then
-        c ← E.(sample_C) ;; 
-        #put (M_loc E) := setm MLOC ((PKr, PKs), n) (m, c) ;;
-        ret c
+        c' ← sample_C ;; 
+        #put (M_loc pk n m c) := setm MLOC ((PKr, PKs), n') (m', c') ;;
+        ret c'
       else 
-         c ← E.(enc) m k n ;;
-         #put (M_loc E) := setm MLOC ((PKr, PKs), n) (m, c) ;;
-          ret c 
+         c' ← enc m' k' n' ;;
+         #put (M_loc pk n m c) := setm MLOC ((PKr, PKs), n') (m', c') ;;
+         ret c' 
+      
     } ; 
 
-    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk × 'pk) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ GET ]: ('pk × 'pk) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk × 'pk) → 'bool } as hon ;;
+    #def #[ DEC ] ('(((PKr, PKs), c'), n') : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'T c) × 'T 'fin #|n|) : ('T m) {
+      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'T 'fin #|k| } as geti ;;
+      #import {sig #[ HON ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'bool } as hon ;;
 
-      k ← geti (PKr, PKs) ;;
-      MLOC ← get M_loc E ;;
+      k' ← geti (PKr, PKs) ;;
+      MLOC ← get M_loc pk n m c ;;
       HON ← hon (PKr, PKs) ;;
       
 
       if (b && HON) then
         
-        #assert isSome (MLOC ((PKr, PKs), n)) as someC ;;
-        let (m, c') := getSome (MLOC ((PKr, PKs), n)) someC in
-        ret m
+        #assert isSome (MLOC ((PKr, PKs), n')) as someC ;;
+        let (m', c') := getSome (MLOC ((PKr, PKs), n')) someC in
+        ret m'
 
       else
 
-        m ← E.(dec) c k n ;;
-        ret m 
+        m' ← dec c' k' n' ;;
+        ret m' 
       
-
+    
     } 
   ].
 
