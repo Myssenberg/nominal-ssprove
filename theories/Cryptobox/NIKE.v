@@ -64,6 +64,9 @@ Notation " 'shared_key n " := ('fin #|Shared_Key n|)
 Notation " 'shared_key n " := ('fin #|Shared_Key n|)
   (at level 3) : package_scope.
 
+Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
+Notation " 'T c " := (c) (at level 2): package_scope.
+
 
 Instance pk_posi n : Positive #|PK n|.
 Proof.
@@ -88,42 +91,42 @@ Definition SET := 6%N.
 Definition CSET := 7%N.
 Definition SHAREDKEY := 8%N.
 
-Definition I_NIKE_IN (N: NIKE_scheme) :=
+Definition I_NIKE_IN (pk sk shared_key : choice_type) :=
   [interface
-    #val #[ GETSK ]: 'pk N → 'sk N ;
-    #val #[ HONPK ]: 'pk N → 'bool ;
-    #val #[ SET ]:   ('SID N × 'shared_key N) → 'unit ;
+    #val #[ GETSK ]: 'T pk → 'T sk ;
+    #val #[ HONPK ]: 'T pk → 'bool ;
+    #val #[ SET ]:   (('T pk × 'T pk ) × 'T shared_key) → 'unit ;
 (*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
-    #val #[ CSET ]: ('SID N × 'shared_key N) → 'unit
+    #val #[ CSET ]: (('T pk × 'T pk ) × 'T shared_key) → 'unit
 ].
 
-Definition I_NIKE_OUT (N: NIKE_scheme) :=
+Definition I_NIKE_OUT (pk : choice_type) :=
   [interface
-    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit
+    #val #[ SHAREDKEY ]: ('T pk × 'T pk) → 'unit
 ].
 
-Definition NIKE (N : NIKE_scheme):
-  module (I_NIKE_IN N) (I_NIKE_OUT N) :=
+Definition NIKE (pk sk shared_key : finType) `{Positive #|pk|} `{Positive #|sk|} `{Positive #|shared_key|} (sharedkey : forall (pk : 'fin #|pk|) (sk : 'fin #|sk|), code fset0 [interface] ('fin #|shared_key|)):
+  module (I_NIKE_IN 'fin #|pk| 'fin #|sk| 'fin #|shared_key|) (I_NIKE_OUT 'fin #|pk|) :=
   [module no_locs ; 
-    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'unit {
-      #import {sig #[ HONPK ]: 'pk N → 'bool } as honpk ;;
-      #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
-      #import {sig #[ SET ]: (('pk N × 'pk N) × 'shared_key N) → 'unit} as set ;;
-      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'shared_key N) → 'unit} as cset ;;
+    #def #[ SHAREDKEY ] ('(pks, pkr) : 'T 'fin #|pk| × 'T 'fin #|pk| ) : 'unit {
+      #import {sig #[ HONPK ]: 'T 'fin #|pk| → 'bool } as honpk ;;
+      #import {sig #[ GETSK ]: 'T 'fin #|pk| → 'T 'fin #|sk| } as getsk ;;
+      #import {sig #[ SET ]: (('T 'fin #|pk| × 'T 'fin #|pk|) × 'T 'fin #|shared_key|) → 'unit} as set ;;
+      #import {sig #[ CSET ]: (('T 'fin #|pk| × 'T 'fin #|pk|) × 'T 'fin #|shared_key|) → 'unit} as cset ;;
       hs ← honpk pks ;;
       hr ← honpk pkr ;;
       
       sks ← getsk pks ;;
-       shared_key ← N.(sharedkey) pkr sks ;;
+       shared_key' ← sharedkey pkr sks ;;
       
       if (hs && hr) then
         let sid := (pks, pkr) in
-          set (sid, shared_key) ;;
+          set (sid, shared_key') ;;
 
         ret (Datatypes.tt : 'unit)
       else
         let sid := (pks, pkr) in
-          cset (sid, shared_key) ;;
+          cset (sid, shared_key') ;;
         ret (Datatypes.tt : 'unit)
       
     }

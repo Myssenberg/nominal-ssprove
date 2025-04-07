@@ -1,4 +1,4 @@
-(*This is an implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme.*)
+(*This is part of an implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme. This file contains the NBPES scheme as well as the PKAE package.*)
 
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
@@ -84,23 +84,24 @@ Instance sk_posi p : Positive #|SK p|.
 Proof.
 apply SK_pos. Defined.
 
-Definition chSet t := chMap t 'unit.
+Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
+Notation " 'T c " := (c) (at level 2): package_scope.
 
-Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
-Notation " 'set t " := (chSet t) (at level 2): package_scope.
+(*the handle, h, aka the SessionID will be represented by a pair of sender and receiver public keys: (pks, pkr)*)
 
-Definition h (E: NBPES_scheme) : choice_type := ('set ('pk E × 'pk E)).
+(*Definition PK_loc (pk : finType) `{Positive #|pk|}: Location := (chMap 'fin #|pk| 'bool ; 0).
 
+Definition SK_loc (pk sk : finType) `{Positive #|pk|} `{Positive #|sk|}: Location := (chMap 'fin #|pk| 'fin #|sk| ; 1).
 
-Definition PK_loc (E : NBPES_scheme): Location := (chMap 'pk E 'bool ; 0).
+Definition PKAE_locs_tt (pk sk : finType) (n m c : choice_type) `{Positive #|pk|} `{Positive #|sk|}:= fset [:: PK_loc pk ; SK_loc pk sk ; M_loc pk sk n m c]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition PKAE_locs_ff (pk sk : finType) (n m c : choice_type) `{Positive #|pk|} `{Positive #|sk|}:= fset [:: PK_loc pk ; SK_loc pk sk ; M_loc pk sk n m c].
+*)
 
-Definition SK_loc (E : NBPES_scheme): Location := (chMap 'pk E 'sk E ; 1).
+Definition M_loc (pk sk : finType) (n m c : choice_type) `{Positive #|pk|} `{Positive #|sk|} : Location := (chMap (('fin #|pk| × 'fin #|sk|) × n) (m × c) ; 2).
 
-Definition M_loc (E: NBPES_scheme): Location := (chMap ('set (h E × 'n E)) ('set ('m E × 'c E)) ; 2). 
+Definition PKAE_locs_tt (pk sk : finType) (n m c : choice_type) `{Positive #|pk|} `{Positive #|sk|}:= fset [:: M_loc pk sk n m c]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition PKAE_locs_ff (pk sk : finType) (n m c : choice_type) `{Positive #|pk|} `{Positive #|sk|}:= fset [:: M_loc pk sk n m c].
 
-
-Definition PKAE_locs_tt (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKAE_locs_ff (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E].
 
 Definition GEN := 2%N.
 Definition GETSK := 4%N.
@@ -110,72 +111,79 @@ Definition PKENC := 6%N.
 Definition PKDEC := 7%N.
 
 
-Definition I_PKAE_IN (E: NBPES_scheme) :=
+Definition I_PKAE_IN (pk sk : choice_type) :=
   [interface
-    #val #[ GETSK ]: 'pk E → 'sk E ;  
-    #val #[ HONPK ]: 'pk E → 'bool 
+    #val #[ GETSK ]: 'T pk → 'T sk ;  
+    #val #[ HONPK ]: 'T pk → 'bool 
 ].
 
-Definition I_PKAE_OUT (E: NBPES_scheme) :=
+Definition I_PKAE_OUT (pk m n c : choice_type) :=
   [interface
-    #val #[ PKENC ]: ('pk E × 'pk E × 'm E × 'n E) → 'c E ;
-    #val #[ PKDEC ]: ('pk E × 'pk E × 'c E × 'n E) → 'm E 
+    #val #[ PKENC ]: ((('T pk × 'T pk) × 'T m) × 'T n) → 'T c ;
+    #val #[ PKDEC ]: ((('T pk × 'T pk) × 'T c) × 'T n) → 'T m 
 ].
 
-Definition I_PKAE_OUT_TEMP (E: NBPES_scheme) :=
-  [interface
-    #val #[ PKENC ]: ('pk E × 'pk E) → 'bool
-].
 
-Notation "'getNone' n ;; c" :=
-  ( v ← get n ;;
-    #assert (v == None) ;;
-    c
-  )
-  (at level 100, n at next level, right associativity,
-  format "getNone  n  ;;  '//' c")
-  : package_scope.
+(*Definition SORT (pks pkr : choice_type) : (pks × pkr) :=
+  if (#| pks | < #| pkr |) then (pks, pkr) else (pkr, pks).
 
-Notation "x ← 'getSome' n ;; c" :=
-  ( v ← get n ;;
-    #assert (isSome v) as vSome ;;
-    let x := getSome v vSome in
-    c
-  )
-  (at level 100, n at next level, right associativity,
-  format "x  ←  getSome  n  ;;  '//' c")
-  : package_scope.
 
-Definition PKAE (E: NBPES_scheme):
-  module (I_PKAE_IN E) (I_PKAE_OUT_TEMP E)  := 
-  [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('(PKs, PKr): 'pk E × 'pk E) : 'bool {
-      #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
-      #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
-      SKs ← getsk PKs ;;
-      HONpkr ← honpk PKr ;;
-      ret HONpkr
+Definition SORT (pks pkr : choice_type) : choice_type * choice_type :=
+  if (#| Finite.clone pks pks | < #| Finite.clone pkr erefl |)
+  then (pks, pkr)
+  else (pkr, pks).
+
+Definition SORT (pks pkr : choice_type) : choice_type * choice_type :=
+  let fin_pks := [finType of pks] in
+  let fin_pkr := [finType of pkr] in
+  if (#|fin_pks| < #|fin_pkr|)
+  then (pks, pkr)
+  else (pkr, pks).
+
+Definition SORT ('fin #|pks| 'fin #|pkr| : choice_type) : (pks × pkr) :=
+  if (#|pks| < #|pkr|) then (pks, pkr) : (prod _ _) else (pkr, pks) : (prod _ _).
+
+
+Definition SORT (pks pkr : finType) `{Positive #|pks|} `{Positive #|pkr|} : (choice_type * choice_type) :=
+  if (#|pks| < #|pkr|) then ('fin #|pks|, 'fin #|pkr|) else ('fin #|pkr|, 'fin #|pks|). (*not sure this sorts the correct thing, if it sorts the length of the keys*)*)
+
+Definition PKAE (b : bool) (pk sk : finType) (n m c : choice_type) `{Positive #|pk|} `{Positive #|sk|} (cdist : code fset0 [interface] c) (enc : forall (m : m) (pks : pk) (pkr : pk) (n : n),
+      code fset0 [interface] c) (dec : forall (c : c) (pks : pk) (pkr : pk) (n : n),
+      code fset0 [interface] m):
+  module (I_PKAE_IN 'fin #|pk| 'fin #|sk|) (I_PKAE_OUT 'fin #|pk| m n c)  := 
+  [module PKAE_locs_tt pk sk m n c ;
+    #def #[ PKENC ] ('(((pks', pkr'), m'), n') : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'T m) × 'T n) : ('T c) {
+      #import {sig #[ GETSK ]: 'T 'fin #|pk|  → 'T 'fin #|sk| } as getsk ;;
+      #import {sig #[ HONPK ]: 'T 'fin #|pk| → 'bool } as honpk ;;
+      sks ← getsk pks' ;;
+      HONpkr ← honpk pkr' ;;
+      let h := (pks', pkr') (*SORT pks' pkr'*) in
+      MLOC ← get M_loc pk sk n m c ;;
+      #assert (getm MLOC ((pkr', sks), n')) == None ;;
+      if (b && HONpkr) then
+        c' ← cdist ;;        
+        #put (M_loc pk sk n m c) := setm MLOC (h, n') (m', c') ;;
+        ret c'
+      else
+        c' ← enc sks pkr' m' n' ;;
+        #put (M_loc pk sk n m c) := setm MLOC (h, n') (m', c') ;;
+        ret c'
+    } ;
+    #def #[ PKDEC ] ('(((pkr', pks'), c'), n') : (('T pk × 'T pk) × 'T c) × 'T n) : ('T m) {
+      #import {sig #[ GETSK ]: 'T 'fin #|pk| → 'T sk } as getsk ;;
+      #import {sig #[ HONPK ]: 'T 'fin #|pk| → 'bool } as honpk ;;
+      skr ← getsk pkr' ;;
+      HONpks ← honpk pks' ;;
+      if (b && HONpks) then
+        let h := (pks', pkr') (*SORT pks' pkr'*) in
+        MLOC ← get M_loc pk sk n m c ;;        
+        #assert isSome (MLOC (h, n')) as MC ;;
+        let (m', c'') := getSome (MLOC (h, n')) MC in
+        ret m'
+      else
+        m' ← dec skr pks' c' n' ;;
+        ret m'
     }
   ].
-
-
-Definition GPKAE_tt_PKEY_tt :=
-  True. (*TEMPORARY*)
-
-Definition GPKAE_tt_PKEY_ff :=
-  False. (*TEMPORARY*)
-
-
-(*
-
-(*Definition GPKAE b := if b then GPKAE_PKEY_tt else GPKAE_PKEY_ff.*)
-
-
-Lemma PK_coll_bound:
-  forall (A : adversary [interface]),
-  AdvFor GPKAE A <=
-  AdvFor GPKAE A.
-Proof.
-*)
 
 End NBPES.
