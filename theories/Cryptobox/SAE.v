@@ -29,66 +29,63 @@ Import NBSES.
 
 Module SAE.
 
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
+Definition M_loc (E : NBSES_scheme) : Location := (chMap 'n E ('m E × 'c E) ; 0).
+Definition K_loc (E : NBSES_scheme) : Location := ('option 'k E ; 1).
 
-Definition M_loc (n : finType) (m c : choice_type) `{Positive #|n|} : Location := (chMap 'fin #|n| (m × c) ; 0).
-Definition K_loc (k : finType) `{Positive #|k|} : Location := ('option 'fin #|k| ; 1).
-
-Definition SAE_locs_tt (m c : choice_type) (n k : finType) `{Positive #|n|} `{Positive #|k|} := fset [::  M_loc n m c ; K_loc k]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition SAE_locs_ff (m c : choice_type) (n k : finType) `{Positive #|n|} `{Positive #|k|} := fset [::  M_loc n m c ; K_loc k]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  M_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition SAE_locs_ff (E : NBSES_scheme) := fset [::  M_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 
 Definition GEN := 2%N.
 Definition ENC := 3%N.
 Definition DEC := 4%N.
 
-Definition I_SAE_OUT (n m c: choice_type) :=
+Definition I_SAE_OUT (E : NBSES_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'unit ;    
-    #val #[ ENC ]: ('T m × 'T n) → 'T c  ;
-    #val #[ DEC ]: ('T c × 'T n) → 'T m 
+    #val #[ ENC ]: ('m E × 'n E) → 'c E  ;
+    #val #[ DEC ]: ('c E × 'n E) → 'm E 
 ].
 
-Definition SAE (b : bool) (m c : choice_type) (n k : finType) `{Positive #|n|} `{Positive #|k|} (sample_K : code fset0 [interface] 'fin #|k|) (sample_C : code fset0 [interface] c) (enc : forall (m : m) (k : 'T 'fin #|k|) (n : 'T 'fin #|n|), code fset0 [interface] c) (dec : forall (c : c) (k : 'T 'fin #|k|) (n : 'fin #|n|), code fset0 [interface] m):
-  game (I_SAE_OUT 'fin #|n| m c)  := 
-  [module SAE_locs_tt m c n k ;
+Definition SAE (b : bool) (E : NBSES_scheme):
+  game (I_SAE_OUT E)  := 
+  [module SAE_locs_tt E ;
     #def #[ GEN ] (_ : 'unit) : ('unit) {
-      KLOC ← get K_loc k ;;
+      KLOC ← get K_loc E ;;
       match KLOC with
       | None =>
-        k' ← sample_K ;;
-        #put (K_loc k) := Some k' ;;
+        k ← E.(sample_K) ;;
+        #put (K_loc E) := Some k ;;
         ret (Datatypes.tt : 'unit)
-      | Some k' => ret (Datatypes.tt : 'unit)
+      | Some k => ret (Datatypes.tt : 'unit)
       end
     } ;
-    #def #[ ENC ] ('(m', n') : ('T m × 'T 'fin #|n|)) : ('T c) {
-      MLOC ← get M_loc n m c ;;
-      #assert MLOC n' == None ;;
-      KLOC ← get K_loc k ;;
+    #def #[ ENC ] ('(m, n) : ('m E × 'n E)) : ('c E) {
+      MLOC ← get M_loc E ;;
+      #assert MLOC n == None ;;
+      KLOC ← get K_loc E ;;
       #assert isSome KLOC as someKey ;;
-      let k' := getSome KLOC someKey in
+      let k := getSome KLOC someKey in
       if (b) then
-       c' ← sample_C ;;
-       #put (M_loc n m c) := setm MLOC (n') (m', c') ;;
-       ret c'
+       c ← E.(sample_C) ;;
+       #put (M_loc E) := setm MLOC (n) (m, c) ;;
+       ret c
       else
-       c' ← enc m' k' n' ;;
-       #put (M_loc n m c) := setm MLOC (n') (m', c') ;;
-       ret c'
+       c ← E.(enc) m k n ;;
+       #put (M_loc E) := setm MLOC (n) (m, c) ;;
+       ret c
     } ;
-    #def #[ DEC ] ('(c', n') : ('T c × 'T 'fin #|n|)) : ('T m) {
-      KLOC ← get K_loc k ;;
+    #def #[ DEC ] ('(c, n) : ('c E × 'n E)) : ('m E) {
+      KLOC ← get K_loc E ;;
       #assert (isSome KLOC) as someKey ;;
-      let k' := getSome KLOC someKey in
+      let k := getSome KLOC someKey in
       if (b) then
-       MLOC ← get M_loc n m c ;;
-       #assert isSome (MLOC n') as MC ;;
-       let (m', c'') := getSome (MLOC n') MC in 
-       ret m'
+       MLOC ← get M_loc E ;;
+       #assert isSome (MLOC n) as MC ;;
+       let (m, c') := getSome (MLOC n) MC in 
+       ret m
       else
-       m' ← dec c' k' n' ;;
-       ret m'
+       m ← E.(dec) c k n ;;
+       ret m
     }
   ].
 
