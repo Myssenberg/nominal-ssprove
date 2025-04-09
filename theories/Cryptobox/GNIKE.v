@@ -21,8 +21,8 @@ Set Primitive Projections.
 
 From NominalSSP Require Import Prelude Group Misc.
 
-From NominalSSP Require Import NIKE KEY PKEY.
-Import NIKE NIKE_scheme KEY PKEY.
+From NominalSSP Require Import NIKE KEY PKEY PKAE.
+Import NIKE_scheme NBPES_scheme KEY PKEY.
 
 Import PackageNotation.
 
@@ -30,25 +30,28 @@ Import PackageNotation.
 
 Module GNIKE.
 
-Definition GEN := 1%N.
-Definition HON := 2%N.
-Definition CSETPK := 3%N.
-Definition GET := 4%N. (*tal skal være forskellige across filer*)
+Definition GEN := 31%N.
+Definition HON := 32%N.
+Definition CSETPK := 33%N.
+Definition GET := 34%N. (*tal skal være forskellige across filer*)
+
+Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
+Notation " 'T c " := (c) (at level 2): package_scope.
 
 
 Definition I_GNIKE_OUT (N: NIKE_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit ;
-    #val #[ GEN ]: 'unit → 'pk N ;
-    #val #[ CSETPK ]: 'pk N → 'unit ;
+    #val #[ SHAREDKEY ]: (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'unit ;
+    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
+    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
     #val #[ GET ]:  ('SID N) → 'shared_key N ;
     #val #[ HON ]:  ('SID N) → 'bool
 ].
 
 Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'pk N ;
-    #val #[ CSETPK ]: 'pk N → 'unit ;
+    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
+    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
     #val #[ GET ]:  ('SID N) → 'shared_key N ;
     #val #[ HON ]:  ('SID N) → 'bool
 ].
@@ -56,11 +59,15 @@ Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
 #[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
 
 Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b || PKEY b N.PK N.SK N.keygen).
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b N || PKEY b (NIKE_to_GEN N)).
+
+
+(*Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b || PKEY b N.PK N.SK N.keygen).*)
 
 Lemma GNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N b).
 Proof.
-unfold GNIKE. nssprove_valid. 2:{
+unfold GNIKE. nssprove_valid. fset_solve.
 
 
 End GNIKE.

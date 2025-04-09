@@ -21,9 +21,77 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group Misc.
 Import PackageNotation.
 
+From NominalSSP Require Import NIKE.
+
 #[local] Open Scope package_scope.
 
 Module KEY.
+
+Import NIKE_scheme.
+
+Definition SID_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'bool ; 25).
+Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 26).
+
+Definition KEY_locs_tt (N: NIKE_scheme) := fset [:: SID_loc N ; K_loc N].  
+Definition KEY_locs_ff (N: NIKE_scheme) := fset [:: SID_loc N ; K_loc N].
+
+Definition SET := 27%N.
+Definition CSET := 28%N.
+Definition GET := 29%N.
+Definition HON := 30%N.
+
+Definition I_KEY_OUT (N: NIKE_scheme) :=
+  [interface
+    #val #[ SET ]:  ('SID N × 'shared_key N) → 'unit ;
+    #val #[ CSET ]: ('SID N × 'shared_key N) → 'unit ;
+    #val #[ GET ]:  'SID N → 'shared_key N ;
+    #val #[ HON ]:  'SID N → 'bool
+].
+
+Definition KEY b (N: NIKE_scheme):
+  game (I_KEY_OUT N) :=
+  [module KEY_locs_tt N ;
+    #def #[ SET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) {
+      KLOC ← get K_loc N ;;
+      SIDLOC ← get SID_loc N ;;
+
+      if b then
+        key ← N.(kdist) ;;
+        #put (K_loc N) := @setm ('SID N : choiceType) _ KLOC sid key ;;(*This needs to put a uniformly chosen key*)
+        ret (Datatypes.tt : 'unit)
+      else
+        #assert isSome (KLOC sid) as someKey ;;
+        #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid true ;;
+        #put (K_loc N) := setm KLOC sid k ;;
+        ret (Datatypes.tt : 'unit)
+    } ;
+
+    #def #[ CSET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) {
+      KLOC ← get K_loc N ;;
+      #assert isSome (KLOC sid) as someKey ;;
+      SIDLOC ← get SID_loc N ;;
+      #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid false ;;
+      ret (Datatypes.tt : 'unit)
+    } ;
+
+    #def #[ GET ] (sid : 'SID N): ('shared_key N) {
+      KLOC ← get K_loc N;;
+      #assert isSome (KLOC sid) as someKey ;;
+      let key := getSome (KLOC sid) someKey in
+      @ret ('shared_key N) key
+
+    } ;
+
+    #def #[ HON ] (sid : 'SID N): ('bool) {
+      SIDLOC ← get SID_loc N;;
+      #assert isSome (SIDLOC sid) as someBool ;;
+      let bool := getSome (SIDLOC sid) someBool in
+      @ret ('bool) bool
+
+    }
+  ].
+
+(*
 
 Definition chSet t := chMap t 'unit.
 
@@ -100,6 +168,6 @@ Definition KEY (b : bool) (pks pkr shared_key : finType) `{Positive #|pks|} `{Po
 
     }
   ].
-
+*)
 
 End KEY.
