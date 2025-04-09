@@ -35,6 +35,8 @@ Notation " 'T c " := (c) (at level 2): package_scope.
 
 Definition M_loc (pk n : finType) (m c : choice_type) `{Positive #|pk|} `{Positive #|n|} : Location := (chMap (('fin #|pk| × 'fin #|pk|) × 'fin #|n|) (m × c); 0).
 
+(*Definition M_loc (E : NBSES_scheme) : Location := (chMap (('pk E × 'pk E) × 'n E) ('m E × 'c E); 0).*)
+
 
 Definition AE_locs_tt (pk n : finType) (m c: choice_type) `{Positive #|pk|} `{Positive #|n|}:= fset [::  M_loc pk n m c].
 Definition AE_locs_ff (pk n : finType) (m c: choice_type) `{Positive #|pk|} `{Positive #|n|}:= fset [::  M_loc pk n m c].
