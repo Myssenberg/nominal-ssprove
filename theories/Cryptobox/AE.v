@@ -33,11 +33,10 @@ Module AE.
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
-Definition M_loc (pk n : finType) (m c : choice_type) `{Positive #|pk|} `{Positive #|n|} : Location := (chMap (('fin #|pk| × 'fin #|pk|) × 'fin #|n|) (m × c); 0).
+Definition M_loc (E: NBSES_scheme) (pk : finType) `{Positive #|pk|} : Location := (chMap (('fin #|pk| × 'fin #|pk|) × 'n E) ('m E × 'c E); 0).
 
-
-Definition AE_locs_tt (pk n : finType) (m c: choice_type) `{Positive #|pk|} `{Positive #|n|}:= fset [::  M_loc pk n m c].
-Definition AE_locs_ff (pk n : finType) (m c: choice_type) `{Positive #|pk|} `{Positive #|n|}:= fset [::  M_loc pk n m c].
+Definition AE_locs_tt (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} := fset [::  M_loc E pk].
+Definition AE_locs_ff (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} := fset [::  M_loc E pk].
 
 Definition GET := 1%N.
 Definition HON := 2%N.
@@ -45,70 +44,64 @@ Definition HON := 2%N.
 Definition ENC := 3%N.
 Definition DEC := 4%N.
 
-
-Definition I_AE_IN (pk k : choice_type) :=
+Definition I_AE_IN (E: NBSES_scheme) (pk : choice_type) :=
   [interface
-    #val #[ GET ]: ('T pk × 'T pk) → 'T k ;
+    #val #[ GET ]: ('T pk × 'T pk) → 'k E ;
     #val #[ HON ]: ('T pk × 'T pk)  → 'bool 
 ].
 
-Definition I_AE_OUT (pk m n c: choice_type) :=
+Definition I_AE_OUT (E: NBSES_scheme) (pk: choice_type) :=
   [interface
-    #val #[ ENC ]: ((('T pk × 'T pk) × 'T m) × 'T n) → 'T c ;
-    #val #[ DEC ]: ((('T pk × 'T pk) × 'T c) × 'T n) → 'T m 
+    #val #[ ENC ]: ((('T pk × 'T pk) × 'm E) × 'n E) → 'c E ;
+    #val #[ DEC ]: ((('T pk × 'T pk) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition AE (b : bool) (m c: choice_type) (pk n k: finType) `{Positive #|pk|} `{Positive #|n|} `{Positive #|k|} (sample_C : code fset0 [interface] c) (enc : forall (m' : m) (k' : 'T 'fin #|k|) (n' : 'T 'fin #|n|), code fset0 [interface] c) (dec : forall (c' : c) (k' : 'T 'fin #|k|) (n' : 'fin #|n|), code fset0 [interface] m):
-  module (I_AE_IN 'fin #|pk| 'fin #|k|) (I_AE_OUT 'fin #|pk| m 'fin #|n| c)  := 
-  [module AE_locs_tt pk n m c ;
-    #def #[ ENC ] ('(((PKr, PKs), m'), n') : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'T m) × 'T 'fin #|n|) : ('T c ){
-      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'T 'fin #|k| } as geti ;;
+Definition AE (b : bool) (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} :
+  module (I_AE_IN E 'fin #|pk|) (I_AE_OUT E 'fin #|pk|)  := 
+  [module AE_locs_tt E pk;
+    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'm E) × 'n E) : ('c E) {
+      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'k E } as geti ;;
       #import {sig #[ HON ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'bool } as hon ;;
       
-      k' ← geti (PKr, PKs) ;;
-      
-      MLOC ← get M_loc pk n m c  ;; 
-      HON ← hon (PKr, PKs) ;;   
+      k ← geti (PKr, PKs) ;;
+      MLOC ← get M_loc E pk ;;
+      HON ← hon (PKr, PKs) ;;
 
-      #assert MLOC ((PKr, PKs), n') == None ;; 
+      #assert MLOC ((PKr, PKs), n) == None ;;
 
       if (b && HON) then
-        c' ← sample_C ;; 
-        #put (M_loc pk n m c) := setm MLOC ((PKr, PKs), n') (m', c') ;;
-        ret c'
+        c ← E.(sample_C) ;; 
+        #put (M_loc E pk) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+        ret c
       else 
-         c' ← enc m' k' n' ;;
-         #put (M_loc pk n m c) := setm MLOC ((PKr, PKs), n') (m', c') ;;
-         ret c' 
-      
+         c ← E.(enc) m k n ;;
+         #put (M_loc E pk) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+          ret c 
     } ; 
 
-    #def #[ DEC ] ('(((PKr, PKs), c'), n') : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'T c) × 'T 'fin #|n|) : ('T m) {
-      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'T 'fin #|k| } as geti ;;
+    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'c E) × 'n E) : ('m E) {
+      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'k E } as geti ;;
       #import {sig #[ HON ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'bool } as hon ;;
 
-      k' ← geti (PKr, PKs) ;;
-      MLOC ← get M_loc pk n m c ;;
+      k ← geti (PKr, PKs) ;;
+      MLOC ← get M_loc E pk;;
       HON ← hon (PKr, PKs) ;;
       
 
       if (b && HON) then
         
-        #assert isSome (MLOC ((PKr, PKs), n')) as someC ;;
-        let (m', c') := getSome (MLOC ((PKr, PKs), n')) someC in
-        ret m'
+        #assert isSome (MLOC ((PKr, PKs), n)) as someC ;;
+        let (m, c') := getSome (MLOC ((PKr, PKs), n)) someC in
+        ret m
 
       else
 
-        m' ← dec c' k' n' ;;
-        ret m' 
+        m ← E.(dec) c k n ;;
+        ret m 
       
-    
+
     } 
   ].
-
-
-
 
 Definition GAE_tt_KEY_tt :=
   True. (*TEMPORARY*)
