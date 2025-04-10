@@ -67,7 +67,7 @@ Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
 
 Lemma GNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N b).
 Proof.
-unfold GNIKE. nssprove_valid. fset_solve.
+unfold GNIKE. nssprove_valid. 
 
 
 End GNIKE.
