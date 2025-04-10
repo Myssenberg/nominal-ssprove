@@ -106,9 +106,8 @@ Definition M_loc (E: NBPES_scheme): Location := (chMap (h E × 'n E) ('m E × 'c
 Definition PKAE_locs_tt (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 Definition PKAE_locs_ff (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E].
 
-Definition GEN := 11%N.
-Definition GETSK := 12%N.
-Definition HONPK := 13%N.
+Definition GETSK := 4%N.
+Definition HONPK := 5%N.
 
 Definition PKENC := 14%N.
 Definition PKDEC := 15%N.

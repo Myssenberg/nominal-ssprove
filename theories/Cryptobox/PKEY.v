@@ -91,9 +91,6 @@ Definition CSETPK := 3%N.
 Definition GETSK := 4%N.
 Definition HONPK := 5%N.
 
-Definition PKENC := 6%N.
-Definition PKDEC := 7%N.
-
 Definition I_PKEY_OUT (G: GEN_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'pk G ;
