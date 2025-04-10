@@ -30,9 +30,9 @@ Import PackageNotation.
 
 Module GSAE.
 
-Definition GEN := 35%N.
-Definition ENC := 36%N.
-Definition DEC:= 37%N. (*tal skal være forskellige across filer*)
+Definition GEN := 2%N.
+Definition ENC := 3%N.
+Definition DEC:= 4%N.
 
 Definition I_GSAE_OUT (E : NBSES_scheme) :=
   [interface
@@ -44,8 +44,8 @@ Definition I_GSAE_OUT (E : NBSES_scheme) :=
 Definition GSAE (E : NBSES_scheme) (b : 'bool) :
   raw_module := SAE b E.
 
-(*Lemma GSAE_valid (E : NBSES_scheme) (b : 'bool) : ValidPackage (GSAE E b).(loc) [interface] (I_GSAE_OUT E) (GSAE E b).
+Lemma GSAE_valid (E : NBSES_scheme) (b : 'bool) : ValidPackage (GSAE E b).(loc) [interface] (I_GSAE_OUT E) (GSAE E b).
 Proof.
-unfold GSAE. nssprove_valid.*)
+unfold GSAE. nssprove_valid. Qed.
 
 End GSAE.
