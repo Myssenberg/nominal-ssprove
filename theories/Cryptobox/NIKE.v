@@ -98,10 +98,10 @@ Definition NIKE_locs_tt (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N]. (*If 
 Definition NIKE_locs_ff (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N].
 
 
-Definition GETSK := 20%N.
-Definition HONPK := 21%N.
-Definition SET := 22%N.
-Definition CSET := 23%N.
+Definition GETSK := 4%N.
+Definition HONPK := 5%N.
+Definition SET := 27%N.
+Definition CSET := 28%N.
 Definition SHAREDKEY := 24%N.
 
 Definition I_NIKE_IN (N: NIKE_scheme) :=
