@@ -38,11 +38,11 @@ Definition M_loc (E: NBSES_scheme) (pk : finType) `{Positive #|pk|} : Location :
 Definition AE_locs_tt (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} := fset [::  M_loc E pk].
 Definition AE_locs_ff (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} := fset [::  M_loc E pk].
 
-Definition GET := 1%N.
-Definition HON := 2%N.
+Definition GET := 50%N.
+Definition HON := 51%N.
 
-Definition ENC := 3%N.
-Definition DEC := 4%N.
+Definition ENC := 52%N.
+Definition DEC := 53%N.
 
 Definition I_AE_IN (E: NBSES_scheme) (pk : choice_type) :=
   [interface
