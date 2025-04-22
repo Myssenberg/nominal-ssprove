@@ -100,5 +100,13 @@ Lemma GNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GNIKE N b).(loc) 
 Proof.
 unfold GNIKE. nssprove_valid. Qed.
 
+Check Adv.
+
+Check AdvFor.
+
+Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
+  Adv (GNIKE N true) (GNIKE N false) A
+  <= Adv (PKEY true (NIKE_to_GEN N)) (PKEY false (NIKE_to_GEN N)) A.
+
 
 End GNIKE.
