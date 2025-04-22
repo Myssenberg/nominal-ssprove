@@ -62,7 +62,7 @@ Definition I_GNIKE_OUT (N: NIKE_scheme) :=
     #val #[ SHAREDKEY ]: (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'unit ;
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
-    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'shared_key N ;
+    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
     #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'bool
 ].
 
@@ -70,19 +70,19 @@ Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
-    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'shared_key N ;
+    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
     #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'bool
 ].
 
-Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N.
+Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N (NIKE_to_SGEN N).
 
 #[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT I_R_PKEY_OUT : in_fset_eq.
 
 Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b N || PKEY b (NIKE_to_GEN N)).
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b N (NIKE_to_SGEN N) || PKEY b (NIKE_to_GEN N)).
 
 Definition GuNIKE (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b N || PKEY true (NIKE_to_GEN N)).
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b N (NIKE_to_SGEN N) || PKEY true (NIKE_to_GEN N)).
 
 Lemma GuNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GuNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N b).
 Proof.
@@ -90,7 +90,7 @@ unfold GuNIKE. nssprove_valid. Qed.
 
 
 Definition R_PKEY (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || KEY b N).
+  raw_module := (NIKE N || KEY b N (NIKE_to_SGEN N)).
 
 Lemma R_PKEY_valid (N: NIKE_scheme) (b : bool) : ValidPackage (R_PKEY N b).(loc) (I_NIKE_IN N) (I_R_PKEY_OUT N) (R_PKEY N b).
 Proof.
