@@ -24,26 +24,26 @@ Import PackageNotation.
 Module NBSES.
 
 Record NBSES_scheme :=
-  { K        : finType ;
-    K_pos    : Positive #|K|;
+  { Shared_Key        : finType ;
+    Shared_Key_pos    : Positive #|Shared_Key|;
     Nonce    : finType ;
     Nonce_pos: Positive #|Nonce|;
     M        : choice_type ;
     C        : choice_type ;
-    sample_K : code fset0 [interface] 'fin #|K| ;
+    sample_K : code fset0 [interface] 'fin #|Shared_Key| ;
     sample_C : code fset0 [interface] C ; (*We might need more logs here*)
 
-    enc : forall (m : M) (k : 'fin #|K|) (n : 'fin #|Nonce|),
+    enc : forall (m : M) (k : 'fin #|Shared_Key|) (n : 'fin #|Nonce|),
       code fset0 [interface] C ;
 
-    dec : forall (c : C) (k : 'fin #|K|) (n : 'fin #|Nonce|),
+    dec : forall (c : C) (k : 'fin #|Shared_Key|) (n : 'fin #|Nonce|),
       code fset0 [interface] M 
   }.
 
-Notation " 'k e " := ('fin #|K e|)
+Notation " 'k e " := ('fin #|Shared_Key e|)
   (in custom pack_type at level 2, e constr at level 20).
 
-Notation " 'k e " := ('fin #|K e|)
+Notation " 'k e " := ('fin #|Shared_Key e|)
   (at level 3) : package_scope.
 
 Notation " 'm e " := (M e)
@@ -64,9 +64,9 @@ Notation " 'n e " := ('fin #|Nonce e|)
 Notation " 'n e " := ('fin #|Nonce e|)
   (at level 3) : package_scope.
 
-Instance k_posi e : Positive #|K e|.
+Instance k_posi e : Positive #|Shared_Key e|.
 Proof.
-apply K_pos. Defined.
+apply Shared_Key_pos. Defined.
 
 Instance Nonce_posi e : Positive #|Nonce e|.
 Proof.

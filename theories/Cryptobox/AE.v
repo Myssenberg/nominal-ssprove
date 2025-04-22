@@ -23,9 +23,9 @@ Import PackageNotation.
 
 #[local] Open Scope package_scope.
 
-From NominalSSP Require Import NBSES.
+From NominalSSP Require Import NBSES NIKE.
 
-Import NBSES.
+Import NBSES NIKE_scheme.
 
 Module AE.
 
@@ -33,58 +33,58 @@ Module AE.
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
-Definition M_loc (E: NBSES_scheme) (pk : finType) `{Positive #|pk|} : Location := (chMap (('fin #|pk| × 'fin #|pk|) × 'n E) ('m E × 'c E); 0).
+Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) ('m E × 'c E); 0).
 
-Definition AE_locs_tt (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} := fset [::  M_loc E pk].
-Definition AE_locs_ff (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} := fset [::  M_loc E pk].
+Definition AE_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
+Definition AE_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
 
-Definition GET := 1%N.
-Definition HON := 2%N.
+Definition GET := 29%N.
+Definition HON := 30%N.
 
-Definition ENC := 3%N.
-Definition DEC := 4%N.
+Definition ENC := 52%N.
+Definition DEC := 53%N.
 
-Definition I_AE_IN (E: NBSES_scheme) (pk : choice_type) :=
+Definition I_AE_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ GET ]: ('T pk × 'T pk) → 'k E ;
-    #val #[ HON ]: ('T pk × 'T pk)  → 'bool 
+    #val #[ GET ]: ('pk N × 'pk N) → 'k E ;
+    #val #[ HON ]: ('pk N × 'pk N)  → 'bool 
 ].
 
-Definition I_AE_OUT (E: NBSES_scheme) (pk: choice_type) :=
+Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ ENC ]: ((('T pk × 'T pk) × 'm E) × 'n E) → 'c E ;
-    #val #[ DEC ]: ((('T pk × 'T pk) × 'c E) × 'n E) → 'm E 
+    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
+    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition AE (b : bool) (E: NBSES_scheme) (pk: finType) `{Positive #|pk|} :
-  module (I_AE_IN E 'fin #|pk|) (I_AE_OUT E 'fin #|pk|)  := 
-  [module AE_locs_tt E pk;
-    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'bool } as hon ;;
+Definition AE (b : bool) (E: NBSES_scheme) (N : NIKE_scheme) :
+  module (I_AE_IN E N) (I_AE_OUT E N)  := 
+  [module AE_locs_tt E N;
+    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
       
       k ← geti (PKr, PKs) ;;
-      MLOC ← get M_loc E pk ;;
+      MLOC ← get M_loc E N ;;
       HON ← hon (PKr, PKs) ;;
 
       #assert MLOC ((PKr, PKs), n) == None ;;
 
       if (b && HON) then
         c ← E.(sample_C) ;; 
-        #put (M_loc E pk) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+        #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
         ret c
       else 
          c ← E.(enc) m k n ;;
-         #put (M_loc E pk) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+         #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
           ret c 
     } ; 
 
-    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('T 'fin #|pk| × 'T 'fin #|pk|) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ GET ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('T 'fin #|pk| × 'T 'fin #|pk|) → 'bool } as hon ;;
+    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
 
       k ← geti (PKr, PKs) ;;
-      MLOC ← get M_loc E pk;;
+      MLOC ← get M_loc E N;;
       HON ← hon (PKr, PKs) ;;
       
 

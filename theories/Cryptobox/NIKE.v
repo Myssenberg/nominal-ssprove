@@ -97,7 +97,6 @@ Definition SK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'sk N ; 19).
 Definition NIKE_locs_tt (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 Definition NIKE_locs_ff (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N].
 
-
 Definition GETSK := 4%N.
 Definition HONPK := 5%N.
 Definition SET := 27%N.

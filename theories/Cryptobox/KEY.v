@@ -21,64 +21,94 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group Misc.
 Import PackageNotation.
 
-From NominalSSP Require Import NIKE.
+From NominalSSP Require Import NIKE NBSES.
 
 #[local] Open Scope package_scope.
 
 Module KEY.
 
-Import NIKE_scheme.
+Import NIKE_scheme NBSES.
+
+Record SGEN_scheme :=
+  { Shared_Key             : finType ;
+    Shared_Key_pos         : Positive #|Shared_Key|;
+
+    kdist : 
+      code fset0 [interface] 'fin #|Shared_Key| ;
+  }.
+
+Definition NBSES_to_SGEN (N : NBSES_scheme) : (SGEN_scheme) :=
+  {| Shared_Key := N.(NBSES.Shared_Key) ;
+     Shared_Key_pos := N.(NBSES.Shared_Key_pos) ;
+     kdist := N.(NBSES.sample_K)
+|}.
+
+Definition NIKE_to_SGEN (N : NIKE_scheme) : (SGEN_scheme) :=
+  {| Shared_Key := N.(NIKE_scheme.Shared_Key) ;
+     Shared_Key_pos := N.(NIKE_scheme.Shared_Key_pos) ;
+     kdist := N.(NIKE_scheme.kdist)
+|}.
+
+Notation " 'shared_key n " := ('fin #|Shared_Key n|)
+  (in custom pack_type at level 2, n constr at level 20).
+
+Notation " 'shared_key n " := ('fin #|Shared_Key n|)
+  (at level 3) : package_scope.
+
+Instance sharedkey_posi n : Positive #|Shared_Key n|.
+Proof.
+apply Shared_Key_pos. Defined.
 
 Definition SID_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'bool ; 25).
-Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 26).
+Definition K_loc (N: NIKE_scheme) (G: SGEN_scheme) : Location := (chMap 'SID N 'shared_key G ; 26).
 
-Definition KEY_locs_tt (N: NIKE_scheme) := fset [:: SID_loc N ; K_loc N].  
-Definition KEY_locs_ff (N: NIKE_scheme) := fset [:: SID_loc N ; K_loc N].
+Definition KEY_locs_tt (N: NIKE_scheme) (G: SGEN_scheme) := fset [:: SID_loc N ; K_loc N G].  
+Definition KEY_locs_ff (N: NIKE_scheme) (G: SGEN_scheme) := fset [:: SID_loc N ; K_loc N G].
 
 Definition SET := 27%N.
 Definition CSET := 28%N.
 Definition GET := 29%N.
 Definition HON := 30%N.
 
-Definition I_KEY_OUT (N: NIKE_scheme) :=
+Definition I_KEY_OUT (N: NIKE_scheme) (G: SGEN_scheme) :=
   [interface
-    #val #[ SET ]:  ('SID N × 'shared_key N) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'shared_key N) → 'unit ;
-    #val #[ GET ]:  'SID N → 'shared_key N ;
+    #val #[ SET ]:  ('SID N × 'shared_key G) → 'unit ;
+    #val #[ CSET ]: ('SID N × 'shared_key G) → 'unit ;
+    #val #[ GET ]:  'SID N → 'shared_key G ;
     #val #[ HON ]:  'SID N → 'bool
 ].
 
-Definition KEY b (N: NIKE_scheme):
-  game (I_KEY_OUT N) :=
-  [module KEY_locs_tt N ;
-    #def #[ SET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) {
-      KLOC ← get K_loc N ;;
+Definition KEY b (N: NIKE_scheme) (G: SGEN_scheme):
+  game (I_KEY_OUT N G) :=
+  [module KEY_locs_tt N G;
+    #def #[ SET ] ('(sid, k) : 'SID N × 'shared_key G): ('unit) {
+      KLOC ← get K_loc N G ;;
       SIDLOC ← get SID_loc N ;;
 
       if b then
-        key ← N.(kdist) ;;
-        #put (K_loc N) := @setm ('SID N : choiceType) _ KLOC sid key ;;(*This needs to put a uniformly chosen key*)
+        key ← G.(kdist) ;;
+        #put (K_loc N G) := @setm ('SID N : choiceType) _ KLOC sid key ;;(*This needs to put a uniformly chosen key*)
         ret (Datatypes.tt : 'unit)
       else
         #assert isSome (KLOC sid) as someKey ;;
         #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid true ;;
-        #put (K_loc N) := setm KLOC sid k ;;
+        #put (K_loc N G) := setm KLOC sid k ;;
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) {
-      KLOC ← get K_loc N ;;
+    #def #[ CSET ] ('(sid, k) : 'SID N × 'shared_key G): ('unit) {
+      KLOC ← get K_loc N G ;;
       #assert isSome (KLOC sid) as someKey ;;
       SIDLOC ← get SID_loc N ;;
       #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid false ;;
       ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ GET ] (sid : 'SID N): ('shared_key N) {
-      KLOC ← get K_loc N;;
+    #def #[ GET ] (sid : 'SID N): ('shared_key G) {
+      KLOC ← get K_loc N G ;;
       #assert isSome (KLOC sid) as someKey ;;
       let key := getSome (KLOC sid) someKey in
-      @ret ('shared_key N) key
+      @ret ('shared_key G) key
 
     } ;
 
