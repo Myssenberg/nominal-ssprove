@@ -21,11 +21,41 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group Misc.
 Import PackageNotation.
 
+From NominalSSP Require Import NIKE NBSES.
+Import NIKE_scheme NBSES.
+
 #[local] Open Scope package_scope.
 
-Module crypto_box_scheme.
+Module crypto_box.
 
-Record crypto_box_scheme :=
+Definition PKGEN := 31%N.
+Definition PKENC := 32%N.
+Definition PKDEC := 33%N.
+
+Definition I_CRYPTOBOX_OUT (N : NIKE_scheme) (E : NBSES_scheme) :=
+  [interface
+    #val #[ PKGEN ]: 'unit → ('pk N × 'sk N) ;
+    #val #[ PKENC ]: ((('sk N × 'pk N) × 'm E) × 'n E) → 'c E (*;
+    #val #[ PKDEC ]: ((('sk N × 'pk N) × 'c E) × 'n E) → 'm E*) 
+].
+
+(*Definition CRYPTOBOX (N : NIKE_scheme) (E : NBSES_scheme):
+  game (I_CRYPTOBOX_OUT N E) :=
+  [module no_locs ;
+    #def #[ PKGEN ] (_ : 'unit) : ('pk N × 'sk N) {
+      '(PK, SK) ← N.(pkgen) ;;
+      ret (PK, SK)
+    } ;
+    #def #[ PKENC ] ('(((SK, PK), m), n) : (('sk N × 'pk N) × 'm E) × 'n E) : ('c E) {
+      K ← N.(sharedkey) PK SK ;;
+      C ← E.(enc) m K n ;;
+      ret C
+    }
+  ].
+*)
+
+
+(*Record crypto_box_scheme :=
   { PK       : finType ;
     PK_pos   : Positive #|PK|;
     SK       : finType ;
@@ -89,8 +119,6 @@ Instance sk_posi p : Positive #|SK p|.
 Proof.
 apply SK_pos. Defined.
 
-(*
-
 Lemma PK_coll_bound:
   forall (A : adversary [interface]),
   AdvFor GPKAE A <=
@@ -98,4 +126,4 @@ Lemma PK_coll_bound:
 Proof.
 
 *)
-End crypto_box_scheme.
+End crypto_box.
