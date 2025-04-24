@@ -27,6 +27,7 @@ Import NIKE_scheme NBPES_scheme KEY PKEY.
 Import PackageNotation.
 
 #[local] Open Scope package_scope.
+#[local] Open Scope ring_scope.
 
 Module GNIKE.
 
@@ -79,10 +80,10 @@ Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N (NIKE_t
 #[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT I_R_PKEY_OUT : in_fset_eq.
 
 Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b N (NIKE_to_SGEN N) || PKEY b (NIKE_to_GEN N)).
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) b || PKEY (NIKE_to_GEN N) b).
 
 Definition GuNIKE (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY b N (NIKE_to_SGEN N) || PKEY true (NIKE_to_GEN N)).
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) b || PKEY (NIKE_to_GEN N) true).
 
 Lemma GuNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GuNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N b).
 Proof.
@@ -90,7 +91,7 @@ unfold GuNIKE. nssprove_valid. Qed.
 
 
 Definition R_PKEY (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || KEY b N (NIKE_to_SGEN N)).
+  raw_module := (NIKE N || KEY N (NIKE_to_SGEN N) b).
 
 Lemma R_PKEY_valid (N: NIKE_scheme) (b : bool) : ValidPackage (R_PKEY N b).(loc) (I_NIKE_IN N) (I_R_PKEY_OUT N) (R_PKEY N b).
 Proof.
@@ -104,9 +105,53 @@ Check Adv.
 
 Check AdvFor.
 
+Check swish.
+
+Check swash.
+
+Check Adv_sep_link.
+
+Search Adv.
+
+Search sep_link.
+
+Search sep_par.
+
+(*
+
+(NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) b || PKEY (NIKE_to_GEN N) b)
+
+*)
+
+(*Theorem Corollary_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
+  let GNike := GNIKE N in
+  let PKey := PKEY (NIKE_to_GEN N) in
+  let Key := KEY N (NIKE_to_SGEN N) in
+  let GuNike := GuNIKE N in
+  AdvFor GNike A <= AdvFor PKey A.
+Proof.
+unfold GNIKE.*)
+
+
+
 Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
-  Adv (GNIKE N true) (GNIKE N false) A
-  <= Adv (PKEY true (NIKE_to_GEN N)) (PKEY false (NIKE_to_GEN N)) A.
+  AdvFor (GNIKE N) A
+  <= AdvFor (PKEY (NIKE_to_GEN N)) (A ∘ ((NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) true || ID (I_PKEY_OUT (NIKE_to_GEN N))))) +
+     AdvFor (KEY N (NIKE_to_SGEN N)) (A ∘ ((NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ ((ID (I_KEY_OUT N (NIKE_to_SGEN N))) || PKEY (NIKE_to_GEN N) false))) +
+     AdvFor (GuNIKE N) A.
+Proof.
+unfold AdvFor. unfold GNIKE. unfold GuNIKE. rewrite Adv_sep_link. rewrite swish. - nssprove_adv_trans .
+
+
+
+(*Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
+  AdvFor (GNIKE N) A
+  <= AdvFor (fun b => PKEY b (NIKE_to_GEN N)) (A ∘ ) + AdvFor (fun b => KEY b N (NIKE_to_SGEN N)) A + AdvFor (GuNIKE N) A.
+Proof.
+unfold AdvFor. unfold GNIKE. rewrite Adv_sep_link. rewrite swish. - nssprove_adv_trans .*)
+
+
+(*change bool to second argument in PKEY*) (*swash*)
 
 
 End GNIKE.

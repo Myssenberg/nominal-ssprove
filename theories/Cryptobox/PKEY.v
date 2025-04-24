@@ -99,7 +99,7 @@ Definition I_PKEY_OUT (G: GEN_scheme) :=
     #val #[ HONPK ]: 'pk G → 'bool 
 ].
 
-Definition PKEY (b : bool) (G : GEN_scheme):
+Definition PKEY (G : GEN_scheme) (b : bool) :
   game (I_PKEY_OUT G) :=
   [module PKEY_locs_tt G ; 
     #def #[ GEN ] (_ : 'unit): ('pk G) {
