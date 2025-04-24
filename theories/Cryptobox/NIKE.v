@@ -114,13 +114,13 @@ Definition I_NIKE_IN (N: NIKE_scheme) :=
 
 Definition I_NIKE_OUT (N: NIKE_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit
+    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit
 ].
 
 Definition NIKE (N : NIKE_scheme):
   module (I_NIKE_IN N) (I_NIKE_OUT N) :=
   [module no_locs ; 
-    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'unit {
+    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'option 'unit {
       #import {sig #[ HONPK ]: 'pk N → 'bool } as honpk ;;
       #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
       #import {sig #[ SET ]: (('pk N × 'pk N) × 'shared_key N) → 'unit} as set ;;
@@ -135,11 +135,11 @@ Definition NIKE (N : NIKE_scheme):
         let sid := (pks, pkr) in
           set (sid, shared_key) ;;
 
-        ret (Datatypes.tt : 'unit)
+        ret (Some (Datatypes.tt : 'unit))
       else
         let sid := (pks, pkr) in
           cset (sid, shared_key) ;;
-        ret (Datatypes.tt : 'unit)
+        ret (Some (Datatypes.tt : 'unit))
       
     }
   ].
