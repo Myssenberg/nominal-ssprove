@@ -35,7 +35,7 @@ Definition PKDEC := 15%N.
 
 Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit ;
+    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit ; (*FIGURE OUT IF THERE IS ANOTHER WAY*)
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E
 ].
@@ -53,20 +53,22 @@ Definition NIKE (N : NIKE_scheme) (E : NBSES_scheme):
   module (I_MODPKAE_IN N E) (I_MODPKAE_OUT N E) :=
   [module no_locs ; 
     #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit } as sharedkey ;;
+      #import {sig #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit } as sharedkey ;;
       #import {sig #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E } as enc ;;
-      #import {sig #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E } as dec ;;
-      (*v ← sharedkey (PKs, PKr) ;;*)
+      #import {sig #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E } as dec ;;      
       let '(fst, snd) := SORT N PKs PKr in
+      v ← sharedkey (PKs, PKr) ;;
+      #assert v != None ;;
       C ← enc (fst, snd, m, n) ;;
       ret C
     } ;
     #def #[ PKDEC ] ('(((PKs, PKr), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit } as sharedkey ;;
+      #import {sig #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit } as sharedkey ;;
       #import {sig #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E } as enc ;;
       #import {sig #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E } as dec ;;
-      (*v ← sharedkey (PKs, PKr) ;;*)
-      let '(fst, snd) := SORT N PKs PKr in
+      let '(fst, snd) := SORT N PKs PKr in      
+      v ← sharedkey (PKs, PKr) ;;
+      #assert v != None ;;
       M ← dec (fst, snd, c, n) ;;
       ret M
     }
