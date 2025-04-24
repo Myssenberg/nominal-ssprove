@@ -42,8 +42,8 @@ Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
 
 Definition I_MODPKAE_OUT (N : NIKE_scheme) (E : NBSES_scheme) :=
 [interface
-    #val #[ PKENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
-    #val #[ PKDEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E
+    #val #[ PKENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ; (*SHOULD COME FROM NBPES*)
+    #val #[ PKDEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E (*SHOULD COME FROM NBPES*)
 ].
 
 Definition SORT (N: NIKE_scheme) (PKs PKr : 'pk N) : ('pk N × 'pk N) :=

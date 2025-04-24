@@ -22,7 +22,7 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group Misc.
 
 From NominalSSP Require Import AE KEY NBSES NIKE PKAE PKEY.
-Import AE (*KEY*) NBSES NIKE_scheme NBPES_scheme PKEY.
+Import AE KEY NBSES NIKE_scheme NBPES_scheme PKEY.
 
 Import PackageNotation.
 
