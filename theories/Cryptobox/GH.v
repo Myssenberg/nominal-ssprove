@@ -53,10 +53,6 @@ Definition GET := 29%N.
 Definition HON := 30%N.
 
 
-
-(*Definition hs (E: NBSES_scheme) (N: NIKE_scheme) : choice_type := (('pk N × 'pk N) × i). *)
-
-
 Definition GH_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc E N ].
 Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc E N ].
 
@@ -96,9 +92,8 @@ Definition hybrid (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) (G : SGEN_sche
        HSLOC ← get HS_loc E N ;;
 
       if  (HSLOC (PKs, PKr) == None) then
-        (* ret (Datatypes.tt : 'unit) *)
         if (counter == i) then
-             gen Datatypes.tt;; (*How to call gen here? Takes and returns unit*)
+             gen Datatypes.tt;;
              ret (Datatypes.tt : 'unit)
          else
              #put (HS_loc E N) := setm HSLOC (PKs, PKr) (counter) ;;
@@ -109,7 +104,7 @@ Definition hybrid (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) (G : SGEN_sche
 
         ret (Datatypes.tt : 'unit)
     } (*;
-    #def #[ CSET ] ('((PKr, PKs), i) : (('pk N × 'pk N) × 'k E) : ('unit) {
+    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'k E) : ('unit) {
     
     } ;
     
@@ -139,42 +134,5 @@ Definition hybrid (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) (G : SGEN_sche
 
 
 
-
-
-(*
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
-
-Definition SET := 27%N.
-Definition CSET := 28%N.
-Definition ENC := 52%N.
-Definition DEC := 53%N.
-
-
-Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
-  [interface
-    #val #[ SET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
-    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
-].
-
-Definition I_GAE_ID_COMP (N : NIKE_scheme) (E : NBSES_scheme) :=
-  [interface
-    #val #[ SET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit
-].
-
-#[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
-
-Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool):
-  raw_module := (AE b E N || ID (I_GAE_ID_COMP N E)) ∘ (KEY b N (NBSES_to_SGEN E)).
-
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) :
-  ValidPackage (GAE E N b).(loc) [interface] (I_GAE_OUT E N) (GAE E N b).
-Proof.
-unfold GAE. nssprove_valid. Qed.
-
-*)
 
 End GH.
