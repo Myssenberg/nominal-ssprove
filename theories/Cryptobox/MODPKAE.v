@@ -35,7 +35,7 @@ Definition PKDEC := 15%N.
 
 Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit ; (*FIGURE OUT IF THERE IS ANOTHER WAY*)
+    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit ; 
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E
 ].
