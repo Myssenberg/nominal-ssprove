@@ -57,10 +57,10 @@ Definition I_GPKAE_ID_COMP (E: NBPES_scheme) :=
 #[export] Hint Unfold I_GPKAE_OUT I_GPKAE_ID_COMP I_PKAE_OUT I_PKAE_IN I_PKEY_OUT : in_fset_eq.
 
 Definition GPKAE (E: NBPES_scheme) (b : 'bool) :
-  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY true (NBPES_to_GEN E)).
+  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY b (NBPES_to_GEN E)).
 
 Definition GuPKAE (E: NBPES_scheme) (b: 'bool) :
-  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY b (NBPES_to_GEN E)).
+  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY true (NBPES_to_GEN E)).
 
 Lemma GuPKAE_valid (E: NBPES_scheme) (b: 'bool) : ValidPackage (GuPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GuPKAE E b).
 Proof.
