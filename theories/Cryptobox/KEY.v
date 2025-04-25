@@ -75,7 +75,7 @@ Definition I_KEY_OUT (N: NIKE_scheme) (G: SGEN_scheme) :=
     #val #[ SET ]:  ('SID N × 'shared_key G) → 'unit ;
     #val #[ CSET ]: ('SID N × 'shared_key G) → 'unit ;
     #val #[ GET ]:  'SID N → 'shared_key G ;
-    #val #[ HON ]:  'SID N → 'bool
+    #val #[ HON ]:  'SID N → 'option 'bool
 ].
 
 Definition KEY b (N: NIKE_scheme) (G: SGEN_scheme):
@@ -112,11 +112,10 @@ Definition KEY b (N: NIKE_scheme) (G: SGEN_scheme):
 
     } ;
 
-    #def #[ HON ] (sid : 'SID N): ('bool) {
+    #def #[ HON ] (sid : 'SID N): ('option 'bool) {
       SIDLOC ← get SID_loc N;;
-      #assert isSome (SIDLOC sid) as someBool ;;
-      let bool := getSome (SIDLOC sid) someBool in
-      @ret ('bool) bool
+      #assert isSome (SIDLOC sid) as someBool ;;  (*Should this be deleted?*)
+      @ret ('option 'bool) (Some(getSome (SIDLOC sid) someBool))
 
     }
   ].
