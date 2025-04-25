@@ -42,14 +42,14 @@ Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
 
 Definition I_MODPKAE_OUT (N : NIKE_scheme) (E : NBSES_scheme) :=
 [interface
-    #val #[ PKENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ; (*SHOULD COME FROM NBPES*)
-    #val #[ PKDEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E (*SHOULD COME FROM NBPES*)
+    #val #[ PKENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ; (*SHOULD COME FROM NBPES?*)
+    #val #[ PKDEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E (*SHOULD COME FROM NBPES?*)
 ].
 
 Definition SORT (N: NIKE_scheme) (PKs PKr : 'pk N) : ('pk N × 'pk N) :=
   if (PKs < PKr) then (PKs, PKr) : (prod _ _) else (PKr, PKs) : (prod _ _).
 
-Definition NIKE (N : NIKE_scheme) (E : NBSES_scheme):
+Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
   module (I_MODPKAE_IN N E) (I_MODPKAE_OUT N E) :=
   [module no_locs ; 
     #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
