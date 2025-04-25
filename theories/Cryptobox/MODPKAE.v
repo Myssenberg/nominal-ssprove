@@ -30,8 +30,8 @@ Import PackageNotation.
 
 Module MODPKAE.
 
-Definition PKENC := 14%N.
-Definition PKDEC := 15%N.
+Definition PKENC_MOD := 69%N.
+Definition PKDEC_MOD := 70%N.
 
 Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
   [interface
@@ -42,8 +42,8 @@ Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
 
 Definition I_MODPKAE_OUT (N : NIKE_scheme) (E : NBSES_scheme) :=
 [interface
-    #val #[ PKENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ; (*SHOULD COME FROM NBPES?*)
-    #val #[ PKDEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E (*SHOULD COME FROM NBPES?*)
+    #val #[ PKENC_MOD ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ; (*SHOULD COME FROM NBPES?*)
+    #val #[ PKDEC_MOD ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E (*SHOULD COME FROM NBPES?*)
 ].
 
 Definition SORT (N: NIKE_scheme) (PKs PKr : 'pk N) : ('pk N × 'pk N) :=
@@ -52,7 +52,7 @@ Definition SORT (N: NIKE_scheme) (PKs PKr : 'pk N) : ('pk N × 'pk N) :=
 Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
   module (I_MODPKAE_IN N E) (I_MODPKAE_OUT N E) :=
   [module no_locs ; 
-    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
+    #def #[ PKENC_MOD ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
       #import {sig #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit } as sharedkey ;;
       #import {sig #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E } as enc ;;
       #import {sig #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E } as dec ;;      
@@ -62,7 +62,7 @@ Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
       C ← enc (fst, snd, m, n) ;;
       ret C
     } ;
-    #def #[ PKDEC ] ('(((PKs, PKr), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
+    #def #[ PKDEC_MOD ] ('(((PKs, PKr), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
       #import {sig #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit } as sharedkey ;;
       #import {sig #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E } as enc ;;
       #import {sig #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E } as dec ;;
