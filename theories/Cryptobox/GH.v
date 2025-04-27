@@ -24,13 +24,9 @@ Import PackageNotation.
 
 #[local] Open Scope package_scope.
 
-From NominalSSP Require Import GSAE KEY NBSES NIKE AE.
+From NominalSSP Require Import SAE KEY NBSES NIKE AE.
 
-Import GSAE KEY NBSES NIKE_scheme AE.
-
-
-
-
+Import SAE KEY NBSES NIKE_scheme AE.
 
 Module GH.
 
@@ -45,8 +41,8 @@ Definition HS_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap ('pk 
 Variable (counter : 'nat). 
 
 
-Definition SET := 27%N.
-Definition CSET := 28%N.
+(*Definition SET := 27%N.
+Definition CSET := 28%N.*)
 Definition ENC := 52%N.
 Definition DEC := 53%N.
 Definition GET := 29%N.
@@ -66,47 +62,62 @@ Definition I_GH_IN (E: NBSES_scheme) (N : NIKE_scheme) (G : SGEN_scheme) :=
     #val #[ GET ]: ('pk N × 'pk N) → 'fin #|E.(NBSES.Shared_Key)| ;
     #val #[ HON ]: ('pk N × 'pk N) → ('option 'bool) ;
     #val #[ GEN ]:  'unit → 'unit 
-]. *)
-
+]. 
 
 Definition I_GH_IN (E: NBSES_scheme) (N : NIKE_scheme) := I_GSAE_OUT E :|: I_KEY_OUT N (NIKE_to_SGEN N) :|: I_AE_OUT E N.
+*)
 
-Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) (G : SGEN_scheme) :=
+Definition I_GH_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|G.(SGEN_scheme.Shared_Key)|) → 'unit (* ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'k E) → 'unit ;
+    #val #[ SET ]:  ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ; 
+    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
+    #val #[ HON ]: ('pk N × 'pk N) → ('option 'bool) ; (*Allowed?*)
+    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
+    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E ;
+    #val #[ GEN ]: 'unit → 'unit ;    
+    #val #[ ENC ]: ('m E × 'n E) → 'c E  ;
+    #val #[ DEC ]: ('c E × 'n E) → 'm E 
+].
+
+Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
+  [interface
+    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
+    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit (*;
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E *)
 ].
 
 
-Definition hybrid (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) (G : SGEN_scheme) : 
+Definition HYBRID (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) : 
   module (I_GH_IN E N) (I_GH_OUT E N) := 
   [module GH_locs_tt E N ;
-    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'shared_key G)) : ('unit) {
+    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
       #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;;
       #import {sig #[ GEN ]: 'unit → 'unit} as gen ;;
-      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as seti ;;
-      hon_stat ← hon (PKs, PKr) ;; 
-      
-       HSLOC ← get HS_loc E N ;;
-
-      if  (HSLOC (PKs, PKr) == None) then
+      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as set ;;
+      hon_stat ← hon (PKs, PKr) ;;
+      HSLOC ← get HS_loc E N ;;
+      #assert isSome (HSLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HSLOC (PKs, PKr)) count in
+      if (HSLOC (PKs, PKr) == None) then
         if (counter == i) then
-             gen Datatypes.tt;;
-             ret (Datatypes.tt : 'unit)
-         else
-             #put (HS_loc E N) := setm HSLOC (PKs, PKr) (counter) ;;
-(*              counter := counter.+1 ;;  *)
-             ret (Datatypes.tt : 'unit) 
+          gen Datatypes.tt ;;
+          #put (HS_loc E N) := setm HSLOC (PKs, PKr) (counts.+1) ;; (*Double check that this is correct*)
+          set (PKs, PKr, k) ;;
+          ret (Datatypes.tt : 'unit)
+        else
+          #put (HS_loc E N) := setm HSLOC (PKs, PKr) (counts.+1) ;;          
+          set (PKs, PKr, k) ;;          
+          ret (Datatypes.tt : 'unit)
       else
-        (seti) (PKs, PKr) k ;; 
-
+        set (PKs, PKr, k) ;;
         ret (Datatypes.tt : 'unit)
-    } (*;
-    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'k E) : ('unit) {
-    
     } ;
+    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
+      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as cset ;;
+      cset (PKr, PKs, k) ;;
+      ret (Datatypes.tt : 'unit)
+    } (*;
     
     #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
       
@@ -118,21 +129,5 @@ Definition hybrid (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) (G : SGEN_sche
     } *)
 
   ].
-
-
-(*      #import {sig #[ GET ]: ('pk N × 'pk N) → ('fin #|E.(NBSES.Shared_Key)|) as geti ;;*)
-
-
-
-
-
-
-
-
-(*
- *)
-
-
-
 
 End GH.
