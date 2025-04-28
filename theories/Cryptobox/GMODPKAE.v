@@ -73,14 +73,17 @@ Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) :
   raw_module := (MODPKAE N E || ID (I_GMODPKAE_ID_COMP N E)) ∘ (((NIKE N || AE false E N)) ∘ (PKEY true (NIKE_to_GEN N) || KEY false N (NIKE_to_SGEN N))).
 *)
 
-(* [THIS VERSION PROVES ALL GOALS BUT WON'T FINISH THE QED]
+(* [THIS VERSION PROVES ALL GOALS BUT WON'T FINISH THE QED].
 Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) :
-  raw_module := ((MODPKAE N E) ∘ ((NIKE N ∘ (PKEY true (NIKE_to_GEN N) || KEY false N (NIKE_to_SGEN N))) || (AE false E N ∘ KEY false N (NBSES_to_SGEN E)))) || (ID (I_GMODPKAE_ID_COMP N E) ∘ PKEY true (NIKE_to_GEN N)).
+  raw_module := ((MODPKAE N E) ∘ ((NIKE N ∘ (PKEY true (NIKE_to_GEN N) || KEY false N (NIKE_to_SGEN N))) || (AE false E N ∘ KEY false N (NBSES_to_SGEN E)))) || (ID (I_GMODPKAE_ID_COMP N E) ∘ PKEY true (NIKE_to_GEN N)).*)
+
+Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) :
+  raw_module := (ID (I_GMODPKAE_ID_COMP N E) || ((MODPKAE N E) ∘ ((NIKE N || AE false E N)))) ∘ ((PKEY true (NIKE_to_GEN N) || KEY false N (NIKE_to_SGEN N))).
 
 
 Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) : ValidPackage (GMODPKAE E N b).(loc) [interface] (I_GMODPKAE_OUT N E) (GMODPKAE E N b).
 Proof.
-unfold GMODPKAE. nssprove_valid. Qed.
-*)
+unfold GMODPKAE. nssprove_valid. fset_solve. Qed.
+
 
 End GMODPKAE.
