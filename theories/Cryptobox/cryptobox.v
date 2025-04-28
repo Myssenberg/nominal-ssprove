@@ -45,12 +45,9 @@ Definition PKDEC := 33%N.
 Definition I_CRYPTOBOX_OUT (N : NIKE_scheme) (E : NBSES_scheme) :=
   [interface
     #val #[ PKGEN ]: 'unit → ('pk N × 'sk N) ;
-    #val #[ PKENC ]: ((('sk N × 'pk N) × 'm E) × 'n E) → 'unit (*;
+    #val #[ PKENC ]: ((('sk N × 'pk N) × 'm E) × 'n E) → 'c E (*;
     #val #[ PKDEC ]: ((('sk N × 'pk N) × 'c E) × 'n E) → 'm E*) 
 ].
-
-Definition TRANSFORM (N : NIKE_scheme) (E : NBSES_scheme) (I : inj 'shared_key N 'k E) : 'shared_key N → 'k E := 
-  I.(encode) : ('shared_key N → 'k E).
 
 Definition CRYPTOBOX (N : NIKE_scheme) (E : NBSES_scheme) (I : inj 'shared_key N 'k E):
   game (I_CRYPTOBOX_OUT N E) :=
@@ -59,11 +56,11 @@ Definition CRYPTOBOX (N : NIKE_scheme) (E : NBSES_scheme) (I : inj 'shared_key N
       '(PK, SK) ← N.(pkgen) ;;
       ret (PK, SK)
     } ;
-    #def #[ PKENC ] ('(((SK, PK), m), n) : (('sk N × 'pk N) × 'm E) × 'n E) : 'unit {
+    #def #[ PKENC ] ('(((SK, PK), m), n) : (('sk N × 'pk N) × 'm E) × 'n E) : ('c E) {
       K ← N.(sharedkey) PK SK ;;
-      let k := TRANSFORM N E I in
-      (*C ← E.(enc) m k n ;;*)
-      ret (Datatypes.tt : 'unit)
+      let k := I.(encode) K in
+      C ← E.(enc) m k n ;;
+      ret C
     }
   ].
 
