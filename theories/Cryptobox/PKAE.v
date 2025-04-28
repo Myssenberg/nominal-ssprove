@@ -129,7 +129,7 @@ Definition I_PKAE_OUT (E: NBPES_scheme) :=
 Definition SORT (E: NBPES_scheme) (PKs PKr : 'pk E) : h E :=
   if (PKs < PKr) then (PKs, PKr) : (prod _ _) else (PKr, PKs) : (prod _ _).
 
-Definition PKAE (b : bool) (E: NBPES_scheme):
+Definition PKAE (E: NBPES_scheme) (b : bool) :
   module (I_PKAE_IN E) (I_PKAE_OUT E)  := 
   [module PKAE_locs_tt E ;
     #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk E × 'pk E) × 'm E) × 'n E) : ('c E) {

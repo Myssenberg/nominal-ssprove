@@ -27,6 +27,7 @@ Import NBPES_scheme PKEY.
 Import PackageNotation.
 
 #[local] Open Scope package_scope.
+#[local] Open Scope ring_scope.
 
 Module GPKAE.
 
@@ -57,10 +58,10 @@ Definition I_GPKAE_ID_COMP (E: NBPES_scheme) :=
 #[export] Hint Unfold I_GPKAE_OUT I_GPKAE_ID_COMP I_PKAE_OUT I_PKAE_IN I_PKEY_OUT : in_fset_eq.
 
 Definition GPKAE (E: NBPES_scheme) (b : 'bool) :
-  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY true (NBPES_to_GEN E)).
+  raw_module := (PKAE E b || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) false).
 
 Definition GuPKAE (E: NBPES_scheme) (b: 'bool) :
-  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY b (NBPES_to_GEN E)).
+  raw_module := (PKAE E b || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true).
 
 Lemma GuPKAE_valid (E: NBPES_scheme) (b: 'bool) : ValidPackage (GuPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GuPKAE E b).
 Proof.
@@ -69,6 +70,26 @@ unfold GuPKAE. nssprove_valid. Qed.
 Lemma GPKAE_valid (E: NBPES_scheme) (b : 'bool) : ValidPackage (GPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GPKAE E b).
 Proof.
 unfold GPKAE. nssprove_valid. Qed. 
+
+
+Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
+  AdvFor (GPKAE E) A
+  <=  AdvFor (PKEY (NBPES_to_GEN E)) A +
+      AdvFor (GuPKAE E) A
+      AdvFor (PKEY (NBPES_to_GEN E)) A.
+Proof.
+
+
+
+
+
+Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
+let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
+  AdvFor (GNIKE N) A
+  <= AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) false || ID (I_PKEY_OUT (NIKE_to_GEN N)))) +
+     AdvFor (GuNIKE N) A +
+     AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) true || ID (I_PKEY_OUT (NIKE_to_GEN N)))).
+Proof.
 
 
 End GPKAE.
