@@ -19,6 +19,10 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
+Import Num.Def.
+Import Num.Theory.
+Import Order.POrderTheory.
+
 From NominalSSP Require Import Prelude Group Misc.
 
 From NominalSSP Require Import NIKE KEY PKEY PKAE.
@@ -117,6 +121,18 @@ Search sep_link.
 
 Search sep_par.
 
+Locate lerD.
+
+Check lerD.
+
+Search Num.Theory.lerD.
+
+Check Adv_par_link_l.
+
+Check Adv_par_link_r.
+
+Check Adv_par_r.
+
 
 (*
 
@@ -134,24 +150,54 @@ Proof.
 unfold GNIKE.*)
 
 Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
+let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
   AdvFor (GNIKE N) A
-  <= AdvFor (PKEY (NIKE_to_GEN N)) (A ∘ ((NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) false || ID (I_PKEY_OUT (NIKE_to_GEN N))))) +
-     AdvFor (PKEY (NIKE_to_GEN N)) (A ∘ ((NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) true || ID (I_PKEY_OUT (NIKE_to_GEN N))))) +
-     AdvFor (GuNIKE N) A.
+  <= AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) false || ID (I_PKEY_OUT (NIKE_to_GEN N)))) +
+     AdvFor (GuNIKE N) A +
+     AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) true || ID (I_PKEY_OUT (NIKE_to_GEN N)))).
 Proof.
 unfold AdvFor, GNIKE, GuNIKE.
 repeat rewrite Adv_sep_link.
+erewrite Adv_sym.
+nssprove_adv_trans (KEY N (NIKE_to_SGEN N) false || PKEY (NIKE_to_GEN N) true).
+erewrite -> Adv_par_r by nssprove_valid.
+erewrite Adv_sym.
+rewrite -GRing.addrA. (*sætter paranterer, så lerD skiller rigtigt ad*)
+apply lerD.
+- apply lexx.
+- nssprove_adv_trans (KEY N (NIKE_to_SGEN N) true || PKEY (NIKE_to_GEN N) true).
+apply lerD.
+-- erewrite Adv_sym. apply lexx.
+-- erewrite -> Adv_par_r by nssprove_valid. apply lexx. Qed.
+
+rewrite -> swash by nssprove_valid.
+rewrite Adv_sep_link.
+
+rewrite
+apply lerD.
+- 
+
+
+ rewrite swash.
+erewrite <- Adv_par_link_l.
+nssprove_adv_trans (KEY N (NIKE_to_SGEN N) true || PKEY (NIKE_to_GEN N) true).
+apply lerD.
+  - erewrite Adv_sym. admit.
+  - nssprove_adv_trans (KEY N (NIKE_to_SGEN N) true || PKEY (NIKE_to_GEN N) false).
+
+
+(*
 rewrite swish.
   - rewrite swish.
   -- rewrite swash.
   --- rewrite swash.
   ---- repeat rewrite sep_par_empty_l.
        repeat rewrite sep_par_empty_r.
+       nssprove_adv_trans (KEY N (NIKE_to_SGEN N) false). apply lerD.
 
 
 
-
-unfold AdvFor. unfold GNIKE. unfold GuNIKE. rewrite Adv_sep_link. rewrite Adv_sep_link. rewrite swish. - rewrite swish. -- rewrite sep_par_empty_l. rewrite sep_par_empty_l. rewrite swash. --- rewrite swash.  rewrite swish. - nssprove_adv_trans .
+unfold AdvFor. unfold GNIKE. unfold GuNIKE. rewrite Adv_sep_link. rewrite Adv_sep_link. rewrite swish. - rewrite swish. -- rewrite sep_par_empty_l. rewrite sep_par_empty_l. rewrite swash. --- rewrite swash.  rewrite swish. - nssprove_adv_trans .*)
 
 
 
