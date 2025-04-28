@@ -75,9 +75,10 @@ unfold GPKAE. nssprove_valid. Qed.
 Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
   AdvFor (GPKAE E) A
   <=  AdvFor (PKEY (NBPES_to_GEN E)) A +
-      AdvFor (GuPKAE E) A
+      AdvFor (GuPKAE E) A +
       AdvFor (PKEY (NBPES_to_GEN E)) A.
 Proof.
+
 
 
 
