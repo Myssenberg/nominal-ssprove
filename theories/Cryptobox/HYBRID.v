@@ -28,7 +28,7 @@ From NominalSSP Require Import SAE KEY NBSES NIKE AE.
 
 Import SAE KEY NBSES NIKE_scheme AE.
 
-Module GH.
+Module HYBRID.
 
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
@@ -120,4 +120,4 @@ Definition HYBRID (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) :
 
   ].
 
-End GH.
+End HYBRID.
