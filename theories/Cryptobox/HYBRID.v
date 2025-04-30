@@ -71,7 +71,7 @@ Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
     #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'unit (*;
+    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'unit (* ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E *)
 ].
 
@@ -107,26 +107,40 @@ Definition HYBRID (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) :
       ret (Datatypes.tt : 'unit)
     } ;
     
-    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('unit) {
+    #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('unit) {
       #import {sig #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E  } as AEenc ;;
       #import {sig #[ ENC ]: ('m E × 'n E) → 'c E   } as SAEenc ;;
       HSLOC ← get HS_loc E N ;; 
       #assert isSome (HSLOC (PKs, PKr)) as count ;;
       let counts := getSome (HSLOC (PKs, PKr)) count in
-      if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) < i) then
-          c ← AEenc ((PKr, PKs), m, n) ;;   (* Should be AE1 here*) 
+(*       if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) < i) then *)
+      if (counts < i) then
+          c ← AEenc ((PKs, PKr), m, n) ;;   (* Should be AE1 here*) 
           ret (Datatypes.tt : 'unit)
+      else if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) == i) then 
+          c ← SAEenc m n ;;
+          ret (Datatypes.tt : 'unit) 
+      else 
+          c ← AEenc ((PKs, PKr),m ,n ) ;; (* Should be AE0 here*) 
+          ret (Datatypes.tt : 'unit)
+     
+    } (*;  
+    
+    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
+      #import {sig #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E  } as AEdec ;;
+      #import {sig #[ DEC ]: ('c E × 'n E) → 'm E   } as SAEdec ;;
+      HSLOC ← get HS_loc E N ;; 
+      #assert isSome (HSLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HSLOC (PKs, PKr)) count in
+      if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) < i) then
+          m ← AEdec ((PKr, PKs), c, n) ;;   (* Should be AE1 here*) 
+          ret m
       (* else if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) == i) then 
           c ← SAEenc m n ;;
           ret (Datatypes.tt : 'unit) *)
       else 
-          c ← AEenc ((PKr, PKs),m ,n ) ;; (* Should be AE0 here*) 
-          ret (Datatypes.tt : 'unit)
-      
-    } (*;  
-    
-    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
-      
+          m ← AEdec ((PKr, PKs),c ,n ) ;; (* Should be AE0 here*) 
+          ret m
       
     } *)
 
