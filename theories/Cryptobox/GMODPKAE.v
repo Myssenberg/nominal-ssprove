@@ -21,8 +21,8 @@ Set Primitive Projections.
 
 From NominalSSP Require Import Prelude Group Misc.
 
-From NominalSSP Require Import AE KEY MODPKAE NBSES NIKE PKEY.
-Import AE KEY MODPKAE NBSES NIKE_scheme PKEY.
+From NominalSSP Require Import AE KEY MODPKAE NBSES NIKE PKAE PKEY.
+Import AE KEY MODPKAE NBSES NIKE_scheme NBPES_scheme PKEY.
 
 Import PackageNotation.
 
@@ -34,8 +34,8 @@ Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
-    #val #[ PKENC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(M)) × 'T 'fin #|E.(Nonce)|) → 'T E.(C) ; 
-    #val #[ PKDEC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(C)) × 'T 'fin #|E.(Nonce)|) → 'T E.(M)
+    #val #[ PKENC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; 
+    #val #[ PKDEC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
 ].
 
 Definition I_GMODPKAE_ID_COMP (N: NIKE_scheme) :=
