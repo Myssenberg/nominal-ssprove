@@ -36,19 +36,21 @@ Notation " 'T c " := (c) (at level 2): package_scope.
 
 Variable (i : 'nat).
 
-Definition HS_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). (*Check loc here*)
-
+Definition HS_loc (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). (*Check loc here*)
+Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) ('m E × 'c E); 0).
 
 (*Definition SET := 27%N.
-Definition CSET := 28%N.*)
+Definition CSET := 28%N.
 Definition ENC := 52%N.
-Definition DEC := 53%N.
+Definition DEC := 53%N. *)
+Definition GEN := 2%N.
 Definition GET := 29%N.
 Definition HON := 30%N.
 
 
-Definition GH_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc E N ].
-Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc E N ].
+
+Definition GH_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N ; M_loc E N].
+Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N ; M_loc E N].
 
 (*
 
@@ -60,25 +62,137 @@ Definition I_GH_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ SET ]:  ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ; 
     #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
     #val #[ HON ]: ('pk N × 'pk N) → ('option 'bool) ; (*Allowed?*)
+    #val #[ GEN ]: 'unit → 'unit ;
+    #val #[ GET ]: ('pk N × 'pk N) → 'k E (* ;    
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E ;
-    #val #[ GEN ]: 'unit → 'unit ;    
     #val #[ ENC ]: ('m E × 'n E) → 'c E  ;
-    #val #[ DEC ]: ('c E × 'n E) → 'm E 
+    #val #[ DEC ]: ('c E × 'n E) → 'm E  *)
 ].
 
 Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'unit (* ;
+    (* #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
+    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ; *)
+    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E (* ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E *)
 ].
-
 
 Definition HYBRID (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) : 
   module (I_GH_IN E N) (I_GH_OUT E N) := 
   [module GH_locs_tt E N ;
+   
+    #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
+
+      k ← geti (PKs, PKr) ;;
+      MLOC ← get M_loc E N ;;
+      HON ← hon (PKr, PKs) ;;
+      HSLOC ← get HS_loc N ;; 
+      
+      #assert MLOC ((PKs, PKr), n) == None ;;
+      #assert isSome (HSLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HSLOC (PKs, PKr)) count in
+
+      if (counts < i) then  (*Do we need the same checks as the if statement in AE?*)
+          c ← E.(sample_C) ;;    (* Should be AE1 here*) 
+          #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+          ret c
+      (* else if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) == i) then 
+          c ← SAEenc m n ;; 
+          ret (Datatypes.tt : 'unit) *)
+      else 
+          c ← E.(enc) m k n ;; (* Should be AE0 here*) 
+          #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+          ret c  
+     
+    } 
+
+  ].
+
+Definition HYBRID (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) : 
+  module (I_GH_IN E N) (I_GH_OUT E N) := 
+  [module GH_locs_tt E N ;
+   (*  #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;;
+      #import {sig #[ GEN ]: 'unit → 'unit} as gen ;;
+      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as set ;;
+      hon_stat ← hon (PKs, PKr) ;;
+      HSLOC ← get HS_loc N ;;
+      #assert isSome (HSLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HSLOC (PKs, PKr)) count in
+      if (HSLOC (PKs, PKr) == None) then  
+        if (counts == i) then
+          gen Datatypes.tt ;;
+          #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;; (*Double check that this is correct*)
+          set (PKs, PKr, k) ;;
+          ret (Datatypes.tt : 'unit)
+        else
+          #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;;          
+          set (PKs, PKr, k) ;;          
+          ret (Datatypes.tt : 'unit)
+      else
+        set (PKs, PKr, k) ;;
+        ret (Datatypes.tt : 'unit)
+    } ;
+
+    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
+      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as cset ;;
+      cset (PKr, PKs, k) ;;
+      ret (Datatypes.tt : 'unit)
+    }  ; *)
+   
+    #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
+
+      k ← geti (PKs, PKr) ;;
+      MLOC ← get M_loc E N ;;
+      HON ← hon (PKr, PKs) ;;
+      HSLOC ← get HS_loc N ;; 
+      
+      #assert MLOC ((PKs, PKr), n) == None ;;
+      #assert isSome (HSLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HSLOC (PKs, PKr)) count in
+
+      if (counts < i) then  (*Do we need the same checks as the if statement in AE?*)
+          c ← E.(sample_C) ;;    (* Should be AE1 here*) 
+          #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+          ret c
+      (* else if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) == i) then 
+          c ← SAEenc m n ;; 
+          ret (Datatypes.tt : 'unit) *)
+      else 
+          c ← E.(enc) m k n ;; (* Should be AE0 here*) 
+          #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
+          ret c  
+     
+    } (*;  
+  
+    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
+      #import {sig #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E  } as AEdec ;;
+      #import {sig #[ DEC ]: ('c E × 'n E) → 'm E   } as SAEdec ;;
+      HSLOC ← get HS_loc E N ;; 
+      #assert isSome (HSLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HSLOC (PKs, PKr)) count in
+      if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) < i) then
+          m ← AEdec ((PKr, PKs), c, n) ;;   (* Should be AE1 here*) 
+          ret m
+      (* else if (HSLOC (PKr, PKs) == Some nat && HSLOC (PKr, PKs) == i) then 
+          c ← SAEenc m n ;;
+          ret (Datatypes.tt : 'unit) *)
+      else 
+          m ← AEdec ((PKr, PKs),c ,n ) ;; (* Should be AE0 here*) 
+          ret m
+      
+    } *)
+
+  ].
+
+Definition HYBRID (b : bool) (E : NBSES_scheme) (N : NIKE_scheme) : 
+  module (I_GH_IN N) (I_GH_OUT E N) := 
+  [module GH_locs_tt N ;
     #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
       #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;;
       #import {sig #[ GEN ]: 'unit → 'unit} as gen ;;
