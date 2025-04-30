@@ -76,11 +76,6 @@ Proof.
 unfold GPKAE. nssprove_valid. Qed. 
 
 
-Check Adv_par_link_r.
-Check swish.
-Search raw_module.
-Search Adv.
-
 Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
   AdvFor (GPKAE E) A
   <=  AdvFor (PKEY (NBPES_to_GEN E)) (A ∘ (PKAE E false || ID (I_GPKAE_ID_COMP E))) +
