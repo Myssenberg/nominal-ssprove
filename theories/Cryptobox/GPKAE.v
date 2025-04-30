@@ -78,6 +78,8 @@ unfold GPKAE. nssprove_valid. Qed.
 
 Check Adv_par_link_r.
 Check swish.
+Search raw_module.
+Search Adv.
 
 Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
   AdvFor (GPKAE E) A
@@ -87,52 +89,19 @@ Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
 Proof.
 unfold AdvFor, GPKAE, GuPKAE.
 erewrite Adv_sym.
-
-
-
-
-nssprove_adv_trans ((PKAE E false) || (PKEY (NBPES_to_GEN E) false)).
-
-
-
-
-
-nssprove_adv_trans ((PKAE E false || ID (I_GPKAE_ID_COMP E)) ∘ PKEY (NBPES_to_GEN E) false).
-
-
-nssprove_adv_trans (PKEY (NBPES_to_GEN E) true).
+nssprove_adv_trans ((PKAE E false || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
+rewrite Adv_sep_link.
+rewrite -GRing.addrA.
 apply lerD.
-
-
-
-
-
-
-
-
-
-unfold AdvFor, GNIKE, GuNIKE.
-repeat rewrite Adv_sep_link.
-erewrite Adv_sym.
-nssprove_adv_trans (KEY N (NIKE_to_SGEN N) false || PKEY (NIKE_to_GEN N) true).
-erewrite -> Adv_par_r by nssprove_valid.
-erewrite Adv_sym.
-rewrite -GRing.addrA. (*sætter paranterer, så lerD skiller rigtigt ad*)
-apply lerD.
-- apply lexx.
-- nssprove_adv_trans (KEY N (NIKE_to_SGEN N) true || PKEY (NIKE_to_GEN N) true).
-apply lerD.
--- erewrite Adv_sym. apply lexx.
--- erewrite -> Adv_par_r by nssprove_valid. apply lexx. Qed.
-
-
-Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
-let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
-  AdvFor (GNIKE N) A
-  <= AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) false || ID (I_PKEY_OUT (NIKE_to_GEN N)))) +
-     AdvFor (GuNIKE N) A +
-     AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) true || ID (I_PKEY_OUT (NIKE_to_GEN N)))).
-Proof.
+  - rewrite Adv_sym.
+    apply lexx.
+  - nssprove_adv_trans ((PKAE E true || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
+    apply lerD.
+  -- rewrite Adv_sym.
+     apply lexx.
+  -- rewrite Adv_sep_link.
+     apply lexx.
+Qed.
 
 
 End GPKAE.
