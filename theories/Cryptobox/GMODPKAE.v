@@ -30,7 +30,9 @@ Import PackageNotation.
 
 Module GMODPKAE.
 
-Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
+(* VERSION WITHOUT NBPES *)
+
+(* Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
@@ -44,21 +46,45 @@ Definition I_GMODPKAE_ID_COMP (N: NIKE_scheme) :=
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit
 ].
 
-(*#[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.*)
-
-#[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN_E I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
-
-(* 
 (* Solution without modified NIKE package *)
+(* #[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
+
 Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) :
   raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || AE false E N)))) ∘ ((PKEY true (NIKE_to_GEN N) || KEY false N (NBSES_to_SGEN E))).
 *)
 
 (* Working solution with modified NIKE package *)
+#[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN_E I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
+
 Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) (I : inj 'shared_key N 'k E) :
   raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE_E N E I || AE false E N)))) ∘ ((PKEY true (NIKE_to_GEN N) || KEY false N (NBSES_to_SGEN E))).
 
 Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) (I : inj 'shared_key N 'k E) : ValidPackage (GMODPKAE E N b I).(loc) [interface] (I_GMODPKAE_OUT N E) (GMODPKAE E N b I).
+Proof.
+unfold GMODPKAE. nssprove_valid. Qed. *)
+
+(* VERSION WITH NBPES *)
+
+Definition I_GMODPKAE_OUT (N: NIKE_scheme) (F : NBPES_scheme) :=
+  [interface
+    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
+    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
+    #val #[ PKENC_MOD ]: ((('T 'fin #|F.(NBPES_scheme.PK)| × 'T 'fin #|F.(NBPES_scheme.PK)|) × 'T F.(NBPES_scheme.M)) × 'T 'fin #|F.(NBPES_scheme.Nonce)|) → 'T F.(NBPES_scheme.C) ;
+    #val #[ PKDEC_MOD ]: ((('T 'fin #|F.(NBPES_scheme.PK)| × 'T 'fin #|F.(NBPES_scheme.PK)|) × 'T F.(NBPES_scheme.C)) × 'T 'fin #|F.(NBPES_scheme.Nonce)|) → 'T F.(NBPES_scheme.M)
+].
+
+Definition I_GMODPKAE_ID_COMP (N: NIKE_scheme) :=
+  [interface
+    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
+    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit
+].
+
+#[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT_F I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN_E I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
+
+Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (F : NBPES_scheme) (I : inj 'shared_key N 'k E) (A : inji 'fin #|F.(NBPES_scheme.PK)| 'fin #|N.(NIKE_scheme.PK)|) (B : inji 'm F 'T E.(NBSES.M)) (C : inji 'n F 'T 'fin #|E.(NBSES.Nonce)|) (D : inji 'c F 'T E.(NBSES.C)) (b : 'bool) :
+  raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE_F N E F A B C D) ∘ ((NIKE_E N E I || AE false E N)))) ∘ ((PKEY true (NIKE_to_GEN N) || KEY false N (NBSES_to_SGEN E))).
+
+Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (F : NBPES_scheme) (I : inj 'shared_key N 'k E) (A : inji 'fin #|F.(NBPES_scheme.PK)| 'fin #|N.(NIKE_scheme.PK)|) (B : inji 'm F 'T E.(NBSES.M)) (C : inji 'n F 'T 'fin #|E.(NBSES.Nonce)|) (D : inji 'c F 'T E.(NBSES.C))  (b : 'bool) : ValidPackage (GMODPKAE E N F I A B C D b).(loc) [interface] (I_GMODPKAE_OUT N F) (GMODPKAE E N F I A B C D b).
 Proof.
 unfold GMODPKAE. nssprove_valid. Qed.
 
