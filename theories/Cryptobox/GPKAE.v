@@ -19,6 +19,10 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
+Import Num.Def.
+Import Num.Theory.
+Import Order.POrderTheory.
+
 From NominalSSP Require Import Prelude Group Misc.
 
 From NominalSSP Require Import PKAE PKEY.
@@ -72,16 +76,54 @@ Proof.
 unfold GPKAE. nssprove_valid. Qed. 
 
 
+Check Adv_par_link_r.
+Check swish.
+
 Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
   AdvFor (GPKAE E) A
-  <=  AdvFor (PKEY (NBPES_to_GEN E)) A +
+  <=  AdvFor (PKEY (NBPES_to_GEN E)) (A ∘ (PKAE E false || ID (I_GPKAE_ID_COMP E))) +
       AdvFor (GuPKAE E) A +
-      AdvFor (PKEY (NBPES_to_GEN E)) A.
+      AdvFor (PKEY (NBPES_to_GEN E)) (A ∘ (PKAE E true || ID (I_GPKAE_ID_COMP E))).
 Proof.
+unfold AdvFor, GPKAE, GuPKAE.
+erewrite Adv_sym.
 
 
 
 
+nssprove_adv_trans ((PKAE E false) || (PKEY (NBPES_to_GEN E) false)).
+
+
+
+
+
+nssprove_adv_trans ((PKAE E false || ID (I_GPKAE_ID_COMP E)) ∘ PKEY (NBPES_to_GEN E) false).
+
+
+nssprove_adv_trans (PKEY (NBPES_to_GEN E) true).
+apply lerD.
+
+
+
+
+
+
+
+
+
+unfold AdvFor, GNIKE, GuNIKE.
+repeat rewrite Adv_sep_link.
+erewrite Adv_sym.
+nssprove_adv_trans (KEY N (NIKE_to_SGEN N) false || PKEY (NIKE_to_GEN N) true).
+erewrite -> Adv_par_r by nssprove_valid.
+erewrite Adv_sym.
+rewrite -GRing.addrA. (*sætter paranterer, så lerD skiller rigtigt ad*)
+apply lerD.
+- apply lexx.
+- nssprove_adv_trans (KEY N (NIKE_to_SGEN N) true || PKEY (NIKE_to_GEN N) true).
+apply lerD.
+-- erewrite Adv_sym. apply lexx.
+-- erewrite -> Adv_par_r by nssprove_valid. apply lexx. Qed.
 
 
 Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
