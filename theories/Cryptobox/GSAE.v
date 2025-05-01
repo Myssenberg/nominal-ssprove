@@ -42,7 +42,7 @@ Definition I_GSAE_OUT (E : NBSES_scheme) :=
 ].
 
 Definition GSAE (E : NBSES_scheme) (b : 'bool) :
-  raw_module := SAE b E.
+  raw_module := SAE E b.
 
 Lemma GSAE_valid (E : NBSES_scheme) (b : 'bool) : ValidPackage (GSAE E b).(loc) [interface] (I_GSAE_OUT E) (GSAE E b).
 Proof.

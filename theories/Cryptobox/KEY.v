@@ -78,7 +78,7 @@ Definition I_KEY_OUT (N: NIKE_scheme) (G: SGEN_scheme) :=
     #val #[ HON ]:  'SID N → 'bool
 ].
 
-Definition KEY (N: NIKE_scheme) (G: SGEN_scheme) b:
+Definition KEY (N: NIKE_scheme) (G: SGEN_scheme) (b : 'bool) :
   game (I_KEY_OUT N G) :=
   [module KEY_locs_tt N G;
     #def #[ SET ] ('(sid, k) : 'SID N × 'shared_key G): ('unit) {

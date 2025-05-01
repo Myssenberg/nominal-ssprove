@@ -56,7 +56,7 @@ Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition AE (b : bool) (E: NBSES_scheme) (N : NIKE_scheme) :
+Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (b : bool) :
   module (I_AE_IN E N) (I_AE_OUT E N)  := 
   [module AE_locs_tt E N;
     #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
@@ -102,13 +102,6 @@ Definition AE (b : bool) (E: NBSES_scheme) (N : NIKE_scheme) :
 
     } 
   ].
-
-Definition GAE_tt_KEY_tt :=
-  True. (*TEMPORARY*)
-
-Definition GAE_tt_KEY_ff :=
-  False. (*TEMPORARY*)
-
 
 
 End AE.
