@@ -32,29 +32,29 @@ Module GH.
 
 Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
+    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  ;
+    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition I_GH_ID_COMP (N : NIKE_scheme) (E : NBSES_scheme) :=
+Definition I_GH_ID_COMP (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit
+    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  ;
+    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
+    #val #[ GET ]: ('pk N × 'pk N) → 'k E (* ;
+    #val #[ HON ]: ('pk N × 'pk N)  → 'option 'bool *)
 ].
 
-#[export] Hint Unfold I_GH_OUT I_GH_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT I_SAE_OUT I_HYBRID_IN I_HYBRID_OUT : in_fset_eq.
+(* #[export] Hint Unfold I_GH_OUT I_GH_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT I_SAE_OUT I_HYBRID_IN I_HYBRID_OUT : in_fset_eq. *)
 
-(*
 (* Temporary attempt at composing game *)
 Definition GH (E : NBSES_scheme) (N : NIKE_scheme) i (b : 'bool):
-  raw_module := ((HYBRID E N i b) ∘ (ID (I_GH_ID_COMP N E) || AE true E N || SAE b E || AE false E N)) ∘ (KEY true N (NIKE_to_SGEN N)).
+  raw_module := (HYBRID E N i) ∘ (AE b E N || SAE b E || (ID (I_GH_ID_COMP E N)) ∘ (KEY true N (NBSES_to_SGEN E))).
 
 Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) i (b : 'bool) :
   ValidPackage (GH E N i b).(loc) [interface] (I_GH_OUT E N) (GH E N i b).
 Proof.
-unfold GH. nssprove_valid. - fset_solve.
-*)
+unfold GH. nssprove_valid. About KEY.
 
 End GH.

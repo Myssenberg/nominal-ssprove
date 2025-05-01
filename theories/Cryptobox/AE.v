@@ -47,7 +47,7 @@ Definition DEC := 53%N.
 Definition I_AE_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     #val #[ GET ]: ('pk N × 'pk N) → 'k E ;
-    #val #[ HON ]: ('pk N × 'pk N)  → 'bool 
+    #val #[ HON ]: ('pk N × 'pk N)  → 'option 'bool 
 ].
 
 Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
@@ -61,7 +61,7 @@ Definition AE (b : bool) (E: NBSES_scheme) (N : NIKE_scheme) :
   [module AE_locs_tt E N;
     #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
       
       k ← geti (PKr, PKs) ;;
       MLOC ← get M_loc E N ;;
@@ -81,7 +81,7 @@ Definition AE (b : bool) (E: NBSES_scheme) (N : NIKE_scheme) :
 
     #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
 
       k ← geti (PKr, PKs) ;;
       MLOC ← get M_loc E N;;

@@ -1,5 +1,5 @@
 (*This is a part of the implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme.
-This file contains the specification for the GAE game and following lemmas*)
+This file contains the specification for the HYBRID package*)
 
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
@@ -52,31 +52,33 @@ Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N 
 
 Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]:  ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ; 
-    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ HON ]: ('pk N × 'pk N) → ('option 'bool) ; (*Allowed?*)
-    #val #[ GEN ]: 'unit → 'unit ;
-    #val #[ GET ]: ('pk N × 'pk N) → 'k E ; 
-    #val #[ ENC ]: ('m E × 'n E) → 'c E  ;
-    #val #[ DEC ]: ('c E × 'n E) → 'm E  
+    #val #[ SET ]:  ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ; 
+    #val #[ CSET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
+    #val #[ GET ]: ('pk N × 'pk N) → 'k E ;
+    (*#val #[ HON ]: ('pk N × 'pk N) → ('option 'bool) ;*)
+    #val #[ GEN ]: 'unit → 'unit ; 
+    #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
+    #val #[ SDEC ]: ('c E × 'n E) → 'm E ;
+    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
+    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ]. 
 
 Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ; 
+    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  ;
+    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  ; 
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E  ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i (b : bool): 
+Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i: 
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
   [module GH_locs_tt E N ;
-    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;;
+    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|)) : ('unit) {
+      (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;; *)
       #import {sig #[ GEN ]: 'unit → 'unit} as gen ;;
-      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as set ;;
-      hon_stat ← hon (PKs, PKr) ;;
+      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  } as set ;;
+      (* hon_stat ← hon (PKs, PKr) ;; *)
       HSLOC ← get HS_loc N ;;
       #assert isSome (HSLOC (PKs, PKr)) as count ;;
       let counts := getSome (HSLOC (PKs, PKr)) count in
@@ -95,19 +97,19 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i (b : bool):
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
-      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as cset ;;
+    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|)) : ('unit) {
+      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  } as cset ;;
       cset (PKr, PKs, k) ;;
       ret (Datatypes.tt : 'unit)
     }  ;
     #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
-      #import {sig #[ ENC ]: ('m E × 'n E) → 'c E   } as SAEenc ;;
+      (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;; *)
+      #import {sig #[ SENC ]: ('m E × 'n E) → 'c E   } as SAEenc ;;
 
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
-      HON ← hon (PKs, PKr) ;;
+      (* HON ← hon (PKs, PKr) ;; *)
       HSLOC ← get HS_loc N ;; 
       
       
@@ -115,7 +117,7 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i (b : bool):
       #assert isSome (HSLOC (PKs, PKr)) as count ;; 
       let counts := getSome (HSLOC (PKs, PKr)) count in 
 
-      if (counts < i) then  (*Do we need the same checks as the if statement in AE?*)
+      if (counts < i) then
           c ← E.(sample_C) ;;    (* Should be AE1 here*) 
           #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
           ret c
@@ -131,12 +133,12 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i (b : bool):
     
     #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
-      #import {sig #[ DEC ]: ('c E × 'n E) → 'm E   } as SAEdec ;;
+      (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;; *)
+      #import {sig #[ SDEC ]: ('c E × 'n E) → 'm E   } as SAEdec ;;
       
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
-      HON ← hon (PKs, PKr) ;;
+      (* HON ← hon (PKs, PKr) ;; *)
       HSLOC ← get HS_loc N ;; 
 
       #assert isSome (HSLOC (PKs, PKr)) as count ;;

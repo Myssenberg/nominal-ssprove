@@ -29,21 +29,21 @@ Import NBSES.
 
 Module SAE.
 
-Definition M_loc (E : NBSES_scheme) : Location := (chMap 'n E ('m E × 'c E) ; 0).
+Definition SM_loc (E : NBSES_scheme) : Location := (chMap 'n E ('m E × 'c E) ; 0).
 Definition K_loc (E : NBSES_scheme) : Location := ('option 'k E ; 1).
 
-Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  M_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition SAE_locs_ff (E : NBSES_scheme) := fset [::  M_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  SM_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition SAE_locs_ff (E : NBSES_scheme) := fset [::  SM_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 
 Definition GEN := 2%N.
-Definition ENC := 3%N.
-Definition DEC := 4%N.
+Definition SENC := 3%N.
+Definition SDEC := 4%N.
 
 Definition I_SAE_OUT (E : NBSES_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'unit ;    
-    #val #[ ENC ]: ('m E × 'n E) → 'c E  ;
-    #val #[ DEC ]: ('c E × 'n E) → 'm E 
+    #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
+    #val #[ SDEC ]: ('c E × 'n E) → 'm E 
 ].
 
 Definition SAE (b : bool) (E : NBSES_scheme):
@@ -59,29 +59,29 @@ Definition SAE (b : bool) (E : NBSES_scheme):
       | Some k => ret (Datatypes.tt : 'unit)
       end
     } ;
-    #def #[ ENC ] ('(m, n) : ('m E × 'n E)) : ('c E) {
-      MLOC ← get M_loc E ;;
-      #assert MLOC n == None ;;
+    #def #[ SENC ] ('(m, n) : ('m E × 'n E)) : ('c E) {
+      SMLOC ← get SM_loc E ;;
+      #assert SMLOC n == None ;;
       KLOC ← get K_loc E ;;
       #assert isSome KLOC as someKey ;;
       let k := getSome KLOC someKey in
       if (b) then
        c ← E.(sample_C) ;;
-       #put (M_loc E) := setm MLOC (n) (m, c) ;;
+       #put (SM_loc E) := setm SMLOC (n) (m, c) ;;
        ret c
       else
        c ← E.(enc) m k n ;;
-       #put (M_loc E) := setm MLOC (n) (m, c) ;;
+       #put (SM_loc E) := setm SMLOC (n) (m, c) ;;
        ret c
     } ;
-    #def #[ DEC ] ('(c, n) : ('c E × 'n E)) : ('m E) {
+    #def #[ SDEC ] ('(c, n) : ('c E × 'n E)) : ('m E) {
       KLOC ← get K_loc E ;;
       #assert (isSome KLOC) as someKey ;;
       let k := getSome KLOC someKey in
       if (b) then
-       MLOC ← get M_loc E ;;
-       #assert isSome (MLOC n) as MC ;;
-       let (m, c') := getSome (MLOC n) MC in 
+       SMLOC ← get SM_loc E ;;
+       #assert isSome (SMLOC n) as MC ;;
+       let (m, c') := getSome (SMLOC n) MC in 
        ret m
       else
        m ← E.(dec) c k n ;;
