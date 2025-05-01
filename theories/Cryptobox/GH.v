@@ -38,29 +38,23 @@ Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition I_GH_ID_COMP_FST (N : NIKE_scheme) (E : NBSES_scheme) :=
+Definition I_GH_ID_COMP (N : NIKE_scheme) (E : NBSES_scheme) :=
   [interface
     #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
     #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit
 ].
 
-Definition I_GH_ID_COMP_SND (N : NIKE_scheme) (E : NBSES_scheme) :=
-  [interface
-    #val #[ GET ]: ('pk N × 'pk N) → 'k E ;
-    #val #[ HON ]: ('pk N × 'pk N)  → 'bool
-].
-
-#[export] Hint Unfold I_GH_OUT I_GH_ID_COMP_FST I_GH_ID_COMP_SND I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT I_SAE_OUT : in_fset_eq.
-
-(* Temporary attempt at composing game *)
-Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool):
-  raw_module := (HYBRID b E N) ∘ (((AE false E N || AE true E N) ∘ KEY false N (NIKE_to_SGEN N)) || SAE b E || KEY false N (NIKE_to_SGEN N)).
+#[export] Hint Unfold I_GH_OUT I_GH_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT I_SAE_OUT I_HYBRID_IN I_HYBRID_OUT : in_fset_eq.
 
 (*
-Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) :
-  ValidPackage (GH E N b).(loc) [interface] (I_GH_OUT E N) (GH E N b).
+(* Temporary attempt at composing game *)
+Definition GH (E : NBSES_scheme) (N : NIKE_scheme) i (b : 'bool):
+  raw_module := ((HYBRID E N i b) ∘ (ID (I_GH_ID_COMP N E) || AE true E N || SAE b E || AE false E N)) ∘ (KEY true N (NIKE_to_SGEN N)).
+
+Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) i (b : 'bool) :
+  ValidPackage (GH E N i b).(loc) [interface] (I_GH_OUT E N) (GH E N i b).
 Proof.
-unfold GH. nssprove_valid. Qed.
+unfold GH. nssprove_valid. - fset_solve.
 *)
 
 End GH.

@@ -34,7 +34,7 @@ Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
 
-Variable (i : 'nat).
+(* Variable (i : 'nat). *)
 
 Definition HS_loc (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). (*Check loc here*)
 
@@ -50,7 +50,7 @@ Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N 
 
 
 
-Definition I_GH_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
+Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     #val #[ SET ]:  ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ; 
     #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
@@ -58,10 +58,10 @@ Definition I_GH_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ GEN ]: 'unit → 'unit ;
     #val #[ GET ]: ('pk N × 'pk N) → 'k E ; 
     #val #[ ENC ]: ('m E × 'n E) → 'c E  ;
-    #val #[ DEC ]: ('c E × 'n E) → 'm E 
+    #val #[ DEC ]: ('c E × 'n E) → 'm E  
 ]. 
 
-Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
+Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
     #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ; 
@@ -69,8 +69,8 @@ Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (b : bool): 
-  module (I_GH_IN E N) (I_GH_OUT E N) := 
+Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i (b : bool): 
+  module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
   [module GH_locs_tt E N ;
     #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
       #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;;
