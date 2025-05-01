@@ -56,7 +56,7 @@ Definition I_GAE_ID_COMP (N : NIKE_scheme) (E : NBSES_scheme) :=
 #[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
 
 Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool):
-  raw_module := (AE b E N || ID (I_GAE_ID_COMP N E)) ∘ (KEY b N (NBSES_to_SGEN E)).
+  raw_module := (AE b E N || ID (I_GAE_ID_COMP N E)) ∘ (KEY true N (NBSES_to_SGEN E)).
 
 Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) :
   ValidPackage (GAE E N b).(loc) [interface] (I_GAE_OUT E N) (GAE E N b).
