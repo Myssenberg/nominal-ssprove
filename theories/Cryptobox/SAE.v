@@ -46,7 +46,7 @@ Definition I_SAE_OUT (E : NBSES_scheme) :=
     #val #[ DEC ]: ('c E × 'n E) → 'm E 
 ].
 
-Definition SAE (b : bool) (E : NBSES_scheme):
+Definition SAE (E : NBSES_scheme) (b : bool) :
   game (I_SAE_OUT E)  := 
   [module SAE_locs_tt E ;
     #def #[ GEN ] (_ : 'unit) : ('unit) {
