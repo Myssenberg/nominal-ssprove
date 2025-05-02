@@ -30,10 +30,10 @@ Import NBSES.
 Module SAE.
 
 Definition SM_loc (E : NBSES_scheme) : Location := (chMap 'n E ('m E × 'c E) ; 0).
-Definition K_loc (E : NBSES_scheme) : Location := ('option 'k E ; 1).
+Definition SAEK_loc (E : NBSES_scheme) : Location := ('option 'k E ; 1).
 
-Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  SM_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition SAE_locs_ff (E : NBSES_scheme) := fset [::  SM_loc E ; K_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  SM_loc E ; SAEK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
+Definition SAE_locs_ff (E : NBSES_scheme) := fset [::  SM_loc E ; SAEK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 
 Definition GEN := 2%N.
 Definition SENC := 3%N.
@@ -50,11 +50,11 @@ Definition SAE (b : bool) (E : NBSES_scheme):
   game (I_SAE_OUT E)  := 
   [module SAE_locs_tt E ;
     #def #[ GEN ] (_ : 'unit) : ('unit) {
-      KLOC ← get K_loc E ;;
+      KLOC ← get SAEK_loc E ;;
       match KLOC with
       | None =>
         k ← E.(sample_K) ;;
-        #put (K_loc E) := Some k ;;
+        #put (SAEK_loc E) := Some k ;;
         ret (Datatypes.tt : 'unit)
       | Some k => ret (Datatypes.tt : 'unit)
       end
@@ -62,7 +62,7 @@ Definition SAE (b : bool) (E : NBSES_scheme):
     #def #[ SENC ] ('(m, n) : ('m E × 'n E)) : ('c E) {
       SMLOC ← get SM_loc E ;;
       #assert SMLOC n == None ;;
-      KLOC ← get K_loc E ;;
+      KLOC ← get SAEK_loc E ;;
       #assert isSome KLOC as someKey ;;
       let k := getSome KLOC someKey in
       if (b) then
@@ -75,7 +75,7 @@ Definition SAE (b : bool) (E : NBSES_scheme):
        ret c
     } ;
     #def #[ SDEC ] ('(c, n) : ('c E × 'n E)) : ('m E) {
-      KLOC ← get K_loc E ;;
+      KLOC ← get SAEK_loc E ;;
       #assert (isSome KLOC) as someKey ;;
       let k := getSome KLOC someKey in
       if (b) then

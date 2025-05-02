@@ -33,7 +33,7 @@ Module AE.
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
-Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) ('m E × 'c E); 0).
+Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) ('m E × 'c E); 54).
 
 Definition AE_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
 Definition AE_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
