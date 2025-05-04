@@ -22,11 +22,16 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group Misc.
 Import PackageNotation.
 
+Import Num.Def.
+Import Num.Theory.
+Import Order.POrderTheory.
+
 #[local] Open Scope package_scope.
+#[local] Open Scope ring_scope.
 
-From NominalSSP Require Import AE HYBRID KEY NBSES NIKE SAE.
+From NominalSSP Require Import AE HYBRID KEY NBSES NIKE SAE GAE GSAE.
 
-Import AE HYBRID KEY NBSES NIKE_scheme SAE.
+Import AE HYBRID KEY NBSES NIKE_scheme SAE GAE GSAE.
 
 Module GH.
 
@@ -82,5 +87,13 @@ Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) i qset (b : 'bool) :
   ValidPackage (GH E N i qset b).(loc) [interface] (I_GH_OUT E N) (GH E N i qset b).
 Proof.
 unfold GH. nssprove_valid. Qed.
+
+(* Attempt at Lemma 3*)
+Theorem Lemma3_Adv_GAE {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) :
+  AdvFor (GAE E N) A <= \sum_(1 <= i < qset)
+    ( AdvFor (GSAE E) (A ∘ (HYBRID E N i qset) ∘ (AE true E N || ID (I_GH_ID_COMP E N)) ∘ (KEY true N (NBSES_to_SGEN E))) + 
+      AdvFor (GSAE E) (A ∘ (HYBRID E N i qset) ∘ (AE false E N || ID (I_GH_ID_COMP E N)) ∘ (KEY true N (NBSES_to_SGEN E)))).
+Proof.
+Admitted.
 
 End GH.
