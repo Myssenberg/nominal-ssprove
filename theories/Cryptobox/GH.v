@@ -78,7 +78,7 @@ Definition I_GH_TRD (E: NBSES_scheme) (N : NIKE_scheme) :=
 Definition GH (E : NBSES_scheme) (N : NIKE_scheme) i (b : 'bool):
   raw_module := (HYBRID E N i) ∘ (((ID (I_GH_ID_COMP E N) || ID (I_GH_FST E N)) ∘ (AE b E N || ID (I_GH_SND E N)) ∘ (SAE b E || ID (I_GH_TRD E N))) ∘ (KEY true N (NBSES_to_SGEN E))).
 
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) i (b : 'bool) :
+Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) i (b : 'bool) :
   ValidPackage (GH E N i b).(loc) [interface] (I_GH_OUT E N) (GH E N i b).
 Proof.
 unfold GH. nssprove_valid. Qed.
