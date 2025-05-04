@@ -34,8 +34,6 @@ Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
 
-(* Variable (i : 'nat). *)
-
 Definition HS_loc (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). (*Check loc here*)
 
 
@@ -71,7 +69,7 @@ Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i: 
+Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i qset: 
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
   [module GH_locs_tt E N ;
     #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|)) : ('unit) {
@@ -82,6 +80,7 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i:
       HSLOC ← get HS_loc N ;;
       #assert isSome (HSLOC (PKs, PKr)) as count ;;
       let counts := getSome (HSLOC (PKs, PKr)) count in
+      #assert (counts < qset) ;;
       if (HSLOC (PKs, PKr) == None) then  
         if (counts == i) then
           gen Datatypes.tt ;;
