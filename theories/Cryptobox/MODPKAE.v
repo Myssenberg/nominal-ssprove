@@ -85,7 +85,7 @@ Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
       ret M
     }
   ].
-
+(*
 Definition I_MODPKAE_OUT_F (F : NBPES_scheme) :=
 [interface
     #val #[ PKENC_MOD ]: ((('pk F × 'pk F) × 'm F) × 'n F) → 'c F ;
@@ -124,6 +124,6 @@ Definition MODPKAE_F (N : NIKE_scheme) (E : NBSES_scheme) (F : NBPES_scheme) (A 
       let m' := B.(decode) M in
       ret m'
     }
-  ].
+  ].*)
 
 End MODPKAE.

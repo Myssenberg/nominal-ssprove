@@ -23,7 +23,7 @@ theories/Example/PK/DDH.v
 theories/Example/PK/ElGamal.v
 
 theories/Cryptobox/AE.v
-theories/Cryptobox/CRYPTOBOX.v
+
 theories/Cryptobox/GAE.v
 theories/Cryptobox/GMODPKAE.v
 theories/Cryptobox/GNIKE.v

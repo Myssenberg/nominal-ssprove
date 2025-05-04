@@ -52,7 +52,7 @@ Module crypto_box.
   }.*)
 
 
-Record inj A B :=
+Record CB_inj A B :=
   { encode  : A → B
   ; decode  : B → A
   ; cancels : cancel encode decode
@@ -65,10 +65,8 @@ Arguments decode {A} {B} _.
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
-Instance shared_pos (N: NIKE_scheme.NIKE_scheme) : Positive #|(prod N.(NIKE_scheme.PK) N.(NIKE_scheme.SK) : finType)|.
-Proof. Admitted.
 
-Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (P : NBPES_scheme.NBPES_scheme) (I : inj ('fin #|N.(NIKE_scheme.Shared_Key)|) E.(NBSES.Shared_Key)): NBPES_scheme.NBPES_scheme := {|
+Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)): NBPES_scheme.NBPES_scheme := {|
     NBPES_scheme.PK       := N.(NIKE_scheme.PK) ;
     NBPES_scheme.SK       := N.(NIKE_scheme.SK) ;
     NBPES_scheme.Nonce    := E.(NBSES.Nonce) ;
@@ -86,7 +84,7 @@ Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme
       {code
         K ← N.(NIKE_scheme.sharedkey) pk sk ;;
         let k := I.(encode) K in
-        C ← E.(NBSES.enc) m (fto k) n ;;
+        C ← E.(NBSES.enc) m k n ;;
         ret C} ;
 
 
@@ -94,17 +92,22 @@ Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme
       {code
         K ← N.(NIKE_scheme.sharedkey) pk sk ;;
         let k := I.(encode) K in
-        M ← E.(NBSES.dec) c (fto k) n ;;
+        M ← E.(NBSES.dec) c k n ;;
         ret M
       }
 |}.
 
 
-Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (I : inj ('fin #|N.(NIKE_scheme.Shared_Key)|) E.(NBSES.Shared_Key)):
-  AdvFor (GPKAE.GuPKAE (CRYPTOBOX_scheme N E P I)) A
-  <= AdvFor (GNIKE.GuNIKE N) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N false)))) ∘ ((ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N)) || ID (KEY.I_KEY_OUT N (KEY.NBSES_to_SGEN E))))).
+Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)):
+  AdvFor (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb)) A
+  <= AdvFor (GNIKE.GuNIKE N) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N false)))) ∘ ((ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N)) || ID (KEY.I_KEY_OUT N (KEY.NBSES_to_SGEN E)))))
+     +
+     AdvFor (GAE.GAE E N) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE_E N E I || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (KEY.I_KEY_OUT N (KEY.NBSES_to_SGEN E))))).
 Proof.
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, AdvFor.
+
+
+
 
 Lemma perfectcb b (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (P : NBPES_scheme.NBPES_scheme) (I : inj ('fin #|N.(NIKE_scheme.Shared_Key)|) E.(NBSES.Shared_Key)) (A : adversary (GPKAE.I_GPKAE_OUT P)):
   ∀ b, (GPKAE.GPKAE (CRYPTOBOX_scheme N E P I) b) ≈₀ (GPKAE.GPKAE (CRYPTOBOX_scheme N E P I) b).
