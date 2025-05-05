@@ -27,7 +27,7 @@ From NominalSSP Require Import PK.DDH PK.Scheme.
 From NominalSSP Require Import Prelude Group Misc.
 Import PackageNotation.
 
-From NominalSSP Require Import NIKE NBSES GPKAE GMODPKAE GAE MODPKAE AE GNIKE NIKE PKEY KEY PKAE Scheme.
+From NominalSSP Require Import NIKE NBSES GPKAE GMODPKAE GAE MODPKAE AE GNIKE NIKE PKEY KEY PKAE GSAE GH HYBRID.
 
 #[local] Open Scope package_scope.
 #[local] Open Scope ring_scope.
@@ -99,6 +99,7 @@ Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme
 
 Check adv_equiv.
 
+(*perfect definition from Markus' branch*)
 Definition perfect I G G' :=
   ∀ LA (A : raw_module) (VA : ValidPackage LA I A_export A), Adv G G' A = 0.
 
@@ -120,5 +121,36 @@ Proof.
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
 Admitted.
 
+Instance sharedkey_posi n : Positive #|NIKE_scheme.Shared_Key n|.
+Proof.
+Admitted.
+
+Instance k_posi e : Positive #|NBSES.Shared_Key e|.
+Proof.
+Admitted.
+
+
+
+Theorem Cryptobox_Security {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) qset (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)):
+  AdvFor (GPKAE.GPKAE (CRYPTOBOX_scheme N E I_cb)) A
+  <=
+  AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A ∘ (NBPES_scheme.PKAE P false || ID (GPKAE.I_GPKAE_ID_COMP P)))
+  +
+  AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A ∘ (NBPES_scheme.PKAE P true || ID (GPKAE.I_GPKAE_ID_COMP P)))
+  +
+  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (A ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N)) ∘ (KEY.KEY N (KEY.NIKE_to_SGEN N) false || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  +
+  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (A ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N)) ∘ (KEY.KEY N (KEY.NIKE_to_SGEN N) true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  +
+  AdvFor (GNIKE.GuNIKE N) A
+  +
+  \sum_(1 <= i < qset)
+   ( AdvFor (GSAE.GSAE E) (A ∘ (HYBRID.HYBRID E N i qset) ∘ (AE.AE E N true || ID (GH.I_GH_ID_COMP E N)) ∘ (KEY.KEY N (KEY.NBSES_to_SGEN E) true)) + 
+     AdvFor (GSAE.GSAE E) (A ∘ (HYBRID.HYBRID E N i qset) ∘ (AE.AE E N false|| ID (GH.I_GH_ID_COMP E N)) ∘ (KEY.KEY N (KEY.NBSES_to_SGEN E) true))).
+Proof.
+Search "Adv".
+About Order.le_trans.
+apply Advantage_triangle_chain.
+apply GH.Lemma3_Adv_GAE.
 
 End crypto_box.

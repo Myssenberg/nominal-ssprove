@@ -25,10 +25,12 @@ theories/Example/PK/ElGamal.v
 theories/Cryptobox/AE.v
 
 theories/Cryptobox/GAE.v
+theories/Cryptobox/GH.v
 theories/Cryptobox/GMODPKAE.v
 theories/Cryptobox/GNIKE.v
 theories/Cryptobox/GPKAE.v
 theories/Cryptobox/GSAE.v
+theories/Cryptobox/HYBRID.v
 theories/Cryptobox/KEY.v
 theories/Cryptobox/MODPKAE.v
 theories/Cryptobox/NBSES.v
