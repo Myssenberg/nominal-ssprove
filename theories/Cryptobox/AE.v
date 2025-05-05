@@ -33,7 +33,7 @@ Module AE.
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
-Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) ('m E × 'c E); 0).
+Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) ('m E × 'c E); 54).
 
 Definition AE_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
 Definition AE_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
@@ -47,7 +47,7 @@ Definition DEC := 53%N.
 Definition I_AE_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     #val #[ GET ]: ('pk N × 'pk N) → 'k E ;
-    #val #[ HON ]: ('pk N × 'pk N)  → 'bool 
+    #val #[ HON ]: ('pk N × 'pk N)  → 'option 'bool 
 ].
 
 Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
@@ -61,7 +61,7 @@ Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (b : bool) :
   [module AE_locs_tt E N;
     #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
       
       k ← geti (PKr, PKs) ;;
       MLOC ← get M_loc E N ;;
@@ -81,7 +81,7 @@ Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (b : bool) :
 
     #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'bool } as hon ;;
+      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
 
       k ← geti (PKr, PKs) ;;
       MLOC ← get M_loc E N;;
@@ -102,6 +102,5 @@ Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (b : bool) :
 
     } 
   ].
-
 
 End AE.
