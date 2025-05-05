@@ -23,9 +23,13 @@ From NominalSSP Require Import Prelude Group Misc.
 
 Import PackageNotation.
 
+From NominalSSP Require Import NBSES.
+
 #[local] Open Scope package_scope.
 
 Module NIKE_scheme.
+
+Import NBSES.
 
 Record NIKE_scheme :=
   { PK             : finType ;
@@ -86,6 +90,15 @@ Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (at level 2): package_scop
 
 (*Instance SessionID_pos (N: NIKE_scheme) : Positive 'fin #|PK N| × 'fin #|PK N|. Admitted.*)
 
+Record inj A B :=
+  { encode  : A → B
+  ; decode  : B → A
+  ; cancels : cancel encode decode
+  }.
+
+Arguments encode {A} {B} _.
+Arguments decode {A} {B} _.
+
 Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('SID N) 'bool ; 16).
 Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 17).
 
@@ -114,13 +127,13 @@ Definition I_NIKE_IN (N: NIKE_scheme) :=
 
 Definition I_NIKE_OUT (N: NIKE_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'unit
+    #val #[ SHAREDKEY ]: ('pk N × 'pk N) → 'option 'unit
 ].
 
 Definition NIKE (N : NIKE_scheme):
   module (I_NIKE_IN N) (I_NIKE_OUT N) :=
   [module no_locs ; 
-    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'unit {
+    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'option 'unit {
       #import {sig #[ HONPK ]: 'pk N → 'bool } as honpk ;;
       #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
       #import {sig #[ SET ]: (('pk N × 'pk N) × 'shared_key N) → 'unit} as set ;;
@@ -135,15 +148,61 @@ Definition NIKE (N : NIKE_scheme):
         let sid := (pks, pkr) in
           set (sid, shared_key) ;;
 
-        ret (Datatypes.tt : 'unit)
+        ret (Some (Datatypes.tt : 'unit))
       else
         let sid := (pks, pkr) in
           cset (sid, shared_key) ;;
-        ret (Datatypes.tt : 'unit)
+        ret (Some (Datatypes.tt : 'unit))
       
     }
   ].
 
+(*
+Definition I_NIKE_IN_E (N: NIKE_scheme) :=
+  [interface
+    #val #[ GETSK ]: 'pk N → 'sk N ;
+    #val #[ HONPK ]: 'pk N → 'bool ;
+    #val #[ SET ]:   ('SID N × 'T NBSES.NBSES_scheme.(Shared_Key)) → 'unit ;
+(*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
+    #val #[ CSET ]: ('SID N × 'T NBSES.NBSES_scheme.(Shared_Key)) → 'unit
+].*)
+
+Definition I_NIKE_IN_E (N: NIKE_scheme) (E: NBSES_scheme) :=
+  [interface
+    #val #[ GETSK ]: 'pk N → 'sk N ;
+    #val #[ HONPK ]: 'pk N → 'bool ;
+    #val #[ SET ]:   ('SID N × 'k E) → 'unit ;
+(*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
+    #val #[ CSET ]: ('SID N × 'k E) → 'unit
+].
+
+Definition NIKE_E (N : NIKE_scheme) (E: NBSES_scheme) (I : inj 'shared_key N 'k E):
+  module (I_NIKE_IN_E N E) (I_NIKE_OUT N) :=
+  [module no_locs ; 
+    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'option 'unit {
+      #import {sig #[ HONPK ]: 'pk N → 'bool } as honpk ;;
+      #import {sig #[ GETSK ]: 'pk N → 'sk N } as getsk ;;
+      #import {sig #[ SET ]: (('pk N × 'pk N) × 'k E) → 'unit} as set ;;
+      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'k E) → 'unit} as cset ;;
+      hs ← honpk pks ;;
+      hr ← honpk pkr ;;
+      
+      sks ← getsk pks ;;
+      shared_key ← N.(sharedkey) pkr sks ;;
+      let Sha_Key := I.(encode) shared_key in      
+
+      if (hs && hr) then
+        let sid := (pks, pkr) in
+          set (sid, Sha_Key) ;;
+
+        ret (Some (Datatypes.tt : 'unit))
+      else
+        let sid := (pks, pkr) in
+          cset (sid, Sha_Key) ;;
+        ret (Some (Datatypes.tt : 'unit))
+      
+    }
+  ].
 
 (*Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.

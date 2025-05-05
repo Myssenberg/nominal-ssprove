@@ -19,6 +19,10 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
+Import Num.Def.
+Import Num.Theory.
+Import Order.POrderTheory.
+
 From NominalSSP Require Import Prelude Group Misc.
 
 From NominalSSP Require Import PKAE PKEY.
@@ -27,6 +31,7 @@ Import NBPES_scheme PKEY.
 Import PackageNotation.
 
 #[local] Open Scope package_scope.
+#[local] Open Scope ring_scope.
 
 Module GPKAE.
 
@@ -57,10 +62,10 @@ Definition I_GPKAE_ID_COMP (E: NBPES_scheme) :=
 #[export] Hint Unfold I_GPKAE_OUT I_GPKAE_ID_COMP I_PKAE_OUT I_PKAE_IN I_PKEY_OUT : in_fset_eq.
 
 Definition GPKAE (E: NBPES_scheme) (b : 'bool) :
-  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY true (NBPES_to_GEN E)).
+  raw_module := (PKAE E b || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) false).
 
 Definition GuPKAE (E: NBPES_scheme) (b: 'bool) :
-  raw_module := (PKAE b E || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY b (NBPES_to_GEN E)).
+  raw_module := (PKAE E b || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true).
 
 Lemma GuPKAE_valid (E: NBPES_scheme) (b: 'bool) : ValidPackage (GuPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GuPKAE E b).
 Proof.
@@ -69,6 +74,29 @@ unfold GuPKAE. nssprove_valid. Qed.
 Lemma GPKAE_valid (E: NBPES_scheme) (b : 'bool) : ValidPackage (GPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GPKAE E b).
 Proof.
 unfold GPKAE. nssprove_valid. Qed. 
+
+
+Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
+  AdvFor (GPKAE E) A
+  <=  AdvFor (PKEY (NBPES_to_GEN E)) (A ∘ (PKAE E false || ID (I_GPKAE_ID_COMP E))) +
+      AdvFor (GuPKAE E) A +
+      AdvFor (PKEY (NBPES_to_GEN E)) (A ∘ (PKAE E true || ID (I_GPKAE_ID_COMP E))).
+Proof.
+unfold AdvFor, GPKAE, GuPKAE.
+erewrite Adv_sym.
+nssprove_adv_trans ((PKAE E false || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
+rewrite Adv_sep_link.
+rewrite -GRing.addrA.
+apply lerD.
+  - rewrite Adv_sym.
+    apply lexx.
+  - nssprove_adv_trans ((PKAE E true || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
+    apply lerD.
+  -- rewrite Adv_sym.
+     apply lexx.
+  -- rewrite Adv_sep_link.
+     apply lexx.
+Qed.
 
 
 End GPKAE.

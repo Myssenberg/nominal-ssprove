@@ -103,6 +103,4 @@ Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (b : bool) :
     } 
   ].
 
-
-
 End AE.
