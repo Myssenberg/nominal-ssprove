@@ -32,7 +32,7 @@ Module GMODPKAE.
 
 (* VERSION WITHOUT NBPES *)
 
-(* Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
+Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
@@ -59,12 +59,13 @@ Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) :
 Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (I : inj 'shared_key N 'k E) (b : 'bool) :
   raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE_E N E I || AE E N false)))) ∘ ((PKEY (NIKE_to_GEN N) true || KEY N (NBSES_to_SGEN E) false)).
 
-Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) (I : inj 'shared_key N 'k E) : ValidPackage (GMODPKAE E N b I).(loc) [interface] (I_GMODPKAE_OUT N E) (GMODPKAE E N b I).
+Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) (I : inj 'shared_key N 'k E) : ValidPackage (GMODPKAE E N I b).(loc) [interface] (I_GMODPKAE_OUT N E) (GMODPKAE E N I b).
 Proof.
-unfold GMODPKAE. nssprove_valid. Qed. *)
+unfold GMODPKAE. nssprove_valid. Qed.
 
 (* VERSION WITH NBPES *)
 
+(*
 Definition I_GMODPKAE_OUT (N: NIKE_scheme) (F : NBPES_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
@@ -86,6 +87,6 @@ Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (F : NBPES_scheme) (I :
 
 Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (F : NBPES_scheme) (I : inj 'shared_key N 'k E) (A : inji 'fin #|F.(NBPES_scheme.PK)| 'fin #|N.(NIKE_scheme.PK)|) (B : inji 'm F 'T E.(NBSES.M)) (C : inji 'n F 'T 'fin #|E.(NBSES.Nonce)|) (D : inji 'c F 'T E.(NBSES.C))  (b : 'bool) : ValidPackage (GMODPKAE E N F I A B C D b).(loc) [interface] (I_GMODPKAE_OUT N F) (GMODPKAE E N F I A B C D b).
 Proof.
-unfold GMODPKAE. nssprove_valid. Qed.
+unfold GMODPKAE. nssprove_valid. Qed.*)
 
 End GMODPKAE.

@@ -157,6 +157,16 @@ Definition NIKE (N : NIKE_scheme):
     }
   ].
 
+(*
+Definition I_NIKE_IN_E (N: NIKE_scheme) :=
+  [interface
+    #val #[ GETSK ]: 'pk N → 'sk N ;
+    #val #[ HONPK ]: 'pk N → 'bool ;
+    #val #[ SET ]:   ('SID N × 'T NBSES.NBSES_scheme.(Shared_Key)) → 'unit ;
+(*if this is from KEY taking a SID, do we then have to define the type SID separately here?*)
+    #val #[ CSET ]: ('SID N × 'T NBSES.NBSES_scheme.(Shared_Key)) → 'unit
+].*)
+
 Definition I_NIKE_IN_E (N: NIKE_scheme) (E: NBSES_scheme) :=
   [interface
     #val #[ GETSK ]: 'pk N → 'sk N ;
