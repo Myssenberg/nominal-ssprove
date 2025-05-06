@@ -120,7 +120,7 @@ Admitted.
 
 
 
-Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)):
+(*Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)):
   AdvFor (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb)) A
   <= AdvFor (GNIKE.GuNIKE N) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N false)))) ∘ ((ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N)) || ID (KEY.I_KEY_OUT N (KEY.NBSES_to_SGEN E)))))
      +
@@ -128,9 +128,9 @@ Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (
 Proof.
 (*rewrite <- Equiv_GuPKAE_GMODPKAE.*)
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
-Admitted.
+Admitted.*)
 
-(*
+
 Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)):
   AdvFor (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb)) A
   <= AdvFor (GNIKE.GuNIKE N) A
@@ -139,7 +139,7 @@ Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (
 Proof.
 (*rewrite <- Equiv_GuPKAE_GMODPKAE.*)
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
-Admitted.*)
+Admitted.
 
 
 Theorem Cryptobox_Security {N} {E} (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A1 : adversary (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb))) (A2 : adversary (GAE.I_GAE_OUT E N)) qset :
@@ -154,7 +154,7 @@ let P := (CRYPTOBOX_scheme N E I_cb) in
   +
   AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (A1 ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N)) ∘ (KEY.KEY N (KEY.NIKE_to_SGEN N) true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
   +
-  AdvFor (GNIKE.GuNIKE N) (A1 ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N false)))) ∘ ((ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N)) || ID (KEY.I_KEY_OUT N (KEY.NBSES_to_SGEN E)))))
+  AdvFor (GNIKE.GNIKE N) A1
   +
   \sum_(1 <= i < qset)
    ( AdvFor (GSAE.GSAE E) (A1 ∘ (HYBRID.HYBRID E N i qset) ∘ (AE.AE E N true || ID (GH.I_GH_ID_COMP E N)) ∘ (KEY.KEY N (KEY.NBSES_to_SGEN E) true)) + 
@@ -166,10 +166,10 @@ eapply le_trans.
 --  done.
 -- (*never repeat this one - it will keep switching*) rewrite -> GRing.addrC. apply lerD.
 --- done.
---- eapply le_trans.
+--- rewrite GRing.addrA. eapply le_trans.
 ---- apply Lemma4_Adv_GuPKAE_CB.
----- repeat rewrite <- GRing.addrA. apply lerD.
------ admit.
+---- rewrite GRing.addrA. apply lerD.
+----- apply GNIKE.Corollary3_Adv_GNIKE_GuNIKE.
 ----- About GH.Lemma3_Adv_GAE. eapply GH.Lemma3_Adv_GAE.
 
 nssprove_eadv_trans.
