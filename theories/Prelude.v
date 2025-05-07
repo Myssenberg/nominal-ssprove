@@ -167,9 +167,14 @@ Ltac nssprove_separate :=
   repeat nssprove_separate_once.
 
 
+Create HintDb nssprove_into_share.
+Hint Rewrite <- @share_link_sep_link : nssprove_into_share.
+Hint Rewrite <- @share_par_sep_par : nssprove_into_share.
+
+
 Ltac nssprove_share_once :=
-  (rewrite <- share_link_sep_link by nssprove_separate_solve)
-  || (rewrite <- share_par_sep_par by nssprove_separate_solve)
+  ((rewrite_strat innermost hints nssprove_into_share)
+    ; try nssprove_separate_solve)
   || (rewrite -> rename_alpha)
   || reflexivity.
 
