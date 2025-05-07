@@ -1,7 +1,9 @@
 From Coq Require Import Utf8.
 
+Set Warnings "-ambiguous-paths,-notation-overridden,-notation-incompatible-format".
 From mathcomp Require Import all_ssreflect all_algebra 
   fingroup.fingroup solvable.cyclic prime.
+Set Warnings "ambiguous-paths,notation-overridden,notation-incompatible-format".
 
 Local Open Scope ring_scope.
 Import GroupScope GRing.Theory.
