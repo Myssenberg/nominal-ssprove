@@ -613,10 +613,10 @@ Section KEMDEM.
   *)
 
   Definition Aux_loc :=
-    MOD_CCA_loc :|: KEM_loc :|: DEM_loc :|: KEY_loc.
+    MOD_CCA_loc :|: (KEM_loc :|: DEM_loc :|: KEY_loc).
 
   Definition Aux b :=
-    (MOD_CCA KEM_DEM ∘ (((KEM true) || (DEM b)) ∘ KEY))%share.
+    (MOD_CCA KEM_DEM ∘ (((KEM true) || (DEM b)) ∘ KEY))%sep.
 
   #[local] Hint Unfold MOD_CCA_in : in_fset_eq.
 
@@ -698,9 +698,9 @@ Section KEMDEM.
     properties regarding the sets involved to prove
     (otherwise type inference would have solved it).
   *)
-  Instance Invariant_inv {b} : Invariant PKE_CCA_loc (loc (Aux b)) inv.
+  Instance Invariant_inv : Invariant PKE_CCA_loc Aux_loc inv.
   Proof.
-    unfold Aux; simpl.
+    unfold Aux_loc; simpl.
     ssprove_invariant; try done; fset_solve.
   Qed.
 
@@ -709,10 +709,12 @@ Section KEMDEM.
     This spares us the burden of proving roughly the same equivalence twice.
   *)
   Lemma PKE_CCA_perf :
-    ∀ b, PKE_CCA KEM_DEM b ≈₀ Aux b.
+    ∀ b, perfect PKE_CCA_out (PKE_CCA KEM_DEM b) (Aux b).
   Proof.
-    intro b.
-    unfold Aux.
+    intro b. unfold Aux.
+    nssprove_share. eapply prove_perfect.
+    Unshelve.
+    3: nssprove_valid.
     (* We go to the relational logic with our invariant. *)
     eapply eq_rel_perf_ind with (inv := inv). 1: exact _.
     simplify_eq_rel m.
@@ -884,9 +886,6 @@ Section KEMDEM.
 
 
   (** Security theorem *)
-Hint Extern 5 (is_true (disj _ _)) =>
-  rewrite /disj !supp_mod //=; fset_solve
-  : disj_db.
 
   Theorem PKE_security :
     ∀ (A : module PKE_CCA_out A_export),
@@ -896,10 +895,7 @@ Hint Extern 5 (is_true (disj _ _)) =>
       AdvFor KEM_CCA (A ∘ (MOD_CCA KEM_DEM ∘ (ID KEM_out || DEM false))).
   Proof.
     intros A.
-    unfold AdvFor.
-    erewrite (Adv_perf_l (PKE_CCA_perf true)).
-    erewrite (Adv_perf_r (PKE_CCA_perf false)).
-    unfold Aux; nssprove_separate.
+    rewrite (AdvFor_perfect PKE_CCA_perf) /Aux /AdvFor.
     erewrite Adv_sep_link.
     eapply le_trans.
     + eapply (single_key_b _ _ _ (KEM false)).
