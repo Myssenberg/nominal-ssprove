@@ -9,6 +9,11 @@ theories/NomPackage.v
 theories/Disjoint.v
 theories/Prelude.v
 
+theories/Example/PK/Scheme.v
+theories/Example/PK/Reductions.v
+theories/Example/PK/DDH.v
+theories/Example/PK/ElGamal.v
+
 theories/Example/KEMDEMD.v
 theories/Example/NomKEMDEM.v
 
@@ -16,9 +21,3 @@ theories/Example/Sigma/Group.v
 theories/Example/Sigma/Sigma.v
 theories/Example/Sigma/Schnorr.v
 theories/Example/Sigma/OR.v
-
-theories/Example/PK/Misc.v
-theories/Example/PK/Scheme.v
-theories/Example/PK/DDH.v
-theories/Example/PK/ElGamal.v
-

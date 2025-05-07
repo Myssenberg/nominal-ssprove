@@ -167,6 +167,16 @@ Ltac nssprove_separate :=
   repeat nssprove_separate_once.
 
 
+Ltac nssprove_share_once :=
+  (rewrite <- share_link_sep_link by nssprove_separate_solve)
+  || (rewrite <- share_par_sep_par by nssprove_separate_solve)
+  || (rewrite -> rename_alpha)
+  || reflexivity.
+
+Ltac nssprove_share :=
+  repeat nssprove_share_once.
+
+
 (* rename simplification *)
 
 Lemma rename_bind {A B} {π} {c : raw_code A} {k : A → raw_code B}
@@ -231,3 +241,28 @@ Qed.
 #[export] Hint Extern 50 (_ = rename _ (let '(_, _) := _ in _)) =>
   rewrite rename_let
   : ssprove_code_simpl.
+
+Notation call n S T a
+  := (#import (mkopsig n S T) as F ;; b ← F a ;; ret b).
+
+Notation "'getNone' n ;; c" :=
+  ( v ← get n ;;
+    #assert (v == None) ;;
+    c
+  )
+  (at level 100, n at next level, right associativity,
+  format "getNone  n  ;;  '//' c")
+  : package_scope.
+
+Notation "x ← 'getSome' n ;; c" :=
+  ( v ← get n ;;
+    #assert (isSome v) as vSome ;;
+    let x := getSome v vSome in
+    c
+  )
+  (at level 100, n at next level, right associativity,
+  format "x  ←  getSome  n  ;;  '//' c")
+  : package_scope.
+
+#[export] Hint Extern 10 (is_true (_ \in _)) =>
+  fset_solve : ssprove_invariant.
