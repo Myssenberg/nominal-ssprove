@@ -19,7 +19,7 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 
 From NominalSSP Require Import AE NBSES NIKE PKAE.
 Import AE NBSES NIKE_scheme NBPES_scheme.
@@ -36,11 +36,11 @@ Record inji A B :=
   ; cancels : cancel encode decode
   }.
 
+Definition PKENC := 14%N.
+Definition PKDEC := 15%N.
+
 Arguments encode {A} {B} _.
 Arguments decode {A} {B} _.
-
-Definition PKENC_MOD := 69%N.
-Definition PKDEC_MOD := 70%N.
 
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
@@ -54,9 +54,15 @@ Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
 
 Definition I_MODPKAE_OUT (N : NIKE_scheme) (E : NBSES_scheme) :=
 [interface
-    #val #[ PKENC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; (*SHOULD COME FROM NBPES?*)
-    #val #[ PKDEC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) (*SHOULD COME FROM NBPES?*)
+    #val #[ PKENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; (*SHOULD COME FROM NBPES?*)
+    #val #[ PKDEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) (*SHOULD COME FROM NBPES?*)
 ].
+
+(* Definition I_MODPKAE_OUT_F (F : NBPES_scheme) :=
+[interface
+    #val #[ PKENC_MOD ]: ((('pk F × 'pk F) × 'm F) × 'n F) → 'c F ;
+    #val #[ PKDEC_MOD ]: ((('pk F × 'pk F) × 'c F) × 'n F) → 'm F
+]. *)
 
 Definition SORT (N: NIKE_scheme) (PKs PKr : 'T 'fin #|N.(NIKE_scheme.PK)|) : ('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) :=
   if (PKs < PKr) then (PKs, PKr) : (prod _ _) else (PKr, PKs) : (prod _ _).
@@ -64,7 +70,7 @@ Definition SORT (N: NIKE_scheme) (PKs PKr : 'T 'fin #|N.(NIKE_scheme.PK)|) : ('T
 Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
   module (I_MODPKAE_IN N E) (I_MODPKAE_OUT N E) :=
   [module no_locs ; 
-    #def #[ PKENC_MOD ] ('(((PKs, PKr), m), n) : (('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.C)) {
+    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.C)) {
       #import {sig #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) → 'option 'unit } as sharedkey ;;
       #import {sig #[ ENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) } as enc ;;
       #import {sig #[ DEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) } as dec ;;      
@@ -74,7 +80,7 @@ Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
       C ← enc (fst, snd, m, n) ;;
       ret C
     } ;
-    #def #[ PKDEC_MOD ] ('(((PKs, PKr), c), n) : (('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.M)) {
+    #def #[ PKDEC ] ('(((PKs, PKr), c), n) : (('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.M)) {
       #import {sig #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) → 'option 'unit } as sharedkey ;;
       #import {sig #[ ENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) } as enc ;;
       #import {sig #[ DEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) } as dec ;;

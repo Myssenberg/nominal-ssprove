@@ -19,7 +19,7 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 
 Import PackageNotation.
 
@@ -167,7 +167,7 @@ Definition I_NIKE_IN_E (N: NIKE_scheme) :=
     #val #[ CSET ]: ('SID N × 'T NBSES.NBSES_scheme.(Shared_Key)) → 'unit
 ].*)
 
-Definition I_NIKE_IN_E (N: NIKE_scheme) (E: NBSES_scheme) :=
+(* Definition I_NIKE_IN_E (N: NIKE_scheme) (E: NBSES_scheme) :=
   [interface
     #val #[ GETSK ]: 'pk N → 'sk N ;
     #val #[ HONPK ]: 'pk N → 'bool ;
@@ -202,7 +202,7 @@ Definition NIKE_E (N : NIKE_scheme) (E: NBSES_scheme) (I : inj 'shared_key N 'k 
         ret (Some (Datatypes.tt : 'unit))
       
     }
-  ].
+  ]. *)
 
 (*Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.

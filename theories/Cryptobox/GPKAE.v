@@ -23,7 +23,7 @@ Import Num.Def.
 Import Num.Theory.
 Import Order.POrderTheory.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 
 From NominalSSP Require Import PKAE PKEY.
 Import NBPES_scheme PKEY.
