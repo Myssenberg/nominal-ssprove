@@ -16,26 +16,28 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude.
 Import PackageNotation.
+#[local] Open Scope ring_scope.
 #[local] Open Scope package_scope.
 
 
 Module PKScheme.
+
+
+(* Public-key encryption schemes *)
 
 Record pk_scheme :=
   { Sec : choice_type
   ; Pub : choice_type
   ; Mes : choice_type
   ; Cip : choice_type
-  ; sample_Cip : code fset0 [interface] Cip
-
+  ; sample_Cip :
+    code fset0 [interface] Cip
   ; keygen :
       code fset0 [interface] (Sec × Pub)
-
   ; enc : ∀ (pk : Pub) (m : Mes),
       code fset0 [interface] Cip
-
   ; dec : ∀ (sk : Sec) (c : Cip),
       code fset0 [interface] Mes
   }.
@@ -65,15 +67,19 @@ Notation " 'cip p " := (Cip p)
   (at level 3) : package_scope.
 
 
+(* Correctness property *)
+
 Definition ENCDEC := 0%N.
 
 Definition I_CORR (P : pk_scheme) :=
-  [interface #val #[ ENCDEC ] : 'mes P → 'mes P ].
+  [interface #val #[ ENCDEC ]
+    : 'mes P → 'mes P ].
 
 Definition CORR0 (P : pk_scheme) :
   game (I_CORR P) :=
   [module no_locs ;
-    #def #[ ENCDEC ] (m : 'mes P) : ('mes P) {
+    #def #[ ENCDEC ] (m : 'mes P)
+        : ('mes P) {
       '(sk, pk) ← P.(keygen) ;;
       c ← P.(enc) pk m ;;
       m' ← P.(dec) sk c ;;
@@ -84,15 +90,42 @@ Definition CORR0 (P : pk_scheme) :
 Definition CORR1 (P : pk_scheme) :
   game (I_CORR P) :=
   [module no_locs ;
-    #def #[ ENCDEC ] (m : 'mes P) : ('mes P) {
+    #def #[ ENCDEC ] (m : 'mes P)
+        : ('mes P) {
       ret m
     }
   ].
 
 Definition CORR P b := if b then CORR0 P else CORR1 P.
 
+
+(* Initialization code and rules *)
+
+Definition init_loc (P : pk_scheme) : Location := ('option ('pub P); 1%N).
+
+Definition init P : raw_code ('pub P) :=
+  locked (
+    mpk ← get init_loc P ;;
+    match mpk with
+    | None => 
+      '(_, pk) ← P.(keygen) ;;
+      #put init_loc P := Some pk ;;
+      ret pk
+    | Some pk => ret pk
+    end ).
+
+#[export] Instance init_valid {P} {L : {fset Location}} {I : Interface}
+  : init_loc P \in L → ValidCode L I (init P).
+Proof.
+  intros H.
+  rewrite /init -lock.
+  ssprove_valid.
+Qed.
+
+
+(* Public-Key One-Time Secrecy Random ($) *)
+
 Definition flag_loc : Location := ('option 'unit; 0%N).
-Definition mpk_loc (P : pk_scheme) : Location := ('option ('pub P); 1%N).
 Definition GET := 0%N.
 Definition QUERY := 1%N.
 
@@ -102,43 +135,82 @@ Definition I_PK_OTSR (P : pk_scheme) :=
     #val #[ QUERY ] : 'mes P → 'cip P
   ].
 
-Definition PK_OTSR_loc (P : pk_scheme) :=
-  fset [:: mpk_loc P ; flag_loc ].
-
-Definition PK_OTSR0 (P : pk_scheme) :
+Definition PK_OTSR (P : pk_scheme) b :
   game (I_PK_OTSR P) :=
-  [module PK_OTSR_loc P ;
-    #def #[ GET ] (_ : 'unit) : ('pub P) {
-      getNone (mpk_loc P) ;;
-      '(_, pk) ← P.(keygen) ;;
-      #put (mpk_loc P) := Some pk ;;
+  [module fset
+    [:: init_loc P ; flag_loc ] ;
+    #def #[ GET ] (_ : 'unit)
+        : ('pub P) {
+      pk ← init P ;;
       ret pk
     } ;
-    #def #[ QUERY ] (m : 'mes P) : ('cip P) {
-      pk ← getSome (mpk_loc P) ;;
+    #def #[ QUERY ] (m : 'mes P)
+        : ('cip P) {
+      pk ← init P ;;
       getNone flag_loc ;;
       #put flag_loc := Some tt ;;
-      P.(enc) pk m
+      if b then
+        P.(enc) pk m
+      else
+        P.(sample_Cip)
     }
   ].
 
-Definition PK_OTSR1 (P : pk_scheme) :
-  game (I_PK_OTSR P) :=
-  [module PK_OTSR_loc P ;
-    #def #[ GET ] (_ : 'unit) : ('pub P) {
-      getNone (mpk_loc P) ;;
-      '(_, pk) ← P.(keygen) ;;
-      #put (mpk_loc P) := Some pk ;;
+
+(* Public-Key One-Time Secrecy *)
+
+Definition I_PK_OTS (P : pk_scheme) :=
+  [interface
+    #val #[ GET ] : 'unit → 'pub P ;
+    #val #[ QUERY ] : 'mes P × 'mes P → 'cip P
+  ].
+
+Definition PK_OTS (P : pk_scheme) b :
+  game (I_PK_OTS P) :=
+  [module fset
+    [:: init_loc P ; flag_loc ] ;
+    #def #[ GET ] (_ : 'unit)
+        : ('pub P) {
+      pk ← init P ;;
       ret pk
     } ;
-    #def #[ QUERY ] (m : 'mes P) : ('cip P) {
-      pk ← getSome (mpk_loc P) ;;
+    #def #[ QUERY ] ('(m, m')
+        : 'mes P × 'mes P) : ('cip P) {
+      pk ← init P ;; 
       getNone flag_loc ;;
       #put flag_loc := Some tt ;;
-      P.(sample_Cip)
+      P.(enc) pk (if b then m else m')
     }
   ].
-  
-Definition PK_OTSR P b := if b then PK_OTSR0 P else PK_OTSR1 P.
+
+
+(* Public-Key n-time Chosen Plaintext Attack *)
+
+Definition I_PK_CPA (P : pk_scheme) :=
+  [interface
+    #val #[ GET ] : 'unit → 'pub P ;
+    #val #[ QUERY ] : 'mes P × 'mes P → 'cip P
+  ].
+
+Definition count_loc : Location := ('nat; 3%N).
+
+Definition PK_CPA (P : pk_scheme) n b :
+  game (I_PK_CPA P) :=
+  [module fset
+    [:: init_loc P ; count_loc ] ;
+    #def #[ GET ] (_ : 'unit)
+        : ('pub P) {
+      pk ← init P ;;
+      ret pk
+    } ;
+    #def #[ QUERY ] ('(m, m')
+        : 'mes P × 'mes P) : ('cip P) {
+      pk ← init P ;;
+      count ← get count_loc ;; 
+      #assert (count < n)%N ;;
+      #put count_loc := count.+1 ;;
+      P.(enc) pk (if b then m else m')
+    }
+  ].
 
 End PKScheme.

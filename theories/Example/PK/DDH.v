@@ -16,7 +16,7 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 Import Num.Def Num.Theory Order.POrderTheory.
 Import PackageNotation.
 #[local] Open Scope ring_scope.
@@ -103,14 +103,11 @@ Definition I_DDH :=
     #val #[ GETBC ] : 'unit → 'el × 'el
   ].
 
-Definition init_loc : Location := ('option 'unit; 5%N).
 Definition mga_loc : Location := ('option 'el; 3%N).
-Definition DDH0_loc := fset [:: mga_loc ].
-Definition DDH1_loc := fset [:: init_loc ].
 
-Definition DDH0 :
+Definition DDH bit :
   game I_DDH :=
-  [module DDH0_loc ;
+  [module fset [:: mga_loc ] ;
     #def #[ GETA ] ('tt : 'unit) : 'el {
       a ← sample uniform #|exp| ;;
       #put mga_loc := Some (op_exp op_g a) ;;
@@ -120,27 +117,12 @@ Definition DDH0 :
       ga ← getSome mga_loc ;;
       #put mga_loc := None ;;
       b ← sample uniform #|exp| ;;
-      @ret ('el × 'el) (op_exp op_g b, op_exp ga b)
+      if bit then
+        @ret ('el × 'el) (op_exp op_g b, op_exp ga b)
+      else
+        c ← sample uniform #|exp| ;;
+        @ret ('el × 'el) (op_exp op_g b, op_exp op_g c)
     }
   ].
-
-Definition DDH1 :
-  game I_DDH :=
-  [module DDH1_loc ;
-    #def #[ GETA ] ('tt : 'unit) : 'el {
-      a ← sample uniform #|exp| ;;
-      #put init_loc := Some tt ;;
-      ret (op_exp op_g a)
-    } ;
-    #def #[ GETBC ] ('tt : 'unit) : 'el × 'el {
-      _ ← getSome init_loc ;;
-      #put init_loc := None ;;
-      b ← sample uniform #|exp| ;;
-      c ← sample uniform #|exp| ;;
-      @ret ('el × 'el) (op_exp op_g b, op_exp op_g c)
-    }
-  ].
-
-Definition DDH b := if b then DDH0 else DDH1.
 
 End DDH.

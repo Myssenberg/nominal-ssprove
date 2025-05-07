@@ -60,6 +60,17 @@ Definition rel_jdg_replace_sem_r
      : ⊢ ⦃ pre ⦄ l ≈ r' ⦃ post ⦄ :=
   (rel_jdg_replace_sem _ _ _ _ _ _ _ _ Rest (rreflexivity_rule _) Right).
 
+Lemma r_refl {A : choiceType} : ∀ c : raw_code A,
+  ⊢ ⦃ λ '(s₀, s₁), s₀ = s₁ ⦄ c ≈ c ⦃ λ '(a₀, s₀) '(a₁, s₁), a₀ = a₁ ∧ s₀ = s₁ ⦄.
+Proof.
+  intros c.
+  eapply rpost_weaken_rule.
+  1: apply rreflexivity_rule.
+  intros [? ?] [? ?] ?.
+  injection H => ? ?.
+  by subst.
+Qed.
+
 Lemma rsame_head_ignore_prog :
   ∀ (A B : choiceType) (L0 L1 : {fset Location}) (m : code L0 (fset [::]) A) (f₀ f₁ : A → raw_code B) (post : postcond B B),
     fdisjoint L0 L1 →
@@ -313,4 +324,37 @@ Proof.
       apply Remembers_rhs_rem_rhs.
     - apply Cross_conj_left, Cross_conj_left, H1.
   + apply H2.
+Qed.
+
+
+Inductive NoFail {A} : raw_code A → Prop :=
+  | NoFail_ret : ∀ x,
+      NoFail (ret x)
+  | NoFail_sampler : ∀ op k,
+      LosslessOp op →
+      (∀ v, NoFail (k v)) →
+      NoFail (pkg_core_definition.sampler op k).
+
+Lemma r_NoFail_L {A B : choiceType} (c : raw_code B) (c₀ : B → raw_code A) (c₁ : raw_code A)
+    (pre : precond) (post : postcond A A) :
+    NoFail c →
+    (∀ x : B, ⊢ ⦃ pre ⦄ c₀ x ≈ c₁ ⦃ post ⦄) →
+    ⊢ ⦃ pre ⦄ x ← c ;; c₀ x ≈ c₁ ⦃ post ⦄.
+Proof.
+  intros H H'.
+  elim: H; intros.
+  + apply H'.
+  + by apply r_const_sample_L.
+Qed.
+
+Lemma r_NoFail_R {A B : choiceType} (c : raw_code B) (c₀ : raw_code A) (c₁ : B → raw_code A)
+    (pre : precond) (post : postcond A A) :
+    NoFail c →
+    (∀ x : B, ⊢ ⦃ pre ⦄ c₀ ≈ c₁ x ⦃ post ⦄) →
+    ⊢ ⦃ pre ⦄ c₀ ≈ x ← c ;; c₁ x ⦃ post ⦄.
+Proof.
+  intros H H'.
+  elim: H; intros.
+  + apply H'.
+  + by apply r_const_sample_R.
 Qed.
