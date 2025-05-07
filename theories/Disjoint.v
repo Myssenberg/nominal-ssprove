@@ -545,13 +545,13 @@ Lemma Adv_triangle {G1 G2 G3 : raw_module} A
   : Adv G1 G3 A <= Adv G1 G2 A + Adv G2 G3 A.
 Proof. unfold Adv, Pr'. apply Advantage_triangle. Qed.
 
-Ltac nssprove_eadv_trans :=
+Ltac nssprove_adv_etrans :=
   eapply le_trans;
     [ eapply Adv_triangle |].
 
 Ltac nssprove_adv_trans M :=
   eapply le_trans;
-    [ eapply (@Adv_triangle _ M) |].
+    [ eapply (@Adv_triangle _ M%sep) |].
 
 Lemma Adv_same (G A : raw_module) : Adv G G A = 0.
 Proof. rewrite /Adv addrN. rewrite normr0 //. Qed.
@@ -727,11 +727,11 @@ Proof.
   intros Indish.
   apply le_anti.
   apply /andP; split.
-  - nssprove_eadv_trans.
+  - nssprove_adv_etrans.
     erewrite (Adv_perf Indish).
     + rewrite GRing.add0r //.
     + eassumption.
-  - nssprove_eadv_trans.
+  - nssprove_adv_etrans.
     erewrite (Adv_perf (adv_equiv_sym _ _ _ _ _ _ _ _ Indish)).
     + rewrite GRing.add0r //.
     + eassumption.
@@ -748,6 +748,55 @@ Proof.
   erewrite Adv_perf_l; [| done].
   rewrite Adv_sym //.
 Qed.
+
+
+Definition perfect I G G' :=
+  ∀ LA (A : raw_module) (VA : ValidPackage LA I A_export A), Adv G G' A = 0.
+
+Lemma perfect_refl {I G} : perfect I G G.
+Proof. intros LA A VA. rewrite Adv_same //. Qed.
+
+Lemma perfect_sym {I G G'} : perfect I G' G → perfect I G G'.
+Proof. intros H LA A VA. rewrite Adv_sym H //. Qed.
+
+Add Parametric Morphism : perfect with
+  signature eq ==> alpha ==> alpha ==> iff as perfect_mor.
+Proof.
+  intros I G0 G0' H0 G1 G1' H1.
+  split.
+  + intros H LA A VA.
+    rewrite -H0 -H1 H //.
+  + intros H LA A VA.
+    rewrite H0 H1 H //.
+Qed.
+
+Lemma Adv_perfect_l {L E} {P P' Q A : raw_module}
+  {V : ValidPackage L E A_export A} :
+  perfect E P P' → Adv P Q A = Adv P' Q A.
+Proof.
+  intros H.
+  apply le_anti.
+  apply /andP; split.
+  - nssprove_adv_trans P'.
+    rewrite H GRing.add0r //.
+  - nssprove_adv_trans P.
+    rewrite Adv_sym H GRing.add0r //.
+Qed.
+
+Lemma Adv_perfect_r {L E} {P P' Q A : raw_module}
+  {V : ValidPackage L E A_export A} :
+  perfect E P P' → Adv Q P A = Adv Q P' A.
+Proof. intros H. rewrite Adv_sym (Adv_perfect_l H) Adv_sym //. Qed.
+
+Lemma perfect_trans {I G G' G''}
+  : perfect I G G' → perfect I G' G'' → perfect I G G''.
+Proof. intros H1 H2 LA A VA. rewrite (Adv_perfect_l H1) H2 //. Qed.
+
+Lemma prove_perfect {L L'} {E} {G G' : raw_module} :
+  ∀ (V  : ValidPackage L  Game_import E G )
+    (V' : ValidPackage L' Game_import E G'),
+    G ≈₀ G' → perfect E G G'.
+Proof. intros V V' H LA A VA. apply (Adv_perf H _ VA). Qed.
 
 
 (* NOM and automation *)
@@ -891,9 +940,28 @@ Ltac nssprove_valid :=
   nssprove_rec ;
   try (fset_solve; fail).
 
-Notation "{ 'module' m }" :=
-  (Build_module (loc m%sep) (mkpackage m%sep _) _)
+
+Class Trimmed (E : Interface) (p : raw_module) := tr : trimmed E p.
+
+Arguments tr {_ _} _.
+
+Notation "{ 'module' I ; E ; m }" :=
+  (@Build_module I E (loc m%sep) (mkpackage m%sep _) (tr _))
   (only parsing) : sep_scope.
+
+Notation "{ 'game' E ; m }" :=
+  (@Build_module Game_import E (loc m%sep) (mkpackage m%sep _) (tr _))
+  (only parsing) : sep_scope.
+
+Notation "{ 'adversary' I ; m }" :=
+  (@Build_module I A_export (loc m%sep) (mkpackage m%sep _) (tr _))
+  (only parsing) : sep_scope.
+
+Instance Trimmed_link {E P Q} : Trimmed E P → Trimmed E (P ∘ Q)%sep.
+Proof. apply trimmed_link. Qed.
+
+Instance Trimmed_module {I E} {P : module I E} : Trimmed E P.
+Proof. apply module_trimmed. Qed.
 
 
 Lemma valid_idents {L I E} P {V : ValidPackage L I E P} : fsubset (idents E) (domm P).
@@ -1105,3 +1173,13 @@ Qed.
 
 
 Definition AdvFor GG A : R := Adv (GG true) (GG false) A.
+
+Lemma AdvFor_perfect {L E} {G G'} {A : raw_module}
+  {V : ValidPackage L E A_export A} :
+  (∀ b : bool, perfect E (G b) (G' b)) →
+  AdvFor G A = Adv (G' true) (G' false) A.
+Proof.
+  intros H.
+  rewrite /AdvFor (Adv_perfect_r (H false)).
+  rewrite (Adv_perfect_l (H true)) //.
+Qed.
