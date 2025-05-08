@@ -105,7 +105,7 @@ Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme
 Lemma Equiv_GuPKAE_GMODPKAE (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I : NIKE_scheme.inj ('fin #|NIKE_scheme.Shared_Key N|) ('fin #|NBSES.Shared_Key E|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
 perfect (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb)) (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb) b) (GMODPKAE.GMODPKAE E N I b).
 Proof.
-unfold GPKAE.GuPKAE, GMODPKAE.GMODPKAE.
+(*unfold GPKAE.GuPKAE, GMODPKAE.GMODPKAE.
 nssprove_share.
 eapply prove_perfect.
 apply (eq_rel_perf_ind_eq).
@@ -116,7 +116,7 @@ simplify_eq_rel x.
   ssprove_code_simpl.
   simpl.
   rewrite unionmE.
-  simpl.
+  simpl.*)
 
 Admitted.
 
@@ -164,6 +164,21 @@ Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (
 Proof.
 erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE N E I I_cb)).
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
+rewrite Adv_sym.
+nssprove_adv_trans ((ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || MODPKAE.MODPKAE N E ∘ (NIKE_scheme.NIKE N || AE.AE E N I false)) ∘ (PKEY.PKEY (PKEY.NIKE_to_GEN N) true || KEY.KEY N true))%sep.
+rewrite Adv_sym.
+apply lerD.
+- rewrite Adv_sep_link. rewrite Adv_sep_link. erewrite Adv_par_r by nssprove_valid. erewrite Adv_par_l by nssprove_valid. erewrite (sep_par_commut  (ID (KEY.I_KEY_OUT N))) by nssprove_valid. apply eq_ler. apply Adv_mor. 
+1, 2: reflexivity.
+apply sep_link_mor. 2: reflexivity. rewrite -sep_link_assoc. apply sep_link_mor. 1: reflexivity.
+rewrite sep_link_assoc. apply sep_link_mor.   (*nssprove_valid.*) admit.
+- Search link. (*rewrite link_sep_link.*) erewrite Adv_sep_link.
+
+
+interchange, swish, swash
+ erewrite sep_par_commut in ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || KEY.KEY N false)). erewrite -> Adv_par_r by nssprove_valid.
++ rewrite Adv_par_r. rewrite sep_par_commut. (*Search "||". nssprove_valid.*) admit.
+- rewrite Adv_sep_link.
 
 Admitted.
 
