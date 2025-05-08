@@ -271,3 +271,32 @@ Notation "x ← 'getSome' n ;; c" :=
 
 #[export] Hint Extern 10 (is_true (_ \in _)) =>
   fset_solve : ssprove_invariant.
+
+
+(* Light and uniform notation for interface, packages and imports *)
+
+Notation "[ f ] : { A ~> B }" :=
+    (f, (A, B))
+    (in custom interface at level 0,
+    f constr, A constr, B constr,
+    format "[ f ]  :  { A  ~>  B }").
+
+Notation "[ f ] : { A ~> B } ( x ) { e }" :=
+    ((f, mkdef A B (λ x, e)))
+    (in custom package at level 0,
+    f constr, e constr, x name, A constr, B constr,
+    format "[ f ]  :  { A  ~>  B }  ( x )  { '[' '/'  e  '/' ']' }")
+    : package_scope.
+
+Notation "[ f ] : { A ~> B } ' p { e }" :=
+    ((f, mkdef A B (λ p, e)))
+    (in custom package at level 0,
+    f constr, e constr, p pattern, A constr, B constr,
+    format "[ f ]  :  { A  ~>  B }  ' p  { '[' '/'  e  '/' ']' }")
+    : package_scope.
+
+Notation "'#import' s " :=
+    (λ x, opr s x (λ y, ret y))
+    (at level 100, s custom interface at level 2,
+    format "#import  s  ")
+    : package_scope.
