@@ -97,10 +97,10 @@ Local Obligation Tactic := idtac.
 Context (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)).
 Let P := (CRYPTOBOX_scheme N E I_cb).
 
-Lemma Equiv_GuPKAE_GMODPKAE (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I : NIKE_scheme.inj ('fin #|NIKE_scheme.Shared_Key N|) ('fin #|NBSES.Shared_Key E|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
-perfect (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb)) (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb) b) (GMODPKAE.GMODPKAE E N I b).
+Lemma Equiv_GuPKAE_GMODPKAE (b : 'bool):
+perfect (GPKAE.I_GPKAE_OUT P) (GPKAE.GuPKAE P b) (GMODPKAE.GMODPKAE E N I b).
 Proof.
-unfold GPKAE.GuPKAE, GMODPKAE.GMODPKAE.
+unfold GPKAE.GuPKAE, GMODPKAE.GMODPKAE, P.
 nssprove_share.
 - eapply prove_perfect.
   apply (eq_rel_perf_ind_eq).
@@ -112,7 +112,6 @@ nssprove_share.
   simpl.
   rewrite unionmE.
   simpl.
-
 Admitted.
 
 
@@ -128,17 +127,19 @@ Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
   {adversary _ ; (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (KEY.I_KEY_OUT N)))) }.
 Obligation 1. intros. unfold P in A. nssprove_valid. - fset_solve. Qed. *)
 
-Theorem Lemma4_Adv_GuPKAE_CB {P} {N} {E} (A : adversary (GPKAE.I_GPKAE_OUT P)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)):
-  AdvFor (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb)) A
+Theorem Lemma4_Adv_GuPKAE_CB (* {P} *) (* {N} {E} *) (A : adversary (GPKAE.I_GPKAE_OUT P)):
+  AdvFor (GPKAE.GuPKAE P) A
   <= AdvFor (GNIKE.GuNIKE N) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))))
      +
      AdvFor (GAE.GAE E N I) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (KEY.I_KEY_OUT N)))).
 Proof.
-erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE N E I I_cb)).
+unfold P.
+unfold P in A.
+erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE)).
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
 Admitted.
 
-Theorem Cryptobox_Security {N} {E} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A1 : adversary (GPKAE.I_GPKAE_OUT P)) qset :
+Theorem Cryptobox_Security (* {N} {E} *) (A1 : adversary (GPKAE.I_GPKAE_OUT P)) qset :
 (* let P := (CRYPTOBOX_scheme N E I_cb) in *)
   AdvFor (GPKAE.GPKAE P) A1
   <=
@@ -146,11 +147,11 @@ Theorem Cryptobox_Security {N} {E} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.S
   +
   AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P true || ID (GPKAE.I_GPKAE_ID_COMP P)))
   +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (A1 ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N)) ∘ (KEY.KEY N false || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N false || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
   +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (A1 ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N)) ∘ (KEY.KEY N true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  AdvFor (GNIKE.GNIKE N) (A4 A1)
   +
-  AdvFor (GNIKE.GNIKE N) (A1 ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))))
+  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
   +
   \sum_(1 <= i < qset)
    ( AdvFor (GSAE.GSAE E) (A1 ∘ (HYBRID.HYBRID E N I i qset) ∘ (AE.AE E N I true || ID (GH.I_GH_ID_COMP N)) ∘ (KEY.KEY N true)) + 
@@ -167,56 +168,7 @@ eapply le_trans.
 --- rewrite GRing.addrA. eapply le_trans.
 ---- apply Lemma4_Adv_GuPKAE_CB.
 ---- rewrite GRing.addrA. apply lerD.
-(* ----- (*pose (A3 := {adversary I_GNIKE_OUT N ; _ }).*) pose (A3 := (A1
-   ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N)
-      || MODPKAE.MODPKAE N E ∘ (ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))%sep).
-      assert (ValidPackage A3.(loc) (GNIKE.I_GNIKE_OUT N) A_export A3).
------- unfold A3. nssprove_valid. *)
------- eapply (@GNIKE.Corollary3_Adv_GNIKE_GuNIKE (N) (A4 A1)).
-
-(* Theorem Cryptobox_Security {N} {E} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A1 : adversary (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb))) qset :
-let P := (CRYPTOBOX_scheme N E I_cb) in
-  AdvFor (GPKAE.GPKAE (CRYPTOBOX_scheme N E I_cb)) A1
-  <=
-  AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P false || ID (GPKAE.I_GPKAE_ID_COMP P)))
-  +
-  AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P true || ID (GPKAE.I_GPKAE_ID_COMP P)))
-  +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (A1 ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N)) ∘ (KEY.KEY N false || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
-  +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (A1 ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N)) ∘ (KEY.KEY N true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
-  +
-  AdvFor (GNIKE.GNIKE N) (A1 ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))))
-  +
-  \sum_(1 <= i < qset)
-   ( AdvFor (GSAE.GSAE E) (A1 ∘ (HYBRID.HYBRID E N I i qset) ∘ (AE.AE E N I true || ID (GH.I_GH_ID_COMP N)) ∘ (KEY.KEY N true)) + 
-     AdvFor (GSAE.GSAE E) (A1 ∘ (HYBRID.HYBRID E N I i qset) ∘ (AE.AE E N I false|| ID (GH.I_GH_ID_COMP N)) ∘ (KEY.KEY N true))).
-Proof.
-eapply le_trans.
-- apply GPKAE.Corollary1_Adv_GPKAE.
-- repeat rewrite <- GRing.addrA. apply lerD.
---  done.
--- (*never repeat this one - it will keep switching*) rewrite -> GRing.addrC. apply lerD.
---- done.
---- rewrite GRing.addrA. eapply le_trans.
----- apply Lemma4_Adv_GuPKAE_CB.
----- rewrite GRing.addrA. apply lerD.
-(* ----- (*pose (A3 := {adversary I_GNIKE_OUT N ; _ }).*) pose (A3 := (A1
-   ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N)
-      || MODPKAE.MODPKAE N E ∘ (ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))%sep).
-      assert (ValidPackage A3.(loc) (GNIKE.I_GNIKE_OUT N) A_export A3).
------- unfold A3. nssprove_valid. *)
------- eapply (GNIKE.Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
------ About GH.Lemma3_Adv_GAE. eapply GH.Lemma3_Adv_GAE. *)
-
-nssprove_eadv_trans.
-apply lerD. About lerD. About GH.Lemma3_Adv_GAE.
-
-Search "Adv".
-About Order.le_trans.
-apply Advantage_triangle_chain.
-apply GH.Lemma3_Adv_GAE.
-
-(*eapply (@GPKAE.Corollary1_Adv_GPKAE (CRYPTOBOX_scheme N E I_cb) A).*)
+------ 1: apply (GNIKE.Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
+------ (* eapply (@GNIKE.Corollary3_Adv_GNIKE_GuNIKE (N) (A4 A1)). *)
 
 End crypto_box.
