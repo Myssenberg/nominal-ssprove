@@ -84,6 +84,18 @@ Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme
       }
 |}.
 
+Instance sharedkey_posi n : Positive #|NIKE_scheme.Shared_Key n|.
+Proof.
+Admitted.
+
+Instance k_posi e : Positive #|NBSES.Shared_Key e|.
+Proof.
+Admitted.
+
+Local Obligation Tactic := idtac.
+
+Context (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)).
+Let P := (CRYPTOBOX_scheme N E I_cb).
 
 Lemma Equiv_GuPKAE_GMODPKAE (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I : NIKE_scheme.inj ('fin #|NIKE_scheme.Shared_Key N|) ('fin #|NBSES.Shared_Key E|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
 perfect (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb)) (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb) b) (GMODPKAE.GMODPKAE E N I b).
@@ -102,19 +114,6 @@ nssprove_share.
   simpl.
 
 Admitted.
-
-Instance sharedkey_posi n : Positive #|NIKE_scheme.Shared_Key n|.
-Proof.
-Admitted.
-
-Instance k_posi e : Positive #|NBSES.Shared_Key e|.
-Proof.
-Admitted.
-
-Local Obligation Tactic := idtac.
-
-Context (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)).
-Let P := (CRYPTOBOX_scheme N E I_cb).
 
 
 Program Definition ANIKE (A : adversary (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb))) : adversary (GNIKE.I_GNIKE_OUT N) :=
@@ -139,9 +138,9 @@ erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE N E I I_cb)).
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
 Admitted.
 
-(* Theorem Cryptobox_Security {N} {E} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A1 : adversary (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb))) qset :
-let P := (CRYPTOBOX_scheme N E I_cb) in
-  AdvFor (GPKAE.GPKAE (CRYPTOBOX_scheme N E I_cb)) A1
+Theorem Cryptobox_Security {N} {E} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A1 : adversary (GPKAE.I_GPKAE_OUT P)) qset :
+(* let P := (CRYPTOBOX_scheme N E I_cb) in *)
+  AdvFor (GPKAE.GPKAE P) A1
   <=
   AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P false || ID (GPKAE.I_GPKAE_ID_COMP P)))
   +
@@ -157,7 +156,7 @@ let P := (CRYPTOBOX_scheme N E I_cb) in
    ( AdvFor (GSAE.GSAE E) (A1 ∘ (HYBRID.HYBRID E N I i qset) ∘ (AE.AE E N I true || ID (GH.I_GH_ID_COMP N)) ∘ (KEY.KEY N true)) + 
      AdvFor (GSAE.GSAE E) (A1 ∘ (HYBRID.HYBRID E N I i qset) ∘ (AE.AE E N I false|| ID (GH.I_GH_ID_COMP N)) ∘ (KEY.KEY N true))).
 Proof.
-(* unfold P in A1. *)
+unfold P in A1.
 unfold P.
 eapply le_trans.
 - apply GPKAE.Corollary1_Adv_GPKAE.
@@ -173,10 +172,9 @@ eapply le_trans.
       || MODPKAE.MODPKAE N E ∘ (ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))%sep).
       assert (ValidPackage A3.(loc) (GNIKE.I_GNIKE_OUT N) A_export A3).
 ------ unfold A3. nssprove_valid. *)
------- eapply (GNIKE.Corollary3_Adv_GNIKE_GuNIKE (ANIKE A1)).
------ About GH.Lemma3_Adv_GAE. eapply GH.Lemma3_Adv_GAE. *)
+------ eapply (@GNIKE.Corollary3_Adv_GNIKE_GuNIKE (N) (A4 A1)).
 
-Theorem Cryptobox_Security {N} {E} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A1 : adversary (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb))) qset :
+(* Theorem Cryptobox_Security {N} {E} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A1 : adversary (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb))) qset :
 let P := (CRYPTOBOX_scheme N E I_cb) in
   AdvFor (GPKAE.GPKAE (CRYPTOBOX_scheme N E I_cb)) A1
   <=
@@ -209,7 +207,7 @@ eapply le_trans.
       assert (ValidPackage A3.(loc) (GNIKE.I_GNIKE_OUT N) A_export A3).
 ------ unfold A3. nssprove_valid. *)
 ------ eapply (GNIKE.Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
------ About GH.Lemma3_Adv_GAE. eapply GH.Lemma3_Adv_GAE.
+----- About GH.Lemma3_Adv_GAE. eapply GH.Lemma3_Adv_GAE. *)
 
 nssprove_eadv_trans.
 apply lerD. About lerD. About GH.Lemma3_Adv_GAE.
