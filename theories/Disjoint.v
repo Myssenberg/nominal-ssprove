@@ -923,6 +923,8 @@ Ltac nssprove_rec :=
       (* try ssprove_valid *)
   | |- (flat Game_import) =>
       apply Game_import_flat
+  | |- (flat [interface]) =>
+      apply Game_import_flat
   | |- (flat ?E) =>
       assumption || (eapply flat_valid_package; eassumption) || (try ssprove_valid)
   | |- (trimmed ?E1 (val (ID ?E2))) =>

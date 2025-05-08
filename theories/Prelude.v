@@ -71,6 +71,21 @@ Proof. apply domm_union. Qed.
 
 #[export] Hint Rewrite @domm_link @domm_par : in_fset_eq.
 
+Lemma rename_set {π} {p : raw_package} {k v}
+  : π ∙ (setm p k v : raw_package)
+  = setm (π ∙ p : raw_package) k (π ∙ v).
+Proof.
+  apply eq_fmap => x.
+  rewrite mapmE 2!setmE mapmE.
+  by destruct (x == k)%B.
+Qed.
+
+Lemma rename_empty {π}
+  : π ∙ (emptym : raw_package) = emptym.
+Proof. apply eq_fmap => x. rewrite mapmE //. Qed.
+
+Hint Rewrite @rename_set @rename_empty : in_fset_eq.
+
 #[export] Hint Unfold Location : in_fset_eq.
 
 
