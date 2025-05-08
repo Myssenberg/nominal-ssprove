@@ -54,6 +54,14 @@ Definition I_GNIKE_OUT (N: NIKE_scheme) :=
     #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
 ].
 
+(* Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
+  [interface
+    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
+    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
+    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
+    #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
+]. *)
+
 Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
