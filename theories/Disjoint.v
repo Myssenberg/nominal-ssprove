@@ -322,6 +322,36 @@ Proof.
   destruct ((n, (S, T)) \in E) eqn:eq; rewrite eq //.
 Qed.
 
+Lemma trimmed_share_par {E1 E2} {p1 p2 : raw_module} :
+  trimmed E1 p1 → trimmed E2 p2 → trimmed (E1 :|: E2) (p1 || p2)%share.
+Proof.
+  unfold trimmed, trim.
+  intros tr1 tr2.
+  rewrite //= -tr1 -tr2.
+  apply eq_fmap => x.
+  rewrite /par unionmE !filtermE unionmE !filtermE.
+  destruct (val p1 x) as [[S [T f]]|] eqn:e.
+  - rewrite e //=.
+    destruct ((x, (S, T)) \in E1) eqn:h.
+    + rewrite h //=.
+      rewrite in_fsetU h //=.
+    + apply eq_fmap in tr1.
+      specialize (tr1 x).
+      rewrite filtermE e //= h // in tr1.
+  - rewrite e //=.
+    destruct (val p2 x) as [[S' [T' f']]|] eqn:e'.
+    + rewrite e' //=.
+      destruct ((x, (S', T')) \in E2) eqn:h'.
+      * rewrite h' //=.
+        rewrite in_fsetU h' orbC //=.
+      * rewrite h' //=.
+    + rewrite e' //.
+Qed.
+
+Lemma trimmed_sep_par {E1 E2} {p1 p2 : raw_module} :
+  trimmed E1 p1 → trimmed E2 p2 → trimmed (E1 :|: E2) (p1 || p2)%sep.
+Proof. apply trimmed_share_par. Qed.
+
 Lemma sep_link_id {L I E} (P : raw_module) :
   ValidPackage L I E P → flat I → trimmed E P → P ∘ (ID I) ≡ P.
 Proof.
@@ -883,30 +913,8 @@ Ltac nssprove_rec :=
       | (ID ?I1) => eapply ID_valid; nssprove_rec
       | (rename ?pi ?P1) => eapply rename_valid; nssprove_rec
       | (mod ?P1) => eapply module_valid
-          (* | (nom (pack ?P1)) => apply pack_valid
-      | (nom ?P1) => apply nom_valid
-          (* apply valid_trim; apply (pack_valid P1) *)
-           *)
       | _ => try eassumption
       end
-    (*
-  | |- (ValidPackage ?L ?I ?E (val (sep_link ?P1 ?P2))) =>
-      eapply sep_link_valid;
-      [ eapply valid_package_inject_export |];
-      nssprove_rec
-  | |- (ValidPackage ?L ?I ?E (val (sep_par ?P1 ?P2))) =>
-      eapply sep_par_valid_same_import;
-      [ | eapply valid_package_inject_import
-        | eapply valid_package_inject_import ] ;
-            nssprove_rec
-  | |- (ValidPackage ?L ?I ?E (val (ID ?M))) =>
-      eapply ID_valid; nssprove_rec
-  | |- (ValidPackage ?L ?I ?E (val (nom ?M))) =>
-      apply valid_trim; apply (pack_valid M)
-  | |- (ValidPackage ?L ?I ?E (val ?P)) =>
-      try eassumption
-     *)
-
   | |- is_true ( fsubset ?A ?B ) =>
       try assumption
   | |- (Parable (val (nom ?P1)) ?P2) =>
@@ -920,13 +928,16 @@ Ltac nssprove_rec :=
   | |- (Parable ?P1 ?P2) =>
       try (assumption || (apply Parable_commut ; assumption)) ;
       try (unfold Parable; simpl; fset_solve)
-      (* try ssprove_valid *)
   | |- (flat Game_import) =>
       apply Game_import_flat
   | |- (flat [interface]) =>
       apply Game_import_flat
   | |- (flat ?E) =>
       assumption || (eapply flat_valid_package; eassumption) || (try ssprove_valid)
+  | |- (trimmed ?E1 (share_par ?P1 ?P2)) =>
+      apply trimmed_share_par
+  | |- (trimmed ?E1 (sep_par ?P1 ?P2)) =>
+      apply trimmed_sep_par
   | |- (trimmed ?E1 (val (ID ?E2))) =>
       apply trimmed_ID
   | |- (trimmed ?E ?P) =>
