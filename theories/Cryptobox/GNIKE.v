@@ -25,8 +25,8 @@ Import Order.POrderTheory.
 
 From NominalSSP Require Import Prelude Group.
 
-From NominalSSP Require Import NIKE KEY PKEY PKAE.
-Import NIKE_scheme NBPES_scheme KEY PKEY.
+From NominalSSP Require Import NIKE KEY PKEY PKAE GMODPKAE AE.
+Import NIKE_scheme NBPES_scheme KEY PKEY GMODPKAE AE.
 
 Import PackageNotation.
 
@@ -63,16 +63,11 @@ Definition I_GNIKE_OUT (N: NIKE_scheme) :=
 ]. *)
 
 Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
-  [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
-    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
-    #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
-].
+(I_GMODPKAE_ID_COMP N) :|: (I_AE_IN N).
 
 Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N .
 
-#[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT I_R_PKEY_OUT : in_fset_eq.
+#[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT I_R_PKEY_OUT I_GMODPKAE_ID_COMP I_AE_IN: in_fset_eq.
 
 Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
   raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N b || PKEY (NIKE_to_GEN N) false).
@@ -82,7 +77,7 @@ Definition GuNIKE (N: NIKE_scheme) (b : 'bool) :
 
 Lemma GuNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GuNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N b).
 Proof.
-unfold GuNIKE. nssprove_valid. Qed.
+unfold GuNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.
 
 
 Lemma GNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N b).
