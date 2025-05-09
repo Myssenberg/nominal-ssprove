@@ -19,7 +19,7 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 Import PackageNotation.
 
 #[local] Open Scope package_scope.
@@ -50,9 +50,9 @@ Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N 
 
 Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]:  ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ; 
-    #val #[ CSET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
-    #val #[ GET ]: ('pk N × 'pk N) → 'k E ;
+    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
+    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
+    #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
     (*#val #[ HON ]: ('pk N × 'pk N) → ('option 'bool) ;*)
     #val #[ GEN ]: 'unit → 'unit ; 
     #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
@@ -63,19 +63,19 @@ Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
 
 Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  ; 
+    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
+    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E  ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i qset: 
+Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset: 
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
   [module GH_locs_tt E N ;
-    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|)) : ('unit) {
+    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
       (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;; *)
       #import {sig #[ GEN ]: 'unit → 'unit} as gen ;;
-      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  } as set ;;
+      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as set ;;
       (* hon_stat ← hon (PKs, PKr) ;; *)
       HSLOC ← get HS_loc N ;;
       #assert isSome (HSLOC (PKs, PKr)) as count ;;
@@ -96,13 +96,13 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i qset:
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|)) : ('unit) {
-      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'fin #|E.(NBSES.Shared_Key)|) → 'unit  } as cset ;;
+    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
+      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as cset ;;
       cset (PKr, PKs, k) ;;
       ret (Datatypes.tt : 'unit)
     }  ;
     #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| } as geti ;;
       (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;; *)
       #import {sig #[ SENC ]: ('m E × 'n E) → 'c E   } as SAEenc ;;
 
@@ -121,7 +121,7 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i qset:
           #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
           ret c
       else if (i < counts) then 
-          c ← E.(enc) m k n ;; (* Should be AE0 here*) 
+          c ← E.(enc) m (I.(encode) k) n ;; (* Should be AE0 here*) 
           #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
           ret c 
       else 
@@ -131,7 +131,7 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i qset:
     } ;
     
     #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'k E } as geti ;;
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| } as geti ;;
       (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;; *)
       #import {sig #[ SDEC ]: ('c E × 'n E) → 'm E   } as SAEdec ;;
       
@@ -147,7 +147,7 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) i qset:
           let (m, c') := getSome (MLOC ((PKr, PKs), n)) someC in
           ret m
       else if (i < counts) then 
-          m ← E.(dec) c k n ;;
+          m ← E.(dec) c (I.(encode) k) n ;;
           ret m 
       else 
           m ← SAEdec (c, n) ;;

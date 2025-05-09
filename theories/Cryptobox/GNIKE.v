@@ -23,7 +23,7 @@ Import Num.Def.
 Import Num.Theory.
 Import Order.POrderTheory.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 
 From NominalSSP Require Import NIKE KEY PKEY PKAE.
 Import NIKE_scheme NBPES_scheme KEY PKEY.
@@ -62,34 +62,27 @@ Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
     #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
 ].
 
-Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N (NIKE_to_SGEN N).
+Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N .
 
 #[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT I_R_PKEY_OUT : in_fset_eq.
 
 Definition GNIKE (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) b || PKEY (NIKE_to_GEN N) false).
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N b || PKEY (NIKE_to_GEN N) false).
 
 Definition GuNIKE (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N (NIKE_to_SGEN N) b || PKEY (NIKE_to_GEN N) true).
+  raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N b || PKEY (NIKE_to_GEN N) true).
 
 Lemma GuNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GuNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N b).
 Proof.
 unfold GuNIKE. nssprove_valid. Qed.
 
 
-Definition R_PKEY (N: NIKE_scheme) (b : 'bool) :
-  raw_module := (NIKE N || KEY N (NIKE_to_SGEN N) b).
-
-Lemma R_PKEY_valid (N: NIKE_scheme) (b : bool) : ValidPackage (R_PKEY N b).(loc) (I_NIKE_IN N) (I_R_PKEY_OUT N) (R_PKEY N b).
-Proof.
-unfold R_PKEY. nssprove_valid. Qed.
-
 Lemma GNIKE_valid (N: NIKE_scheme) (b : 'bool) : ValidPackage (GNIKE N b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N b).
 Proof.
 unfold GNIKE. nssprove_valid. Qed.
 
 
-Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
+(*Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
 let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
   AdvFor (GNIKE N) A
   <= AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) false || ID (I_PKEY_OUT (NIKE_to_GEN N)))) +
@@ -108,6 +101,29 @@ apply lerD.
 - nssprove_adv_trans (KEY N (NIKE_to_SGEN N) true || PKEY (NIKE_to_GEN N) true).
 apply lerD.
 -- erewrite Adv_sym. apply lexx.
--- erewrite -> Adv_par_r by nssprove_valid. apply lexx. Qed.
+-- erewrite -> Adv_par_r by nssprove_valid. apply lexx. Qed.*)
+
+
+Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) :
+let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
+  AdvFor (GuNIKE N) A
+  <= AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N false || ID (I_PKEY_OUT (NIKE_to_GEN N)))) +
+     AdvFor (GNIKE N) A +
+     AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N true || ID (I_PKEY_OUT (NIKE_to_GEN N)))).
+Proof.
+unfold AdvFor, GNIKE, GuNIKE.
+repeat rewrite Adv_sep_link.
+erewrite Adv_sym.
+nssprove_adv_trans (KEY N false || PKEY (NIKE_to_GEN N) false).
+erewrite -> Adv_par_r by nssprove_valid.
+rewrite Adv_sym.
+rewrite -GRing.addrA. (*puts in paranthesis, so lerD parts correctly*)
+apply lerD.
+- apply lexx.
+- nssprove_adv_trans (KEY N true || PKEY (NIKE_to_GEN N) false).
+apply lerD.
+-- erewrite Adv_sym. apply lexx.
+-- erewrite -> Adv_par_r by nssprove_valid. rewrite Adv_sym. apply lexx. Qed.
+
 
 End GNIKE.
