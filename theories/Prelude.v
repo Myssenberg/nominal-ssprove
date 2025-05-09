@@ -71,6 +71,21 @@ Proof. apply domm_union. Qed.
 
 #[export] Hint Rewrite @domm_link @domm_par : in_fset_eq.
 
+Lemma rename_set {π} {p : raw_package} {k v}
+  : π ∙ (setm p k v : raw_package)
+  = setm (π ∙ p : raw_package) k (π ∙ v).
+Proof.
+  apply eq_fmap => x.
+  rewrite mapmE 2!setmE mapmE.
+  by destruct (x == k)%B.
+Qed.
+
+Lemma rename_empty {π}
+  : π ∙ (emptym : raw_package) = emptym.
+Proof. apply eq_fmap => x. rewrite mapmE //. Qed.
+
+Hint Rewrite @rename_set @rename_empty : in_fset_eq.
+
 #[export] Hint Unfold Location : in_fset_eq.
 
 
@@ -271,3 +286,32 @@ Notation "x ← 'getSome' n ;; c" :=
 
 #[export] Hint Extern 10 (is_true (_ \in _)) =>
   fset_solve : ssprove_invariant.
+
+
+(* Light and uniform notation for interface, packages and imports *)
+
+Notation "[ f ] : { A ~> B }" :=
+    (f, (A, B))
+    (in custom interface at level 0,
+    f constr, A constr, B constr,
+    format "[ f ]  :  { A  ~>  B }").
+
+Notation "[ f ] : { A ~> B } ( x ) { e }" :=
+    ((f, mkdef A B (λ x, e)))
+    (in custom package at level 0,
+    f constr, e constr, x name, A constr, B constr,
+    format "[ f ]  :  { A  ~>  B }  ( x )  { '[' '/'  e  '/' ']' }")
+    : package_scope.
+
+Notation "[ f ] : { A ~> B } ' p { e }" :=
+    ((f, mkdef A B (λ p, e)))
+    (in custom package at level 0,
+    f constr, e constr, p pattern, A constr, B constr,
+    format "[ f ]  :  { A  ~>  B }  ' p  { '[' '/'  e  '/' ']' }")
+    : package_scope.
+
+Notation "'#import' s " :=
+    (λ x, opr s x (λ y, ret y))
+    (at level 100, s custom interface at level 2,
+    format "#import  s  ")
+    : package_scope.
