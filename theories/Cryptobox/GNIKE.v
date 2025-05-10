@@ -54,16 +54,16 @@ Definition I_GNIKE_OUT (N: NIKE_scheme) :=
     #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
 ].
 
-(* Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
+Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
     #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
     #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
-]. *)
+].
 
-Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
-(I_GMODPKAE_ID_COMP N) :|: (I_AE_IN N).
+(*Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
+(I_GMODPKAE_ID_COMP N) :|: (I_AE_IN N).*)
 
 Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N .
 
@@ -119,7 +119,7 @@ repeat rewrite Adv_sep_link.
 erewrite Adv_sym.
 nssprove_adv_trans (KEY N qset false || PKEY (NIKE_to_GEN N) false).
 erewrite -> Adv_par_r by nssprove_valid.
-rewrite Adv_sym.
+erewrite Adv_sym.
 rewrite -GRing.addrA. (*puts in paranthesis, so lerD parts correctly*)
 apply lerD.
 - apply lexx.
