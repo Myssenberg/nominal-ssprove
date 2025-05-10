@@ -59,6 +59,7 @@ Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) :
 (* Working solution with modified NIKE package *)
 #[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
 
+
 Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : inj 'shared_key N 'k E) (b : 'bool) :
   raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || AE E N I b)))) ∘ ((PKEY (NIKE_to_GEN N) true || KEY N qset b)).
 
