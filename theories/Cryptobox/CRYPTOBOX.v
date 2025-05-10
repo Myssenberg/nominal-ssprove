@@ -97,8 +97,8 @@ Local Obligation Tactic := idtac.
 Context (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)).
 Let P := (CRYPTOBOX_scheme N E I_cb).
 
-Lemma Equiv_GuPKAE_GMODPKAE qset (b : 'bool):
-perfect (GPKAE.I_GPKAE_OUT P) (GPKAE.GuPKAE P b) (GMODPKAE.GMODPKAE E N qset I b).
+Lemma Equiv_GuPKAE_GMODPKAE (b : 'bool):
+perfect (GPKAE.I_GPKAE_OUT P) (GPKAE.GuPKAE P b) (GMODPKAE.GMODPKAE E N I b).
 Proof.
 unfold GPKAE.GuPKAE, GMODPKAE.GMODPKAE, P.
 nssprove_share.
@@ -119,35 +119,42 @@ Program Definition A4 (A : adversary (GPKAE.I_GPKAE_OUT P)) : adversary (GNIKE.I
 Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
 
 Program Definition A5 (A : adversary (GPKAE.I_GPKAE_OUT P)) : adversary (GAE.I_GAE_OUT E N) :=
-  {adversary _ ; (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (GAE.I_GAE_OUT E N)))) }.
+  {adversary _ ; ((A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (GAE.I_GAE_OUT E N))))) }.
 Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
 
-Theorem Lemma4_Adv_GuPKAE_CB qset (A : adversary (GPKAE.I_GPKAE_OUT P)):
+(* Program Definition A5   (A : adversary (GPKAE.I_GPKAE_OUT P)) : adversary (GAE.I_GAE_OUT E N) :=
+  {adversary _ ; (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (KEY.I_KEY_OUT N)))) }.
+Obligation 1. intros. unfold P in A. nssprove_valid. 2: fset_solve. Qed. *)
+
+Theorem Lemma4_Adv_GuPKAE_CB (* {P} *) (* {N} {E} *) (A : adversary (GPKAE.I_GPKAE_OUT P)):
   AdvFor (GPKAE.GuPKAE P) A
-  <= AdvFor (GNIKE.GuNIKE N qset) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))))
+  <= AdvFor (GNIKE.GuNIKE N) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))))
      +
-     AdvFor (GAE.GAE E N I qset) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (GAE.I_GAE_OUT E N)))).
+     AdvFor (GAE.GAE E N I) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (GAE.I_GAE_OUT E N)))).
 Proof.
 unfold P.
 unfold P in A.
-erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE qset)).
+erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE)).
 unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
 Admitted.
 
-Theorem Cryptobox_Security (A1 : adversary (GPKAE.I_GPKAE_OUT P)) qset :
+Theorem Cryptobox_Security (* {N} {E} *) (A1 : adversary (GPKAE.I_GPKAE_OUT P)) qset :
+(* let P := (CRYPTOBOX_scheme N E I_cb) in *)
   AdvFor (GPKAE.GPKAE P) A1
   <=
   AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P false || ID (GPKAE.I_GPKAE_ID_COMP P)))
   +
   AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P true || ID (GPKAE.I_GPKAE_ID_COMP P)))
   +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N qset false || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N false || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
   +
-  AdvFor (GNIKE.GNIKE N qset) (A4 A1)
+  AdvFor (GNIKE.GNIKE N) (A4 A1)
   +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N qset true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
   +
-  \sum_(0 <= i < qset) AdvFor (GSAE.GSAE E) ((A5 A1) ∘ HYBRID.HYBRID E N I i qset ∘ ((ID (GH.I_GH_ID_COMP N)) || (KEY.KEY N qset true))).
+  \sum_(1 <= i < qset)
+   ( AdvFor (GSAE.GSAE E) ((A5 A1) ∘ (HYBRID.HYBRID E N I i qset) ∘ (AE.AE E N I true || ID (GH.I_GH_ID_COMP N)) ∘ (KEY.KEY N true)) + 
+     AdvFor (GSAE.GSAE E) ((A5 A1) ∘ (HYBRID.HYBRID E N I i qset) ∘ (AE.AE E N I false|| ID (GH.I_GH_ID_COMP N)) ∘ (KEY.KEY N true))).
 Proof.
 unfold P in A1.
 unfold P.
