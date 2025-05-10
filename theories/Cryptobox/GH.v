@@ -50,7 +50,7 @@ Definition I_GH_ID_COMP (N : NIKE_scheme) :=
     #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)|
 ].
 
-Definition I_GH_FST (E: NBSES_scheme) (N : NIKE_scheme) :=
+(* Definition I_GH_FST (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'unit ; 
     #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
@@ -76,38 +76,49 @@ Definition I_GH_TRD (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
     #val #[ HON ]: ('pk N × 'pk N)  → 'option 'bool
 ].
-
-#[export] Hint Unfold I_GH_OUT I_GH_ID_COMP I_HYBRID_IN I_HYBRID_OUT I_GH_FST I_GH_SND I_GH_TRD I_AE_IN I_AE_OUT I_KEY_OUT I_SAE_OUT: in_fset_eq.
+ *)
+#[export] Hint Unfold I_GH_OUT I_GH_ID_COMP I_HYBRID_IN I_HYBRID_OUT (* I_GH_FST I_GH_SND I_GH_TRD *) I_AE_IN I_AE_OUT I_KEY_OUT I_SAE_OUT: in_fset_eq.
 
 Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool):
-  raw_module := (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N) || AE E N I b || SAE E b) ∘ KEY N true).
+  raw_module := (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N) || AE E N I b || SAE E b) ∘ KEY N qset true).
 
 Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool) :
   ValidPackage (GH E N I i qset b).(loc) [interface] (I_GH_OUT E N) (GH E N I i qset b).
 Proof.
 unfold GH. nssprove_valid. Qed.
 
-(* Old version before || fix *)
-(* Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool):
-  raw_module := (HYBRID E N I i qset) ∘ (((ID (I_GH_ID_COMP N) || ID (I_GH_FST E N)) ∘ (AE E N I b || ID (I_GH_SND E N)) ∘ (SAE E b || ID (I_GH_TRD E N))) ∘ (KEY N true)).
-
-Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool) :
-  ValidPackage (GH E N I i qset b).(loc) [interface] (I_GH_OUT E N) (GH E N I i qset b).
+Lemma GAE_HYBRID_perfect {E} {N} {I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)} qset b : perfect (I_GAE_OUT E N)
+  (GAE E N I qset b) (HYBRID E N I (if b then 0 else qset) qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true).
 Proof.
-unfold GH. nssprove_valid. Qed. *)
+Admitted.
+
+Lemma HYBRID_succ_perfect {E} {N} {i} {I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)} qset : perfect (I_GAE_OUT E N)
+  (HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E false)
+   (HYBRID E N I i.+1 qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true).
+Proof.
+Admitted.
 
 (* Attempt at Lemma 3*)
-Theorem Lemma3_Adv_GAE_OLD {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
-  AdvFor (GAE E N I) A <= \sum_(1 <= i < qset)
-    ( AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I true || ID (I_GH_ID_COMP N)) ∘ (KEY N true)) + 
-      AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I false|| ID (I_GH_ID_COMP N)) ∘ (KEY N true))).
+Theorem Lemma3_Adv_GAE_OLD {E} {N} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) qset :
+  AdvFor (GAE E N I qset) A <= \sum_(1 <= i < qset)
+    ( AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I true || ID (I_GH_ID_COMP N)) ∘ (KEY N qset true)) + 
+      AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I false|| ID (I_GH_ID_COMP N)) ∘ (KEY N qset true))).
 Proof.
 unfold GAE.
 Admitted.
 
-Theorem Lemma3_Adv_GAE {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
-  AdvFor (GAE E N I) A <= \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N true))).
+Theorem Lemma3_Adv_GAE {E} {N} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) qset :
+  AdvFor (GAE E N I qset) A <= \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
 Proof.
-Admitted.
+rewrite (AdvFor_perfect (GAE_HYBRID_perfect qset)).
+elim: {+ 3 6}qset => [| j IH ].
+{ rewrite Adv_same big_nil //. }
+rewrite big_nat_recr //=.
+nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true)%sep.
+apply lerD.
+1: apply IH.
+erewrite <- (Adv_perfect_r (HYBRID_succ_perfect qset)).
+unfold AdvFor.
+rewrite Adv_sep_link. rewrite Adv_sep_link. rewrite sep_link_assoc. done. Qed.
 
 End GH.
