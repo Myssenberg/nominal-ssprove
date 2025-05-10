@@ -19,7 +19,7 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 
 From NominalSSP Require Import AE KEY MODPKAE NBSES NIKE PKAE PKEY.
 Import AE KEY MODPKAE NBSES NIKE_scheme NBPES_scheme PKEY.
@@ -32,12 +32,15 @@ Module GMODPKAE.
 
 (* VERSION WITHOUT NBPES *)
 
+Definition PKENC := 14%N.
+Definition PKDEC := 15%N.
+
 Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
   [interface
     #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
     #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
-    #val #[ PKENC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; 
-    #val #[ PKDEC_MOD ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
+    #val #[ PKENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; 
+    #val #[ PKDEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
 ].
 
 Definition I_GMODPKAE_ID_COMP (N: NIKE_scheme) :=
@@ -54,12 +57,13 @@ Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool) :
 *)
 
 (* Working solution with modified NIKE package *)
-#[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN_E I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
+#[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT : in_fset_eq.
 
-Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) (I : inj 'shared_key N 'k E) (b : 'bool) :
-  raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE_E N E I || AE E N false)))) ∘ ((PKEY (NIKE_to_GEN N) true || KEY N (NBSES_to_SGEN E) false)).
 
-Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) (I : inj 'shared_key N 'k E) : ValidPackage (GMODPKAE E N I b).(loc) [interface] (I_GMODPKAE_OUT N E) (GMODPKAE E N I b).
+Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : inj 'shared_key N 'k E) (b : 'bool) :
+  raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || AE E N I b)))) ∘ ((PKEY (NIKE_to_GEN N) true || KEY N qset b)).
+
+Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (b : 'bool) (I : inj 'shared_key N 'k E) : ValidPackage (GMODPKAE E N qset I b).(loc) [interface] (I_GMODPKAE_OUT N E) (GMODPKAE E N qset I b).
 Proof.
 unfold GMODPKAE. nssprove_valid. Qed.
 

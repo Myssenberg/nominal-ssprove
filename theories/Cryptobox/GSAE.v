@@ -19,7 +19,7 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 
 From NominalSSP Require Import SAE NBSES.
 Import SAE NBSES.

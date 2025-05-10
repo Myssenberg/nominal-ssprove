@@ -19,7 +19,7 @@ Set Bullet Behavior "Strict Subproofs".
 Set Default Goal Selector "!".
 Set Primitive Projections.
 
-From NominalSSP Require Import Prelude Group Misc.
+From NominalSSP Require Import Prelude Group.
 Import PackageNotation.
 
 From NominalSSP Require Import NIKE PKAE.
