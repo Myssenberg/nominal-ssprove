@@ -97,12 +97,17 @@ Proof.
 unfold GH. nssprove_valid. Qed. *)
 
 (* Attempt at Lemma 3*)
-Theorem Lemma3_Adv_GAE {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
+Theorem Lemma3_Adv_GAE_OLD {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
   AdvFor (GAE E N I) A <= \sum_(1 <= i < qset)
     ( AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I true || ID (I_GH_ID_COMP N)) ∘ (KEY N true)) + 
       AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I false|| ID (I_GH_ID_COMP N)) ∘ (KEY N true))).
 Proof.
 unfold GAE.
+Admitted.
+
+Theorem Lemma3_Adv_GAE {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
+  AdvFor (GAE E N I) A <= \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N true))).
+Proof.
 Admitted.
 
 End GH.
