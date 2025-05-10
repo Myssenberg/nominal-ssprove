@@ -197,7 +197,7 @@ erewrite Adv_sym.
 nssprove_adv_trans ((ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || (MODPKAE.MODPKAE N E ∘ (NIKE_scheme.NIKE N || AE.AE E N I false))) ∘ (PKEY.PKEY (PKEY.NIKE_to_GEN N) true || KEY.KEY N true))%sep.
 erewrite Adv_sym.
 apply lerD.
-- rewrite Adv_sep_link. erewrite Adv_par_r by nssprove_valid. rewrite Adv_sep_link. erewrite Adv_par_l by nssprove_valid. erewrite (sep_par_commut (ID (KEY.I_KEY_OUT N))) by nssprove_valid. apply eq_ler. apply Adv_mor. 
+- erewrite Adv_sep_link. erewrite Adv_par_r by nssprove_valid. rewrite Adv_sep_link. erewrite Adv_par_l by nssprove_valid. erewrite (sep_par_commut (ID (KEY.I_KEY_OUT N))) by nssprove_valid. apply eq_ler. apply Adv_mor. 
 1, 2: reflexivity.
 apply sep_link_mor. 2: reflexivity. rewrite -sep_link_assoc. apply sep_link_mor. 1: reflexivity.
 erewrite (sep_par_commut _ (ID (GNIKE.I_GNIKE_ID_COMP N))) by nssprove_valid.
