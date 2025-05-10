@@ -22,13 +22,13 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group.
 Import PackageNotation.
 
-From NominalSSP Require Import NIKE PKAE.
+From NominalSSP Require Import NIKE NBPES.
 
 #[local] Open Scope package_scope.
 
 Module PKEY.
 
-Import NIKE_scheme NBPES_scheme.
+Import NIKE NBPES.
 
 Record GEN_scheme :=
   { PK             : finType ;
@@ -41,19 +41,19 @@ Record GEN_scheme :=
   }.
 
 Definition NBPES_to_GEN (N : NBPES_scheme) : (GEN_scheme) :=
-  {| PK := N.(NBPES_scheme.PK) ;
-     PK_pos := N.(NBPES_scheme.PK_pos) ;
-     SK := N.(NBPES_scheme.SK) ;
-     SK_pos := N.(NBPES_scheme.SK_pos) ;
-     pkgen := N.(NBPES_scheme.pkgen)
+  {| PK := N.(NBPES.PK) ;
+     PK_pos := N.(NBPES.PK_pos) ;
+     SK := N.(NBPES.SK) ;
+     SK_pos := N.(NBPES.SK_pos) ;
+     pkgen := N.(NBPES.pkgen)
 |}.
 
 Definition NIKE_to_GEN (N : NIKE_scheme) : (GEN_scheme) :=
-  {| PK := N.(NIKE_scheme.PK) ;
-     PK_pos := N.(NIKE_scheme.PK_pos) ;
-     SK := N.(NIKE_scheme.SK) ;
-     SK_pos := N.(NIKE_scheme.SK_pos) ;
-     pkgen := N.(NIKE_scheme.pkgen)
+  {| PK := N.(NIKE.PK) ;
+     PK_pos := N.(NIKE.PK_pos) ;
+     SK := N.(NIKE.SK) ;
+     SK_pos := N.(NIKE.SK_pos) ;
+     pkgen := N.(NIKE.pkgen)
 |}.
 
 Definition chSet t := chMap t 'unit.

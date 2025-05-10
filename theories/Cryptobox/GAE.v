@@ -22,7 +22,7 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group.
 
 From NominalSSP Require Import AE KEY NBSES NIKE.
-Import AE KEY NBSES NIKE_scheme.
+Import AE KEY NBSES NIKE.
 
 Import PackageNotation.
 
@@ -40,24 +40,24 @@ Definition DEC := 53%N.
 
 Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
+    #val #[ SET ]: ('SID N × 'fin #|N.(NIKE.Shared_Key)|) → 'unit ;
+    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE.Shared_Key)|) → 'unit ;
     #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
 Definition I_GAE_ID_COMP (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit
+    #val #[ SET ]: ('SID N × 'fin #|N.(NIKE.Shared_Key)|) → 'unit ;
+    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE.Shared_Key)|) → 'unit
 ].
 
 #[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
 
-Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
+Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : NIKE.inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
   raw_module := (AE E N I b || ID (I_GAE_ID_COMP N)) ∘ (KEY N qset true).
 
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool) :
+Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : NIKE.inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool) :
   ValidPackage (GAE E N qset I b).(loc) [interface] (I_GAE_OUT E N) (GAE E N qset I b).
 Proof.
 unfold GAE. nssprove_valid. Qed.

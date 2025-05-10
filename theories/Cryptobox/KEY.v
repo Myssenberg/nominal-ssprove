@@ -27,7 +27,7 @@ From NominalSSP Require Import NIKE NBSES.
 
 Module KEY.
 
-Import NIKE_scheme NBSES.
+Import NIKE NBSES.
 
 Definition SID_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'bool ; 25).
 Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 26).

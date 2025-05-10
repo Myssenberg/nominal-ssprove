@@ -25,7 +25,7 @@ Import PackageNotation.
 
 From NominalSSP Require Import NBSES NIKE.
 
-Import NBSES NIKE_scheme.
+Import NBSES NIKE.
 
 Module AE.
 
@@ -47,7 +47,7 @@ Definition DEC := 53%N.
 
 Definition I_AE_IN (N : NIKE_scheme) :=
   [interface
-    #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
+    #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| ;
     #val #[ HON ]: ('pk N × 'pk N)  → 'option 'bool 
 ].
 
@@ -57,11 +57,11 @@ Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
 ].
 
-Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : bool) :
+Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : bool) :
   module (I_AE_IN N) (I_AE_OUT E N) := 
   [module AE_locs_tt E N;
     #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| } as geti ;;
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| } as geti ;;
       #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
       
       k ← geti (PKr, PKs) ;;
@@ -81,7 +81,7 @@ Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N
     } ; 
 
     #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| } as geti ;;
+      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| } as geti ;;
       #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
 
       k ← geti (PKr, PKs) ;;

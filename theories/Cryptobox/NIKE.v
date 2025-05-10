@@ -27,7 +27,7 @@ From NominalSSP Require Import NBSES.
 
 #[local] Open Scope package_scope.
 
-Module NIKE_scheme.
+Module NIKE.
 
 Import NBSES.
 
@@ -154,4 +154,4 @@ Definition NIKE (N : NIKE_scheme):
     }
   ].
 
-End NIKE_scheme.
+End NIKE.

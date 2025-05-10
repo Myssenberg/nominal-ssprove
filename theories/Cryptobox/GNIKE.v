@@ -25,8 +25,8 @@ Import Order.POrderTheory.
 
 From NominalSSP Require Import Prelude Group.
 
-From NominalSSP Require Import NIKE KEY PKEY PKAE GMODPKAE AE.
-Import NIKE_scheme NBPES_scheme KEY PKEY GMODPKAE AE.
+From NominalSSP Require Import NIKE NBPES KEY PKEY PKAE GMODPKAE AE.
+Import NIKE NBPES KEY PKEY GMODPKAE AE.
 
 Import PackageNotation.
 
@@ -47,22 +47,22 @@ Notation " 'T c " := (c) (at level 2): package_scope.
 
 Definition I_GNIKE_OUT (N: NIKE_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'unit ;
-    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
-    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
-    #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
+    #val #[ SHAREDKEY ]: (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'option 'unit ;
+    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE.PK)| ;
+    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE.PK)| → 'unit ;
+    #val #[ GET ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'fin #|N.(NIKE.Shared_Key)| ;
+    #val #[ HON ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'option 'bool
 ].
 
 Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE_scheme.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE_scheme.PK)| → 'unit ;
-    #val #[ GET ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
-    #val #[ HON ]:  (('fin #|N.(NIKE_scheme.PK)|) × ('fin #|N.(NIKE_scheme.PK)|)) → 'option 'bool
+    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE.PK)| ;
+    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE.PK)| → 'unit ;
+    #val #[ GET ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'fin #|N.(NIKE.Shared_Key)| ;
+    #val #[ HON ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'option 'bool
 ].
 
-(*Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
+(*Definition I_GNIKE_ID_COMP (N: NIKE) :=
 (I_GMODPKAE_ID_COMP N) :|: (I_AE_IN N).*)
 
 Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N .

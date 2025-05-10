@@ -21,8 +21,8 @@ Set Primitive Projections.
 
 From NominalSSP Require Import Prelude Group.
 
-From NominalSSP Require Import AE NBSES NIKE PKAE.
-Import AE NBSES NIKE_scheme NBPES_scheme.
+From NominalSSP Require Import AE NBSES NIKE NBPES.
+Import AE NBSES NIKE NBPES.
 
 Import PackageNotation.
 
@@ -47,38 +47,38 @@ Notation " 'T c " := (c) (at level 2): package_scope.
 
 Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) → 'option 'unit ; 
-    #val #[ ENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; 
-    #val #[ DEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
+    #val #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) → 'option 'unit ; 
+    #val #[ ENC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; 
+    #val #[ DEC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
 ].
 
 Definition I_MODPKAE_OUT (N : NIKE_scheme) (E : NBSES_scheme) :=
 [interface
-    #val #[ PKENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ;
-    #val #[ PKDEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
+    #val #[ PKENC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ;
+    #val #[ PKDEC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
 ].
 
 
-Definition SORT (N: NIKE_scheme) (PKs PKr : 'T 'fin #|N.(NIKE_scheme.PK)|) : ('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) :=
+Definition SORT (N: NIKE_scheme) (PKs PKr : 'T 'fin #|N.(NIKE.PK)|) : ('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) :=
   if (PKs < PKr) then (PKs, PKr) : (prod _ _) else (PKr, PKs) : (prod _ _).
 
 Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
   module (I_MODPKAE_IN N E) (I_MODPKAE_OUT N E) :=
   [module no_locs ; 
-    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.C)) {
-      #import {sig #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) → 'option 'unit } as sharedkey ;;
-      #import {sig #[ ENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) } as enc ;;
-      #import {sig #[ DEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) } as dec ;;      
+    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.C)) {
+      #import {sig #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) → 'option 'unit } as sharedkey ;;
+      #import {sig #[ ENC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) } as enc ;;
+      #import {sig #[ DEC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) } as dec ;;      
       let '(fst, snd) := SORT N PKs PKr in
       v ← sharedkey (PKs, PKr) ;;
       #assert v != None ;;
       C ← enc (fst, snd, m, n) ;;
       ret C
     } ;
-    #def #[ PKDEC ] ('(((PKs, PKr), c), n) : (('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.M)) {
-      #import {sig #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) → 'option 'unit } as sharedkey ;;
-      #import {sig #[ ENC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) } as enc ;;
-      #import {sig #[ DEC ]: ((('T 'fin #|N.(NIKE_scheme.PK)| × 'T 'fin #|N.(NIKE_scheme.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) } as dec ;;
+    #def #[ PKDEC ] ('(((PKs, PKr), c), n) : (('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.M)) {
+      #import {sig #[ SHAREDKEY ]: ('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) → 'option 'unit } as sharedkey ;;
+      #import {sig #[ ENC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) } as enc ;;
+      #import {sig #[ DEC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M) } as dec ;;
       let '(fst, snd) := SORT N PKs PKr in      
       v ← sharedkey (PKs, PKr) ;;
       #assert v != None ;;
