@@ -87,22 +87,64 @@ Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE_scheme.inj ('fin #|
 Proof.
 unfold GH. nssprove_valid. Qed.
 
-(* Old version before || fix *)
-(* Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool):
-  raw_module := (HYBRID E N I i qset) ∘ (((ID (I_GH_ID_COMP N) || ID (I_GH_FST E N)) ∘ (AE E N I b || ID (I_GH_SND E N)) ∘ (SAE E b || ID (I_GH_TRD E N))) ∘ (KEY N true)).
 
-Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool) :
-  ValidPackage (GH E N I i qset b).(loc) [interface] (I_GH_OUT E N) (GH E N I i qset b).
+Lemma GAE_HYBRID_perfect {E N qset} {I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)} b : perfect (I_GAE_OUT E N)
+  (GAE E N qset I b) (HYBRID E N I (if b then 0 else qset) qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true).
 Proof.
-unfold GH. nssprove_valid. Qed. *)
+Admitted.
+
+Lemma HYBRID_succ_perfect {E N} {qset} {i} {I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)} : perfect (I_GAE_OUT E N)
+  (HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E false)
+   (HYBRID E N I i.+1 qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true).
+Proof.
+Admitted.
+
+(* Double check the sum*)
+Theorem Adv_GAE_GSAE {E N} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GAE_OUT E N)) :
+  AdvFor (GAE E N qset I) A <= \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
+Proof.
+rewrite (AdvFor_perfect GAE_HYBRID_perfect).
+elim: {+ 3 6}qset => [| j IH ].
+{ rewrite Adv_same big_nil //. }
+rewrite big_nat_recr //=.
+nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true)%sep.
+apply lerD.
+1: apply IH.
+erewrite <- (Adv_perfect_r HYBRID_succ_perfect).
+unfold AdvFor.
+rewrite Adv_sep_link. rewrite Adv_sep_link. rewrite sep_link_assoc. done. Qed.
+
+
+
+(* Theorem Adv_GSAE {E N} {i qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GSAE_OUT E )) :
+  AdvFor (GSAE E ) A
+  <= AdvFor (GH E N I i qset) (A ∘ AE E N I true)
+  +  AdvFor (GH E N I i qset) (A ∘ AE E N I false).
+Proof.
+Admitted.
+ *)
+(* Theorem Adv_GSAE {E N i} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GSAE_OUT E )) :
+  AdvFor (GSAE E ) A
+  <= AdvFor (GSAE E) (A ∘ HYBRID E N I i qset).
+Proof.
+Admitted. *)
+
+(*  Theorem Adv_GAE {E N i} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GSAE_OUT E )) : perfect (I_GAE_OUT E N)
+   (HYBRID E N I i qset ∘ (GAE E N qset I false)) (HYBRID E N I i qset ∘ GAE E N qset I true).
+Proof.
+Admitted.  *)
 
 (* Attempt at Lemma 3*)
-Theorem Lemma3_Adv_GAE {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
-  AdvFor (GAE E N I) A <= \sum_(1 <= i < qset)
-    ( AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I true || ID (I_GH_ID_COMP N)) ∘ (KEY N true)) + 
-      AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ (AE E N I false|| ID (I_GH_ID_COMP N)) ∘ (KEY N true))).
+(* Theorem Lemma3_Adv_GAE {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
+  AdvFor (GAE E N qset I) A <= \sum_(0 <= i < qset.-1)
+    ( AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))) + 
+      AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
 Proof.
-unfold GAE.
-Admitted.
+eapply Order.le_trans; [ apply Adv_GAE_GSAE |].
+apply Num.Theory.ler_sum => i _. rewrite /AdvFor 2!(sep_link_assoc A). *) 
+
+
+(* unfold GAE. *)
+
 
 End GH.

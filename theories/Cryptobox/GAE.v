@@ -54,11 +54,11 @@ Definition I_GAE_ID_COMP (N : NIKE_scheme) :=
 
 #[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
 
-Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
-  raw_module := (AE E N I b || ID (I_GAE_ID_COMP N)) ∘ (KEY N true).
+Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
+  raw_module := (AE E N I b || ID (I_GAE_ID_COMP N)) ∘ (KEY N qset true).
 
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool) :
-  ValidPackage (GAE E N I b).(loc) [interface] (I_GAE_OUT E N) (GAE E N I b).
+Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool) :
+  ValidPackage (GAE E N qset I b).(loc) [interface] (I_GAE_OUT E N) (GAE E N qset I b).
 Proof.
 unfold GAE. nssprove_valid. Qed.
 
