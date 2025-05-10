@@ -126,9 +126,6 @@ Program Definition A5 (A : adversary (GPKAE.I_GPKAE_OUT P)) : adversary (GAE.I_G
 Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
 
 
-(*Lemma move_AE (b : 'bool) :
-ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ (NIKE_scheme.NIKE N || AE.AE E N I b)) ≡ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ (NIKE_scheme.NIKE N || (ID (AE.I_AE_OUT E N))))). ∘ (ID ?? || AE.AE N).*)
-
 Lemma ID_sep_par I I' :
 ID I || ID I' = ID (I :|: I').
 Admitted.
@@ -240,12 +237,12 @@ eapply le_trans.
 - apply GPKAE.Corollary1_Adv_GPKAE.
 - repeat rewrite <- GRing.addrA. apply lerD.
 --  done.
--- (*never repeat this one - it will keep switching*) rewrite -> GRing.addrC. apply lerD.
+--  rewrite -> GRing.addrC. apply lerD.
 --- done.
 --- rewrite GRing.addrA. eapply le_trans.
 ---- apply Lemma4_Adv_GuPKAE_CB.
 ---- rewrite GRing.addrA. apply lerD.
 ------ 1: apply (GNIKE.Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
------- apply (GH.Lemma3_Adv_GAE I (A5 A1)). Qed.
+------ apply (GH.Lemma3_Adv_GAE qset I (A5 A1)). Qed.
 
 End crypto_box.
