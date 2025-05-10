@@ -100,7 +100,7 @@ Proof.
 Admitted.
 
 (* Double check the sum*)
-Theorem Adv_GAE_GSAE {E N} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GAE_OUT E N)) :
+Theorem Lemma3_Adv_GAE {E N} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GAE_OUT E N)) :
   AdvFor (GAE E N qset I) A <= \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
 Proof.
 rewrite (AdvFor_perfect GAE_HYBRID_perfect).
