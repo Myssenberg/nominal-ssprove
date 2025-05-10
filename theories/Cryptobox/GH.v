@@ -80,7 +80,7 @@ Definition I_GH_TRD (E: NBSES_scheme) (N : NIKE_scheme) :=
 #[export] Hint Unfold I_GH_OUT I_GH_ID_COMP I_HYBRID_IN I_HYBRID_OUT I_GH_FST I_GH_SND I_GH_TRD I_AE_IN I_AE_OUT I_KEY_OUT I_SAE_OUT: in_fset_eq.
 
 Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool):
-  raw_module := (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N) || AE E N I b || SAE E b) ∘ KEY N true).
+  raw_module := (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N) || AE E N I b || SAE E b) ∘ KEY N qset true).
 
 Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset (b : 'bool) :
   ValidPackage (GH E N I i qset b).(loc) [interface] (I_GH_OUT E N) (GH E N I i qset b).
@@ -89,7 +89,7 @@ unfold GH. nssprove_valid. Qed.
 
 
 Lemma GAE_HYBRID_perfect {E N qset} {I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)} b : perfect (I_GAE_OUT E N)
-  (GAE E N qset I b) (HYBRID E N I (if b then 0 else qset) qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true).
+  (GAE E N I qset b) (HYBRID E N I (if b then 0 else qset) qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true).
 Proof.
 Admitted.
 
@@ -100,8 +100,8 @@ Proof.
 Admitted.
 
 (* Double check the sum*)
-Theorem Adv_GAE_GSAE {E N} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GAE_OUT E N)) :
-  AdvFor (GAE E N qset I) A <= \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
+Theorem Lemma3_Adv_GAE {E N} {I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)} (A : adversary (I_GAE_OUT E N)) qset :
+  AdvFor (GAE E N I qset) A <= \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
 Proof.
 rewrite (AdvFor_perfect GAE_HYBRID_perfect).
 elim: {+ 3 6}qset => [| j IH ].
