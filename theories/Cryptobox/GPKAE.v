@@ -39,7 +39,6 @@ Definition GEN := 2%N.
 Definition CSETPK := 3%N.
 Definition PKENC := 14%N.
 Definition PKDEC := 15%N.
-(*tal skal være forskellige across filer*)
 
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.

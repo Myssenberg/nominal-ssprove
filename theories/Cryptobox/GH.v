@@ -115,36 +115,4 @@ unfold AdvFor.
 rewrite Adv_sep_link. rewrite Adv_sep_link. rewrite sep_link_assoc. done. Qed.
 
 
-
-(* Theorem Adv_GSAE {E N} {i qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GSAE_OUT E )) :
-  AdvFor (GSAE E ) A
-  <= AdvFor (GH E N I i qset) (A ∘ AE E N I true)
-  +  AdvFor (GH E N I i qset) (A ∘ AE E N I false).
-Proof.
-Admitted.
- *)
-(* Theorem Adv_GSAE {E N i} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GSAE_OUT E )) :
-  AdvFor (GSAE E ) A
-  <= AdvFor (GSAE E) (A ∘ HYBRID E N I i qset).
-Proof.
-Admitted. *)
-
-(*  Theorem Adv_GAE {E N i} {qset} (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (A : adversary (I_GSAE_OUT E )) : perfect (I_GAE_OUT E N)
-   (HYBRID E N I i qset ∘ (GAE E N qset I false)) (HYBRID E N I i qset ∘ GAE E N qset I true).
-Proof.
-Admitted.  *)
-
-(* Attempt at Lemma 3*)
-(* Theorem Lemma3_Adv_GAE {E} {N} {qset} (A : adversary (I_GAE_OUT E N)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) :
-  AdvFor (GAE E N qset I) A <= \sum_(0 <= i < qset.-1)
-    ( AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))) + 
-      AdvFor (GSAE E) (A ∘ (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
-Proof.
-eapply Order.le_trans; [ apply Adv_GAE_GSAE |].
-apply Num.Theory.ler_sum => i _. rewrite /AdvFor 2!(sep_link_assoc A). *) 
-
-
-(* unfold GAE. *)
-
-
 End GH.

@@ -53,7 +53,6 @@ Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
     #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  ;
     #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
     #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| ;
-    (*#val #[ HON ]: ('pk N × 'pk N) → ('option 'bool) ;*)
     #val #[ GEN ]: 'unit → 'unit ; 
     #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
     #val #[ SDEC ]: ('c E × 'n E) → 'm E ;
@@ -73,10 +72,8 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fi
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
   [module GH_locs_tt E N ;
     #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|)) : ('unit) {
-      (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool} as hon ;; *)
       #import {sig #[ GEN ]: 'unit → 'unit} as gen ;;
       #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit  } as set ;;
-      (* hon_stat ← hon (PKs, PKr) ;; *)
       HSLOC ← get HS_loc N ;;
       #assert isSome (HSLOC (PKs, PKr)) as count ;;
       let counts := getSome (HSLOC (PKs, PKr)) count in
@@ -103,12 +100,10 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fi
     }  ;
     #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| } as geti ;;
-      (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;; *)
       #import {sig #[ SENC ]: ('m E × 'n E) → 'c E   } as SAEenc ;;
 
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
-      (* HON ← hon (PKs, PKr) ;; *)
       HSLOC ← get HS_loc N ;; 
       
       
@@ -132,12 +127,10 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE_scheme.inj ('fi
     
     #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
       #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE_scheme.Shared_Key)| } as geti ;;
-      (* #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;; *)
       #import {sig #[ SDEC ]: ('c E × 'n E) → 'm E   } as SAEdec ;;
       
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
-      (* HON ← hon (PKs, PKr) ;; *)
       HSLOC ← get HS_loc N ;; 
 
       #assert isSome (HSLOC (PKs, PKr)) as count ;;

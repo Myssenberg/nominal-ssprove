@@ -38,7 +38,7 @@ Module GNIKE.
 Definition GEN := 2%N.
 Definition HON := 30%N.
 Definition CSETPK := 3%N.
-Definition GET := 29%N. (*tal skal være forskellige across filer*)
+Definition GET := 29%N.
 
 Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
@@ -85,28 +85,6 @@ Proof.
 unfold GNIKE. nssprove_valid. Qed.
 
 
-(*Theorem Corollary3_Adv_GNIKE_GuNIKE {N} qset (A : adversary (I_GNIKE_OUT N)) :
-let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
-  AdvFor (GNIKE N) A
-  <= AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) false || ID (I_PKEY_OUT (NIKE_to_GEN N)))) +
-     AdvFor (GuNIKE N) A +
-     AdvFor (PKEY (NIKE_to_GEN N)) (A' ∘ (KEY N (NIKE_to_SGEN N) true || ID (I_PKEY_OUT (NIKE_to_GEN N)))).
-Proof.
-unfold AdvFor, GNIKE, GuNIKE.
-repeat rewrite Adv_sep_link.
-erewrite Adv_sym.
-nssprove_adv_trans (KEY N (NIKE_to_SGEN N) false || PKEY (NIKE_to_GEN N) true).
-erewrite -> Adv_par_r by nssprove_valid.
-erewrite Adv_sym.
-rewrite -GRing.addrA. (*puts in paranthesis, so lerD parts correctly*)
-apply lerD.
-- apply lexx.
-- nssprove_adv_trans (KEY N (NIKE_to_SGEN N) true || PKEY (NIKE_to_GEN N) true).
-apply lerD.
--- erewrite Adv_sym. apply lexx.
--- erewrite -> Adv_par_r by nssprove_valid. apply lexx. Qed.*)
-
-
 Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) qset:
 let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
   AdvFor (GuNIKE N qset) A
@@ -120,7 +98,7 @@ erewrite Adv_sym.
 nssprove_adv_trans (KEY N qset false || PKEY (NIKE_to_GEN N) false).
 erewrite -> Adv_par_r by nssprove_valid.
 erewrite Adv_sym.
-rewrite -GRing.addrA. (*puts in paranthesis, so lerD parts correctly*)
+rewrite -GRing.addrA.
 apply lerD.
 - apply lexx.
 - nssprove_adv_trans (KEY N qset true || PKEY (NIKE_to_GEN N) false).
