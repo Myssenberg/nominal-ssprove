@@ -69,6 +69,11 @@ Module FsetSolve.
           let P := fresh "P" in
           apply /negP => P ;
           rewrite -in_fset1 in P
+      | |- (_ = _) =>
+          apply /eqP ;
+          rewrite eqEfsubset ;
+          apply /andP ; split ;
+          fset_into_prop x
       | |- False =>
           idtac
       | |- _ =>
