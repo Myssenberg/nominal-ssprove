@@ -56,8 +56,6 @@ Definition NIKE_to_GEN (N : NIKE_scheme) : (GEN_scheme) :=
      pkgen := N.(NIKE.pkgen)
 |}.
 
-Definition chSet t := chMap t 'unit.
-
 Notation " 'pk n " := ('fin #|PK n|)
   (in custom pack_type at level 2, n constr at level 20).
 
@@ -93,16 +91,16 @@ Definition HONPK := 5%N.
 
 Definition I_PKEY_OUT (G: GEN_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'pk G ;
-    #val #[ CSETPK ]: 'pk G → 'unit ;
-    #val #[ GETSK ]: 'pk G → 'sk G ;
-    #val #[ HONPK ]: 'pk G → 'bool 
+    [ GEN ]    : { 'unit ~> 'pk G } ;
+    [ CSETPK ] : { 'pk G ~> 'unit } ;
+    [ GETSK ]  : { 'pk G ~> 'sk G } ;
+    [ HONPK ]  : { 'pk G ~> 'bool }
 ].
 
 Definition PKEY (G : GEN_scheme) (b : bool) :
   game (I_PKEY_OUT G) :=
   [module PKEY_locs_tt G ; 
-    #def #[ GEN ] (_ : 'unit): ('pk G) {
+    [ GEN ] : { 'unit ~> 'pk G } '_ {
       '(pk, sk) ← G.(pkgen) ;; (*in doubt whether this should be from cryptobox/NBPES scheme or just randomly sampled*)
 
       if negb b then (*real*)
@@ -121,14 +119,14 @@ Definition PKEY (G : GEN_scheme) (b : bool) :
           ret pk
     } ;
 
-    #def #[ CSETPK ] (pk : 'pk G) : 'unit {
+    [ CSETPK ] : { 'pk G ~> 'unit } (pk) {
       PKLOC ← get PK_loc G;;
       #assert PKLOC pk == None ;;
       #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk false ;;
       ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ GETSK ] (pk : 'pk G) : ('sk G) {
+   [ GETSK ]  : { 'pk G ~> 'sk G } (pk) {
       PKLOC ← get PK_loc G ;;
       SKLOC ← get SK_loc G ;;
       #assert PKLOC pk == Some true ;; (*does #assert fail or break this if it's not true?*)
@@ -137,7 +135,7 @@ Definition PKEY (G : GEN_scheme) (b : bool) :
       @ret ('sk G) sk
     } ;
 
-    #def #[ HONPK ] (pk : 'pk G) : 'bool {
+    [ HONPK ]  : { 'pk G ~> 'bool } (pk) {
       PKLOC ← get PK_loc G ;;
       #assert isSome (PKLOC pk) as someBool;;
       let b := getSome (PKLOC pk) someBool in

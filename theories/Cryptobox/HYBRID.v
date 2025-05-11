@@ -30,50 +30,40 @@ Import SAE KEY NBSES NIKE AE.
 
 Module HYBRID.
 
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
-
-
 Definition HS_loc (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). (*Check loc here*)
-
-
-Definition GEN := 2%N.
-Definition GET := 29%N.
-Definition HON := 30%N.
-
 
 
 Definition GH_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N ; M_loc E N].
 Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N ; M_loc E N ].
 
 
-
 Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|) → 'unit  ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|) → 'unit ;
-    #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| ;
-    #val #[ GEN ]: 'unit → 'unit ; 
-    #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
-    #val #[ SDEC ]: ('c E × 'n E) → 'm E ;
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
-    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
+    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
+    [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
+    [ GET ]  : { ('pk N × 'pk N) ~> 'shared_key N } ;
+    [ GEN ]  : { 'unit ~> 'unit } ; 
+    [ SENC ] : { (M E × 'n E) ~> C E } ;
+    [ SDEC ] : { (C E × 'n E) ~> M E } ;
+    [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
+    [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
 ]. 
 
 Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|) → 'unit  ;
-    #val #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|) → 'unit ;
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E  ;
-    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
+    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
+    [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
+    [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
+    [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
 ].
 
 Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset: 
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
   [module GH_locs_tt E N ;
-    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|)) : ('unit) {
-      #import {sig #[ GEN ]: 'unit → 'unit} as gen ;;
-      #import {sig #[ SET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|) → 'unit  } as set ;;
+    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|)) : ('unit) { (*old notation*)
+      let gen := #import [ GEN ]  : { 'unit ~> 'unit } in
+      let set := #import [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } in      
+
       HSLOC ← get HS_loc N ;;
       #assert isSome (HSLOC (PKs, PKr)) as count ;;
       let counts := getSome (HSLOC (PKs, PKr)) count in
@@ -93,14 +83,15 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|)) : ('unit) {
-      #import {sig #[ CSET ]: (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|) → 'unit  } as cset ;;
+    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|)) : ('unit) { (*old notation*)
+      let cset := #import [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } in
+
       cset (PKr, PKs, k) ;;
       ret (Datatypes.tt : 'unit)
     }  ;
-    #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| } as geti ;;
-      #import {sig #[ SENC ]: ('m E × 'n E) → 'c E   } as SAEenc ;;
+    #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) { (*old notation*)
+      let geti   := #import [ GET ]  : { ('pk N × 'pk N) ~> 'shared_key N } in      
+      let SAEenc := #import [ SENC ] : { (M E × 'n E) ~> C E } in
 
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
@@ -125,9 +116,9 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
           
     } ;
     
-    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| } as geti ;;
-      #import {sig #[ SDEC ]: ('c E × 'n E) → 'm E   } as SAEdec ;;
+    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) { (*old notation*)
+      let geti   := #import [ GET ]  : { ('pk N × 'pk N) ~> 'shared_key N } in
+      let SAEdec := #import [ SDEC ] : { (C E × 'n E) ~> M E } in
       
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
@@ -145,8 +136,6 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
       else 
           m ← SAEdec (c, n) ;;
           ret m
-         
-      
     } 
 
   ].

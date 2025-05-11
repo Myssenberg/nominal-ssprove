@@ -58,22 +58,22 @@ Notation " 'sk p " := ('fin #|SK p|)
 Notation " 'sk p " := ('fin #|SK p|)
   (at level 3) : package_scope.
 
-Notation " 'm p " := (M p)
-  (in custom pack_type at level 2, p constr at level 20).
-
-Notation " 'm p " := (M p)
-  (at level 3) : package_scope.
-
-Notation " 'c p " := (C p)
-  (in custom pack_type at level 2, p constr at level 20).
-
-Notation " 'c p " := (C p)
-  (at level 3) : package_scope.
-
 Notation " 'n p " := ('fin #|Nonce p|)
   (in custom pack_type at level 2, p constr at level 20).
 
 Notation " 'n p " := ('fin #|Nonce p|)
+  (at level 3) : package_scope.
+
+Notation " 'm e " := (M e)
+  (in custom pack_type at level 2, e constr at level 20).
+
+Notation " 'm e " := (M e)
+  (at level 3) : package_scope.
+
+Notation " 'c e " := (C e)
+  (in custom pack_type at level 2, e constr at level 20).
+
+Notation " 'c e " := (C e)
   (at level 3) : package_scope.
 
 Instance pk_posi p : Positive #|PK p|.

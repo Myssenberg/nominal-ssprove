@@ -43,16 +43,16 @@ Definition HON := 30%N.
 
 Definition I_KEY_OUT (N: NIKE_scheme) :=
   [interface
-    #val #[ SET ]:  ('SID N × 'shared_key N) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'shared_key N) → 'unit ;
-    #val #[ GET ]:  'SID N → 'shared_key N ;
-    #val #[ HON ]:  'SID N → 'option 'bool
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ GET ]  : { 'SID N ~> 'shared_key N } ;
+    [ HON ]  : { 'SID N ~> 'option 'bool }
 ].
 
 Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
   game (I_KEY_OUT N) :=
   [module KEY_locs_tt N;
-    #def #[ SET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) {
+    #def #[ SET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) { (*old notation*)
       KLOC ← get K_loc N ;;
       SIDLOC ← get SID_loc N ;;
       HCLOC ← get HC_loc N;;
@@ -73,7 +73,7 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) {
+    #def #[ CSET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) { (*old notation*)
       KLOC ← get K_loc N ;;
       #assert isSome (KLOC sid) as someKey ;;
       SIDLOC ← get SID_loc N ;;
@@ -81,7 +81,7 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
       ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ GET ] (sid : 'SID N): ('shared_key N) {
+    [ GET ]  : { 'SID N ~> 'shared_key N } (sid) {
       KLOC ← get K_loc N ;;
       #assert isSome (KLOC sid) as someKey ;;
       let key := getSome (KLOC sid) someKey in
@@ -89,7 +89,7 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
 
     } ;
 
-    #def #[ HON ] (sid : 'SID N): ('option 'bool) {
+    [ HON ]  : { 'SID N ~> 'option 'bool } (sid) {
       SIDLOC ← get SID_loc N;;
       #assert isSome (SIDLOC sid) as someBool ;;  (*Should this be deleted?*)
       @ret ('option 'bool) (Some(getSome (SIDLOC sid) someBool))

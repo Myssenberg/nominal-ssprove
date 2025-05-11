@@ -26,11 +26,6 @@ Module PKAE.
 
 #[local] Open Scope package_scope.
 
-Definition chSet t := chMap t 'unit.
-
-Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
-Notation " 'set t " := (chSet t) (at level 2): package_scope.
-
 Notation " 'F c " := 'fin #|c| (in custom pack_type at level 2, c constr at level 20).
 Notation " 'F c " := 'fin #|c| (at level 2): package_scope.
 
@@ -41,7 +36,7 @@ Definition PK_loc (E : NBPES_scheme): Location := (chMap 'pk E 'bool ; 8).
 
 Definition SK_loc (E : NBPES_scheme): Location := (chMap 'pk E 'sk E ; 9).
 
-Definition M_loc (E: NBPES_scheme): Location := (chMap (h E × 'n E) ('m E × 'c E) ; 10). 
+Definition M_loc (E: NBPES_scheme): Location := (chMap (h E × 'n E) (M E × C E) ; 10). 
 
 
 Definition PKAE_locs_tt (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
@@ -56,14 +51,14 @@ Definition PKDEC := 15%N.
 
 Definition I_PKAE_IN (E: NBPES_scheme) :=
   [interface
-    #val #[ GETSK ]: 'pk E → 'sk E ;  
-    #val #[ HONPK ]: 'pk E → 'bool 
+    [ GETSK ] : { 'pk E ~> 'sk E } ;  
+    [ HONPK ] : { 'pk E ~> 'bool }
 ].
 
 Definition I_PKAE_OUT (E: NBPES_scheme) :=
   [interface
-    #val #[ PKENC ]: ((('pk E × 'pk E) × 'm E) × 'n E) → 'c E ;
-    #val #[ PKDEC ]: ((('pk E × 'pk E) × 'c E) × 'n E) → 'm E 
+    [ PKENC ] : { ((('pk E × 'pk E) × M E) × 'n E) ~> C E } ;
+    [ PKDEC ] : { ((('pk E × 'pk E) × C E) × 'n E) ~> M E }
 ].
 
 
@@ -74,9 +69,10 @@ Definition SORT (E: NBPES_scheme) (PKs PKr : 'pk E) : h E :=
 Definition PKAE (E: NBPES_scheme) (b : bool):
   module (I_PKAE_IN E) (I_PKAE_OUT E)  := 
   [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk E × 'pk E) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
-      #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
+    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk E × 'pk E) × 'm E) × 'n E) : ('c E) { (*old notation*)
+      let getsk := #import [ GETSK ] : { 'pk E ~> 'sk E } in
+      let honpk := #import [ HONPK ] : { 'pk E ~> 'bool } in
+
       SKs ← getsk PKs ;;
       HONpkr ← honpk PKr ;;
       let h := SORT E PKs PKr in
@@ -91,9 +87,9 @@ Definition PKAE (E: NBPES_scheme) (b : bool):
         #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
         ret c
     } ;
-    #def #[ PKDEC ] ('(((PKr, PKs), c), n) : (('pk E × 'pk E) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ GETSK ]: 'pk E → 'sk E } as getsk ;;
-      #import {sig #[ HONPK ]: 'pk E → 'bool } as honpk ;;
+    #def #[ PKDEC ] ('(((PKr, PKs), c), n) : (('pk E × 'pk E) × 'c E) × 'n E) : ('m E) { (*old notation*)
+      let getsk := #import [ GETSK ] : { 'pk E ~> 'sk E } in
+      let honpk := #import [ HONPK ] : { 'pk E ~> 'bool } in
       SKr ← getsk PKr ;;
       HONpks ← honpk PKs ;;
       if (b && HONpks) then

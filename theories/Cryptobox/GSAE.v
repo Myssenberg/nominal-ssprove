@@ -30,15 +30,11 @@ Import PackageNotation.
 
 Module GSAE.
 
-Definition GEN := 2%N.
-Definition SENC := 3%N.
-Definition SDEC:= 4%N.
-
 Definition I_GSAE_OUT (E : NBSES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'unit ;
-    #val #[ SENC ]: ('m E × 'n E) → 'c E ;
-    #val #[ SDEC ]: ('c E × 'n E) → 'm E
+    [ GEN ]  : { 'unit ~> 'unit } ;
+    [ SENC ] : { (M E × 'n E) ~> C E } ;
+    [ SDEC ] : { (C E × 'n E) ~> M E }
 ].
 
 Definition GSAE (E : NBSES_scheme) (b : 'bool) :
