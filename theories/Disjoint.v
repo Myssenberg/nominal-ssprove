@@ -322,36 +322,6 @@ Proof.
   destruct ((n, (S, T)) \in E) eqn:eq; rewrite eq //.
 Qed.
 
-Lemma trimmed_share_par {E1 E2} {p1 p2 : raw_module} :
-  trimmed E1 p1 → trimmed E2 p2 → trimmed (E1 :|: E2) (p1 || p2)%share.
-Proof.
-  unfold trimmed, trim.
-  intros tr1 tr2.
-  rewrite //= -tr1 -tr2.
-  apply eq_fmap => x.
-  rewrite /par unionmE !filtermE unionmE !filtermE.
-  destruct (val p1 x) as [[S [T f]]|] eqn:e.
-  - rewrite e //=.
-    destruct ((x, (S, T)) \in E1) eqn:h.
-    + rewrite h //=.
-      rewrite in_fsetU h //=.
-    + apply eq_fmap in tr1.
-      specialize (tr1 x).
-      rewrite filtermE e //= h // in tr1.
-  - rewrite e //=.
-    destruct (val p2 x) as [[S' [T' f']]|] eqn:e'.
-    + rewrite e' //=.
-      destruct ((x, (S', T')) \in E2) eqn:h'.
-      * rewrite h' //=.
-        rewrite in_fsetU h' orbC //=.
-      * rewrite h' //=.
-    + rewrite e' //.
-Qed.
-
-Lemma trimmed_sep_par {E1 E2} {p1 p2 : raw_module} :
-  trimmed E1 p1 → trimmed E2 p2 → trimmed (E1 :|: E2) (p1 || p2)%sep.
-Proof. apply trimmed_share_par. Qed.
-
 Lemma sep_link_id {L I E} (P : raw_module) :
   ValidPackage L I E P → flat I → trimmed E P → P ∘ (ID I) ≡ P.
 Proof.
@@ -412,6 +382,36 @@ Proof.
   apply functional_extensionality => x.
   destruct x as [n T]; done.
 Qed.
+
+Lemma trimmed_share_par {E1 E2} {p1 p2 : raw_module} :
+  trimmed E1 p1 → trimmed E2 p2 → trimmed (E1 :|: E2) (p1 || p2)%share.
+Proof.
+  unfold trimmed, trim.
+  intros tr1 tr2.
+  rewrite //= -tr1 -tr2.
+  apply eq_fmap => x.
+  rewrite /par unionmE !filtermE unionmE !filtermE.
+  destruct (val p1 x) as [[S [T f]]|] eqn:e.
+  - rewrite e //=.
+    destruct ((x, (S, T)) \in E1) eqn:h.
+    + rewrite h //=.
+      rewrite in_fsetU h //=.
+    + apply eq_fmap in tr1.
+      specialize (tr1 x).
+      rewrite filtermE e //= h // in tr1.
+  - rewrite e //=.
+    destruct (val p2 x) as [[S' [T' f']]|] eqn:e'.
+    + rewrite e' //=.
+      destruct ((x, (S', T')) \in E2) eqn:h'.
+      * rewrite h' //=.
+        rewrite in_fsetU h' orbC //=.
+      * rewrite h' //=.
+    + rewrite e' //.
+Qed.
+
+Lemma trimmed_sep_par {E1 E2} {p1 p2 : raw_module} :
+  trimmed E1 p1 → trimmed E2 p2 → trimmed (E1 :|: E2) (p1 || p2)%sep.
+Proof. intros H H'. apply (trimmed_share_par H). apply (rename_trimmed H'). Qed.
 
 Lemma sep_par_commut (p1 p2 : raw_module) (P : Parable p1 p2)
   : (p1 || p2) ≡ (p2 || p1).
@@ -488,6 +488,8 @@ Proof.
 Qed.
  *)
 
+Lemma alpha_eq {X : actionType} {P P' : X} : P = P' → P ≡ P'.
+Proof. move=> ->. eexists. by erewrite rename_id. Qed.
 
 Lemma alpha_equi {X Y : actionType} {P P'} {f : X → Y}
 : equivariant f → P ≡ P' → f P ≡ f P'.
@@ -879,6 +881,94 @@ Proof.
   rewrite in_fset0 // in H.
 Qed.
 
+Lemma flat_fsetU {I I'}
+  : fdisjoint (idents I) (idents I') → flat I → flat I' → flat (I :|: I').
+Proof.
+  move=> H H' H'' n TS TS'.
+  rewrite 2!in_fsetU.
+  move=> /orP [G|G] /orP [G'|G'].
+  - eapply H'; eassumption.
+  - move: H => /fdisjointP H.
+    assert ((n, TS).1 \in idents I).
+    1: by apply mem_imfset.
+    assert ((n, TS').1 \in idents I').
+    1: by apply mem_imfset.
+    simpl in *.
+    specialize (H n H0).
+    by move: H => /negP H.
+  - move: H => /fdisjointP H.
+    assert ((n, TS).1 \in idents I').
+    1: by apply mem_imfset.
+    assert ((n, TS').1 \in idents I).
+    1: by apply mem_imfset.
+    simpl in *.
+    specialize (H n H1).
+    by move: H => /negP H.
+  - eapply H''; eassumption.
+Qed.
+
+Lemma id_sep_par {I I' : Interface}
+  : flat (I :|: I') → ID I || ID I' ≡ ID (I :|: I').
+Proof.
+  intros H.
+  rewrite -share_par_sep_par.
+  2: rewrite /disj /supp //= supp0 fdisjoint0s //.
+  apply alpha_eq, eq_raw_module.
+  1: rewrite //= fsetU0 //.
+  apply eq_fmap => //= n.
+  rewrite unionmE 3!IDE.
+  destruct (getm_def (I :|: I') n) eqn:e => //=.
+  - destruct s as [S T] => //=.
+    apply getm_def_in in e.
+    rewrite in_fsetU in e.
+    move: e => /orP [e|e].
+    + destruct (getm_def I n) eqn:eI => //=.
+      2: exfalso; eapply in_getm_def_None; [ apply e | assumption ].
+      rewrite eI //=.
+      apply getm_def_in in eI.
+      assert (eI1 : (n, s) \in I :|: I').
+      1: rewrite in_fsetU; apply /orP; by left.
+      assert (e1 : (n, (S, T)) \in I :|: I').
+      1: rewrite in_fsetU; apply /orP; by left.
+      specialize (H n (S, T) s e1 eI1).
+      by noconf H.
+    + destruct (getm_def I n) eqn:eI => //=.
+      * rewrite eI //=.
+        apply getm_def_in in eI.
+        assert (eI1 : (n, s) \in I :|: I').
+        1: rewrite in_fsetU; apply /orP; by left.
+        assert (e1 : (n, (S, T)) \in I :|: I').
+        1: rewrite in_fsetU; apply /orP; by right.
+        specialize (H n (S, T) s e1 eI1).
+        by noconf H.
+      * rewrite eI //=.
+        destruct (getm_def I' n) eqn:eI' => //=.
+        2: exfalso; eapply in_getm_def_None; [ apply e | assumption ].
+        rewrite eI' //=.
+        apply getm_def_in in eI'.
+        assert (eI1 : (n, s) \in I :|: I').
+        1: rewrite in_fsetU; apply /orP; by right.
+        assert (e1 : (n, (S, T)) \in I :|: I').
+        1: rewrite in_fsetU; apply /orP; by right.
+        specialize (H n (S, T) s e1 eI1).
+        by noconf H.
+  - destruct (getm_def I n) eqn:eI => //=.
+    1: {
+      apply getm_def_in in eI.
+      exfalso; eapply in_getm_def_None; [| apply e ].
+      rewrite in_fsetU; apply /orP; left.
+      apply eI.
+    }
+    destruct (getm_def I' n) eqn:eI' => //=.
+    1: {
+      apply getm_def_in in eI'.
+      exfalso; eapply in_getm_def_None; [| apply e ].
+      rewrite in_fsetU; apply /orP; right.
+      apply eI'.
+    }
+    rewrite eI eI' //.
+Qed.
+
 Lemma Parable_commut {P1 P2} : Parable P2 P1 → Parable P1 P2.
 Proof. rewrite /Parable fdisjointC //. Qed.
 
@@ -917,6 +1007,8 @@ Ltac nssprove_rec :=
       end
   | |- is_true ( fsubset ?A ?B ) =>
       try assumption
+  | |- is_true ( fdisjoint ?A ?B ) =>
+      try assumption
   | |- (Parable (val (nom ?P1)) ?P2) =>
       apply Parable_nom_l ; nssprove_rec
   | |- (Parable ?P1 (val (nom ?P2))) =>
@@ -932,12 +1024,18 @@ Ltac nssprove_rec :=
       apply Game_import_flat
   | |- (flat [interface]) =>
       apply Game_import_flat
+  | |- (flat (?I1 :|: ?I2)) =>
+      apply flat_fsetU ; nssprove_rec
   | |- (flat ?E) =>
       assumption || (eapply flat_valid_package; eassumption) || (try ssprove_valid)
-  | |- (trimmed ?E1 (share_par ?P1 ?P2)) =>
-      apply trimmed_share_par
-  | |- (trimmed ?E1 (sep_par ?P1 ?P2)) =>
-      apply trimmed_sep_par
+  | |- (trimmed ?E1 (val (share_link ?P1 ?P2))) =>
+      apply trimmed_link ; nssprove_rec
+  | |- (trimmed ?E1 (val (sep_link ?P1 ?P2))) =>
+      apply trimmed_link ; nssprove_rec
+  | |- (trimmed ?E1 (val (share_par ?P1 ?P2))) =>
+      apply trimmed_share_par ; nssprove_rec
+  | |- (trimmed ?E1 (val (sep_par ?P1 ?P2))) =>
+      apply trimmed_sep_par ; nssprove_rec
   | |- (trimmed ?E1 (val (ID ?E2))) =>
       apply trimmed_ID
   | |- (trimmed ?E ?P) =>
@@ -958,23 +1056,20 @@ Class Trimmed (E : Interface) (p : raw_module) := tr : trimmed E p.
 
 Arguments tr {_ _} _.
 
+Hint Extern 3 (Trimmed _ _) =>
+  unfold Trimmed; nssprove_valid : typeclass_instances.
+
 Notation "{ 'module' I ; E ; m }" :=
   (@Build_module I E (loc m%sep) (mkpackage m%sep _) (tr _))
-  (only parsing) : sep_scope.
+  : sep_scope.
 
 Notation "{ 'game' E ; m }" :=
   (@Build_module Game_import E (loc m%sep) (mkpackage m%sep _) (tr _))
-  (only parsing) : sep_scope.
+  : sep_scope.
 
 Notation "{ 'adversary' I ; m }" :=
   (@Build_module I A_export (loc m%sep) (mkpackage m%sep _) (tr _))
-  (only parsing) : sep_scope.
-
-Instance Trimmed_link {E P Q} : Trimmed E P → Trimmed E (P ∘ Q)%sep.
-Proof. apply trimmed_link. Qed.
-
-Instance Trimmed_module {I E} {P : module I E} : Trimmed E P.
-Proof. apply module_trimmed. Qed.
+  : sep_scope.
 
 
 Lemma valid_idents {L I E} P {V : ValidPackage L I E P} : fsubset (idents E) (domm P).

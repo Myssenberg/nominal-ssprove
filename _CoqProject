@@ -8,6 +8,7 @@ theories/Pr.v
 theories/NomPackage.v
 theories/Disjoint.v
 theories/Prelude.v
+theories/Tests.v
 
 theories/Example/PK/Scheme.v
 theories/Example/PK/Reductions.v
