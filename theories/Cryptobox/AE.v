@@ -29,40 +29,40 @@ Import NBSES NIKE.
 
 Module AE.
 
+Notation " 'F c " := 'fin #|c| (in custom pack_type at level 2, c constr at level 20).
+Notation " 'F c " := 'fin #|c| (at level 2): package_scope.
 
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
-
-Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) ('m E × 'c E); 54).
+Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) (M E × C E); 54).
 
 Definition AE_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
 Definition AE_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  M_loc E N].
 
+
 Definition GET := 29%N.
 Definition HON := 30%N.
-
 Definition ENC := 52%N.
 Definition DEC := 53%N.
 
 
 Definition I_AE_IN (N : NIKE_scheme) :=
   [interface
-    #val #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| ;
-    #val #[ HON ]: ('pk N × 'pk N)  → 'option 'bool 
+    [ GET ] : { 'pk N × 'pk N ~> 'shared_key N } ;
+    [ HON ] : { 'pk N × 'pk N ~> 'option 'bool }
 ].
 
 Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
-    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
+    [ ENC ] : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
+    [ DEC ] : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
 ].
 
-Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : bool) :
+
+Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('F N.(NIKE.Shared_Key)) ('F (E.(NBSES.Shared_Key)))) (b : bool) :
   module (I_AE_IN N) (I_AE_OUT E N) := 
   [module AE_locs_tt E N;
-    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
+    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) { (*old notation*)
+      let geti := #import [ GET ] : { 'pk N × 'pk N ~> 'shared_key N } in
+      let hon  := #import [ HON ] : { 'pk N × 'pk N ~> 'option 'bool } in
       
       k ← geti (PKr, PKs) ;;
       MLOC ← get M_loc E N ;;
@@ -80,9 +80,9 @@ Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(NIKE.
           ret c 
     } ; 
 
-    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) {
-      #import {sig #[ GET ]: ('pk N × 'pk N) → 'fin #|N.(NIKE.Shared_Key)| } as geti ;;
-      #import {sig #[ HON ]: ('pk N × 'pk N) → 'option 'bool } as hon ;;
+    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) { (*old notation*)
+      let geti := #import [ GET ] : { 'pk N × 'pk N ~> 'shared_key N } in
+      let hon  := #import [ HON ] : { 'pk N × 'pk N ~> 'option 'bool } in
 
       k ← geti (PKr, PKs) ;;
       MLOC ← get M_loc E N;;
@@ -103,5 +103,6 @@ Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(NIKE.
 
     } 
   ].
+
 
 End AE.

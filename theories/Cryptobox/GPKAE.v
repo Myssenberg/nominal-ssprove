@@ -35,27 +35,19 @@ Import PackageNotation.
 
 Module GPKAE.
 
-Definition GEN := 2%N.
-Definition CSETPK := 3%N.
-Definition PKENC := 14%N.
-Definition PKDEC := 15%N.
-
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
-
 
 Definition I_GPKAE_OUT (E: NBPES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|E.(NBPES.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|E.(NBPES.PK)| → 'unit ;
-    #val #[ PKENC ]: (((('fin #|E.(NBPES.PK)|) × ('fin #|E.(NBPES.PK)|)) × 'm E) × 'n E) → 'c E ;
-    #val #[ PKDEC ]: (((('fin #|E.(NBPES.PK)|) × ('fin #|E.(NBPES.PK)|)) × 'c E) × 'n E) → 'm E
+    [ GEN ]    : { 'unit ~> 'F E.(NBPES.PK) } ;
+    [ CSETPK ] : { 'F E.(NBPES.PK) ~> 'unit } ;
+    [ PKENC ]  : { (((('F E.(NBPES.PK)) × ('F E.(NBPES.PK))) × M E) × 'n E) ~> C E } ;
+    [ PKDEC ]  : { (((('F E.(NBPES.PK)) × ('F E.(NBPES.PK))) × C E) × 'n E) ~> M E }
 ].
 
 Definition I_GPKAE_ID_COMP (E: NBPES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|E.(NBPES.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|E.(NBPES.PK)| → 'unit 
+    [ GEN ]    : { 'unit ~> 'F E.(NBPES.PK) } ;
+    [ CSETPK ] : { 'F E.(NBPES.PK) ~> 'unit }
 ].
 
 #[export] Hint Unfold I_GPKAE_OUT I_GPKAE_ID_COMP I_PKAE_OUT I_PKAE_IN I_PKEY_OUT : in_fset_eq.

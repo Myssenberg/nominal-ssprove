@@ -36,6 +36,7 @@ theories/Cryptobox/HYBRID.v
 theories/Cryptobox/KEY.v
 theories/Cryptobox/MODPKAE.v
 theories/Cryptobox/NBSES.v
+theories/Cryptobox/NBPES.v
 theories/Cryptobox/NIKE.v
 theories/Cryptobox/PKAE.v
 theories/Cryptobox/PKEY.v

@@ -31,6 +31,9 @@ Definition chSet t := chMap t 'unit.
 Notation " 'set t " := (chSet t) (in custom pack_type at level 2).
 Notation " 'set t " := (chSet t) (at level 2): package_scope.
 
+Notation " 'F c " := 'fin #|c| (in custom pack_type at level 2, c constr at level 20).
+Notation " 'F c " := 'fin #|c| (at level 2): package_scope.
+
 Definition h (E: NBPES_scheme) : choice_type := ('pk E × 'pk E).
 
 

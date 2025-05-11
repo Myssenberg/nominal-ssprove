@@ -30,21 +30,18 @@ Import PackageNotation.
 
 Module GMODPKAE.
 
-Definition PKENC := 14%N.
-Definition PKDEC := 15%N.
-
 Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE.PK)| → 'unit ;
-    #val #[ PKENC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.C) ; 
-    #val #[ PKDEC ]: ((('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) → 'T E.(NBSES.M)
+    [ GEN ]    : { 'unit ~> 'F (N.(NIKE.PK)) } ;
+    [ CSETPK ] : { 'F (N.(NIKE.PK)) ~> 'unit } ;
+    [ PKENC ]  : { ((('F (N.(NIKE.PK)) × 'F (N.(NIKE.PK))) × E.(NBSES.M)) × 'F (E.(NBSES.Nonce))) ~> E.(NBSES.C) } ; 
+    [ PKDEC ]  : { ((('F (N.(NIKE.PK)) × 'F (N.(NIKE.PK))) × E.(NBSES.C)) × 'F (E.(NBSES.Nonce))) ~> E.(NBSES.M) }
 ].
 
 Definition I_GMODPKAE_ID_COMP (N: NIKE_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE.PK)| → 'unit
+    [ GEN ]    : { 'unit ~> 'F N.(NIKE.PK) };
+    [ CSETPK ] : { 'F N.(NIKE.PK) ~> 'unit }
 ].
 
 

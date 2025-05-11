@@ -35,31 +35,21 @@ Import PackageNotation.
 
 Module GNIKE.
 
-Definition GEN := 2%N.
-Definition HON := 30%N.
-Definition CSETPK := 3%N.
-Definition GET := 29%N.
-
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
-
-
-
 Definition I_GNIKE_OUT (N: NIKE_scheme) :=
   [interface
-    #val #[ SHAREDKEY ]: (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'option 'unit ;
-    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE.PK)| → 'unit ;
-    #val #[ GET ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'fin #|N.(NIKE.Shared_Key)| ;
-    #val #[ HON ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'option 'bool
+    [ SHAREDKEY ] : { (('F N.(NIKE.PK) × 'F N.(NIKE.PK))) ~> 'option 'unit } ;
+    [ GEN ]       : { 'unit ~> 'F N.(NIKE.PK) } ;
+    [ CSETPK ]    : { 'F N.(NIKE.PK) ~> 'unit } ;
+    [ GET ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'F N.(NIKE.Shared_Key) } ;
+    [ HON ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'bool }
 ].
 
 Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|N.(NIKE.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|N.(NIKE.PK)| → 'unit ;
-    #val #[ GET ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'fin #|N.(NIKE.Shared_Key)| ;
-    #val #[ HON ]:  (('fin #|N.(NIKE.PK)|) × ('fin #|N.(NIKE.PK)|)) → 'option 'bool
+    [ GEN ]       : { 'unit ~> 'F N.(NIKE.PK) } ;
+    [ CSETPK ]    : { 'F N.(NIKE.PK) ~> 'unit } ;
+    [ GET ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'F N.(NIKE.Shared_Key) } ;
+    [ HON ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'bool }
 ].
 
 (*Definition I_GNIKE_ID_COMP (N: NIKE) :=
