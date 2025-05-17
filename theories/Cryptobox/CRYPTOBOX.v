@@ -27,16 +27,17 @@ From NominalSSP Require Import PK.DDH PK.Scheme.
 From NominalSSP Require Import Prelude Group.
 Import PackageNotation.
 
-From NominalSSP Require Import NIKE NBSES GPKAE GMODPKAE GAE MODPKAE AE GNIKE NIKE PKEY KEY PKAE GSAE GH HYBRID.
+From NominalSSP Require Import NIKE NBSES NBPES GPKAE GMODPKAE GAE MODPKAE AE GNIKE NIKE PKEY KEY PKAE GSAE GH HYBRID.
 
 Require Import GMODPKAE.
+Import NIKE NBSES NBPES GPKAE GMODPKAE GAE MODPKAE AE GNIKE NIKE PKEY KEY PKAE GSAE GH HYBRID.
 
 #[local] Open Scope package_scope.
 #[local] Open Scope ring_scope.
 
 Module crypto_box.
 
-#[export] Hint Unfold GMODPKAE.I_GMODPKAE_OUT GMODPKAE.I_GMODPKAE_ID_COMP MODPKAE.I_MODPKAE_OUT MODPKAE.I_MODPKAE_IN NIKE_scheme.I_NIKE_OUT NIKE_scheme.I_NIKE_IN AE.I_AE_OUT AE.I_AE_IN PKEY.I_PKEY_OUT KEY.I_KEY_OUT GPKAE.I_GPKAE_OUT GPKAE.I_GPKAE_ID_COMP NBPES_scheme.I_PKAE_OUT NBPES_scheme.I_PKAE_IN GNIKE.I_GNIKE_OUT GNIKE.I_GNIKE_ID_COMP GAE.I_GAE_OUT GAE.I_GAE_ID_COMP : in_fset_eq.
+#[export] Hint Unfold I_GMODPKAE_OUT I_GMODPKAE_ID_COMP I_MODPKAE_OUT I_MODPKAE_IN I_NIKE_OUT I_NIKE_IN I_AE_OUT I_AE_IN I_PKEY_OUT I_KEY_OUT I_GPKAE_OUT I_GPKAE_ID_COMP I_PKAE_OUT I_PKAE_IN I_GNIKE_OUT I_GNIKE_ID_COMP I_GAE_OUT I_GAE_ID_COMP : in_fset_eq.
 
 
 Record CB_inj A B :=
@@ -53,31 +54,31 @@ Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
 Notation " 'T c " := (c) (at level 2): package_scope.
 
 
-Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)): NBPES_scheme.NBPES_scheme := {|
-    NBPES_scheme.PK       := N.(NIKE_scheme.PK) ;
-    NBPES_scheme.SK       := N.(NIKE_scheme.SK) ;
-    NBPES_scheme.Nonce    := E.(NBSES.Nonce) ;
-    NBPES_scheme.M        := E.(NBSES.M) ;
-    NBPES_scheme.C        := E.(NBSES.C) ;
-    NBPES_scheme.sample_C := E.(NBSES.sample_C) ;
+Definition CRYPTOBOX_scheme (N: NIKE_scheme) (E : NBSES_scheme) (I : CB_inj ('F N.(NIKE.Shared_Key)) ('F E.(NBSES.Shared_Key))): NBPES_scheme := {|
+    NBPES.PK       := N.(NIKE.PK) ;
+    NBPES.SK       := N.(NIKE.SK) ;
+    NBPES.Nonce    := E.(NBSES.Nonce) ;
+    NBPES.M        := E.(NBSES.M) ;
+    NBPES.C        := E.(NBSES.C) ;
+    NBPES.sample_C := E.(NBSES.sample_C) ;
 
-    NBPES_scheme.pkgen :=  
+    NBPES.pkgen :=  
       {code
-        '(pk, sk) ← N.(NIKE_scheme.pkgen) ;;
+        '(pk, sk) ← N.(NIKE.pkgen) ;;
         ret (pk, sk)
       } ;
 
-    NBPES_scheme.enc := λ sk pk m n,
+    NBPES.enc := λ sk pk m n,
       {code
-        K ← N.(NIKE_scheme.sharedkey) pk sk ;;
+        K ← N.(NIKE.sharedkey) pk sk ;;
         let k := I.(encode) K in
         C ← E.(NBSES.enc) m k n ;;
         ret C} ;
 
 
-    NBPES_scheme.dec := λ sk pk c n,
+    NBPES.dec := λ sk pk c n,
       {code
-        K ← N.(NIKE_scheme.sharedkey) pk sk ;;
+        K ← N.(NIKE.sharedkey) pk sk ;;
         let k := I.(encode) K in
         M ← E.(NBSES.dec) c k n ;;
         ret M
@@ -85,7 +86,30 @@ Definition CRYPTOBOX_scheme (N: NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme
 |}.
 
 
-Lemma Equiv_GuPKAE_GMODPKAE (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I : NIKE_scheme.inj ('fin #|NIKE_scheme.Shared_Key N|) ('fin #|NBSES.Shared_Key E|)) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) qset (b : 'bool):
+Instance sharedkey_posi n : Positive #|NIKE.Shared_Key n|.
+Proof.
+Admitted.
+
+Instance k_posi e : Positive #|NBSES.Shared_Key e|.
+Proof.
+Admitted.
+
+Local Obligation Tactic := idtac.
+
+Context (N : NIKE_scheme) (E : NBSES_scheme) (I_cb : CB_inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I : inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)).
+Let P := (CRYPTOBOX_scheme N E I_cb).
+
+
+Lemma ID_sep_par I I' :
+ID I || ID I' = ID (I :|: I').
+Admitted.
+
+Lemma eq_ID I I':
+I = I' -> ID I = ID I'.
+Admitted.
+
+
+Lemma Equiv_GuPKAE_GMODPKAE qset (b : 'bool):
 perfect (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb)) (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb) b) (GMODPKAE.GMODPKAE E N qset I b).
 Proof.
 (*unfold GPKAE.GuPKAE, GMODPKAE.GMODPKAE.
@@ -103,54 +127,23 @@ simplify_eq_rel x.
 Admitted.
 
 
-Instance sharedkey_posi n : Positive #|NIKE_scheme.Shared_Key n|.
-Proof.
-Admitted.
-
-Instance k_posi e : Positive #|NBSES.Shared_Key e|.
-Proof.
-Admitted.
-
-Local Obligation Tactic := idtac.
-
-Context (N : NIKE_scheme.NIKE_scheme) (E : NBSES.NBSES_scheme) (I_cb : CB_inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)).
-Let P := (CRYPTOBOX_scheme N E I_cb).
-
-
-Program Definition A4 (A : adversary (GPKAE.I_GPKAE_OUT P)) : adversary (GNIKE.I_GNIKE_OUT N) :=
-  {adversary _ ; (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false))))) }.
-Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
-
-Program Definition A5 (A : adversary (GPKAE.I_GPKAE_OUT P)) : adversary (GAE.I_GAE_OUT E N) :=
-  {adversary _ ; ((A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (GAE.I_GAE_OUT E N))))) }.
-Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
-
-
-Lemma ID_sep_par I I' :
-ID I || ID I' = ID (I :|: I').
-Admitted.
-
-Lemma eq_ID I I':
-I = I' -> ID I = ID I'.
-Admitted.
-
-Theorem Lemma4_Adv_GuPKAE_CB (A : adversary (GPKAE.I_GPKAE_OUT P)) qset:
-  AdvFor (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb)) A
-  <= AdvFor (GNIKE.GuNIKE N qset) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((ID (NIKE_scheme.I_NIKE_OUT N) || AE.AE E N I false)))))
+Theorem Lemma4_Adv_GuPKAE_CB (A : adversary (I_GPKAE_OUT P)) qset:
+  AdvFor (GuPKAE (CRYPTOBOX_scheme N E I_cb)) A
+  <= AdvFor (GuNIKE N qset) (A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((ID (I_NIKE_OUT N) || AE E N I false)))))
      +
-     AdvFor (GAE.GAE E N qset I) (A ∘ (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ((MODPKAE.MODPKAE N E) ∘ ((NIKE_scheme.NIKE N || ID (AE.I_AE_OUT E N))))) ∘ ((PKEY.PKEY (PKEY.NIKE_to_GEN N) true || ID (GAE.I_GAE_OUT E N)))).
+     AdvFor (GAE E N qset I) (A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || ID (I_AE_OUT E N))))) ∘ ((PKEY (NIKE_to_GEN N) true || ID (I_GAE_OUT E N)))).
 Proof.
-erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE N E I I_cb qset)).
-unfold GPKAE.GuPKAE, GNIKE.GuNIKE, GAE.GAE, GMODPKAE.GMODPKAE, AdvFor.
+erewrite (AdvFor_perfect (Equiv_GuPKAE_GMODPKAE qset)).
+unfold GuPKAE, GuNIKE, GAE, GMODPKAE, AdvFor.
 erewrite Adv_sym.
-nssprove_adv_trans ((ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || (MODPKAE.MODPKAE N E ∘ (NIKE_scheme.NIKE N || AE.AE E N I false))) ∘ (PKEY.PKEY (PKEY.NIKE_to_GEN N) true || KEY.KEY N qset true))%sep.
+nssprove_adv_trans ((ID (I_GMODPKAE_ID_COMP N) || (MODPKAE N E ∘ (NIKE N || AE E N I false))) ∘ (PKEY (NIKE_to_GEN N) true || KEY N qset true))%sep.
 erewrite Adv_sym.
 apply lerD.
-- erewrite Adv_sep_link. erewrite Adv_par_r by nssprove_valid. rewrite Adv_sep_link. erewrite Adv_par_l by nssprove_valid. erewrite (sep_par_commut (ID (KEY.I_KEY_OUT N))) by nssprove_valid. apply eq_ler. apply Adv_mor. 
+- erewrite Adv_sep_link. erewrite Adv_par_r by nssprove_valid. rewrite Adv_sep_link. erewrite Adv_par_l by nssprove_valid. erewrite (sep_par_commut (ID (I_KEY_OUT N))) by nssprove_valid. apply eq_ler. apply Adv_mor. 
 1, 2: reflexivity.
 apply sep_link_mor. 2: reflexivity. rewrite -sep_link_assoc. apply sep_link_mor. 1: reflexivity.
-erewrite (sep_par_commut _ (ID (GNIKE.I_GNIKE_ID_COMP N))) by nssprove_valid.
-replace (ID (GNIKE.I_GNIKE_ID_COMP N)) with (ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ID (AE.I_AE_IN N)).
+erewrite (sep_par_commut _ (ID (I_GNIKE_ID_COMP N))) by nssprove_valid.
+replace (ID (I_GNIKE_ID_COMP N)) with (ID (I_GMODPKAE_ID_COMP N) || ID (I_AE_IN N)).
 2:{ admit. } (*redefine I_GNIKE_ID_COMP*)
 rewrite -sep_par_assoc.
 erewrite <- sep_interchange by nssprove_valid.
@@ -158,57 +151,57 @@ rewrite -> sep_link_id by nssprove_valid.
 apply sep_par_mor. 1: reflexivity.
 rewrite -sep_link_assoc.
 apply sep_link_mor. 1: reflexivity.
-erewrite (sep_par_commut  (ID (AE.I_AE_IN N))) by nssprove_valid.
+erewrite (sep_par_commut  (ID (I_AE_IN N))) by nssprove_valid.
 erewrite <- swash by nssprove_valid.
 reflexivity.
 
 - rewrite -Adv_sep_link.
   apply eq_ler. rewrite Adv_sym.
   apply Adv_mor. 3: reflexivity.
-+ rewrite -(@sep_par_empty_l ((AE.AE E N I true || ID (GAE.I_GAE_ID_COMP N)) ∘ KEY.KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY.PKEY (PKEY.NIKE_to_GEN N) true)) by nssprove_valid. rewrite -> sep_link_id by nssprove_valid.
++ rewrite -(@sep_par_empty_l ((AE E N I true || ID (I_GAE_ID_COMP N)) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)) by nssprove_valid. rewrite -> sep_link_id by nssprove_valid.
 erewrite -> id_sep_link.
 2: nssprove_valid.
 2: { admit. } (*par combination*)
-erewrite <- (id_sep_link (PKEY.PKEY (PKEY.NIKE_to_GEN N) true)) by nssprove_valid.
+erewrite <- (id_sep_link (PKEY (NIKE_to_GEN N) true)) by nssprove_valid.
 erewrite sep_interchange.
 2, 3, 4, 5, 6, 8 : nssprove_valid.
 2: { admit. } (*par combination*)
 erewrite sep_link_assoc. erewrite id_sep_link by nssprove_valid. apply sep_link_mor.
 2: reflexivity.
-erewrite (sep_par_commut (AE.AE E N I true)) by nssprove_valid.
-erewrite -> (@swish _ _ _ _ _ _ (NIKE_scheme.NIKE N)) by nssprove_valid.
+erewrite (sep_par_commut (AE E N I true)) by nssprove_valid.
+erewrite -> (@swish _ _ _ _ _ _ (NIKE.NIKE N)) by nssprove_valid.
 rewrite sep_link_assoc.
-erewrite <- (id_sep_link (ID (GMODPKAE.I_GMODPKAE_ID_COMP N))) by nssprove_valid.
+erewrite <- (id_sep_link (ID (I_GMODPKAE_ID_COMP N))) by nssprove_valid.
 erewrite sep_interchange by nssprove_valid.
 apply sep_link_mor.
 1: erewrite id_sep_link by nssprove_valid ; reflexivity.
 rewrite sep_par_assoc. rewrite sep_par_assoc. apply sep_par_mor.
 2: reflexivity.
-replace ((ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ID (NIKE_scheme.I_NIKE_IN N))) with (ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N)) || ID (GAE.I_GAE_ID_COMP N)). (*to get equality instead of equivalence*)
+replace ((ID (I_GMODPKAE_ID_COMP N) || ID (I_NIKE_IN N))) with (ID (I_PKEY_OUT (NIKE_to_GEN N)) || ID (I_GAE_ID_COMP N)). (*to get equality instead of equivalence*)
 1: reflexivity.
 rewrite ID_sep_par. rewrite ID_sep_par.
 apply eq_ID. apply /eqP. rewrite eqEfsubset. apply /andP. split.
 1,2 : fset_solve.
-+ rewrite -(@sep_par_empty_l ((AE.AE E N I false || ID (GAE.I_GAE_ID_COMP N)) ∘ KEY.KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY.PKEY (PKEY.NIKE_to_GEN N) true)) by nssprove_valid. rewrite -> sep_link_id by nssprove_valid.
++ rewrite -(@sep_par_empty_l ((AE E N I false || ID (I_GAE_ID_COMP N)) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)) by nssprove_valid. rewrite -> sep_link_id by nssprove_valid.
 erewrite -> id_sep_link.
 2: nssprove_valid.
 2: { admit. } (*par combination*)
-erewrite <- (id_sep_link (PKEY.PKEY (PKEY.NIKE_to_GEN N) true)) by nssprove_valid.
+erewrite <- (id_sep_link (PKEY (NIKE_to_GEN N) true)) by nssprove_valid.
 erewrite sep_interchange.
 2, 3, 4, 5, 6, 8 : nssprove_valid.
 2: { admit. } (*par combination*)
 erewrite sep_link_assoc. erewrite id_sep_link by nssprove_valid. apply sep_link_mor.
 2: reflexivity.
-erewrite (sep_par_commut (AE.AE E N I false)) by nssprove_valid.
-erewrite -> (@swish _ _ _ _ _ _ (NIKE_scheme.NIKE N)) by nssprove_valid.
+erewrite (sep_par_commut (AE E N I false)) by nssprove_valid.
+erewrite -> (@swish _ _ _ _ _ _ (NIKE N)) by nssprove_valid.
 rewrite sep_link_assoc.
-erewrite <- (id_sep_link (ID (GMODPKAE.I_GMODPKAE_ID_COMP N))) by nssprove_valid.
+erewrite <- (id_sep_link (ID (I_GMODPKAE_ID_COMP N))) by nssprove_valid.
 erewrite sep_interchange by nssprove_valid.
 apply sep_link_mor.
 1: erewrite id_sep_link by nssprove_valid ; reflexivity.
 rewrite sep_par_assoc. rewrite sep_par_assoc. apply sep_par_mor.
 2: reflexivity.
-replace ((ID (GMODPKAE.I_GMODPKAE_ID_COMP N) || ID (NIKE_scheme.I_NIKE_IN N))) with (ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N)) || ID (GAE.I_GAE_ID_COMP N)). (*to get equality instead of equivalence*)
+replace ((ID (I_GMODPKAE_ID_COMP N) || ID (I_NIKE_IN N))) with (ID (I_PKEY_OUT (NIKE_to_GEN N)) || ID (I_GAE_ID_COMP N)). (*to get equality instead of equivalence*)
 1: reflexivity.
 rewrite ID_sep_par. rewrite ID_sep_par.
 apply eq_ID. apply /eqP. rewrite eqEfsubset. apply /andP. split.
@@ -216,25 +209,35 @@ apply eq_ID. apply /eqP. rewrite eqEfsubset. apply /andP. split.
 Admitted.
 
 
-Theorem Cryptobox_Security (A1 : adversary (GPKAE.I_GPKAE_OUT P)) qset :
-  AdvFor (GPKAE.GPKAE P) A1
+
+Program Definition A4 (A : adversary (I_GPKAE_OUT P)) : adversary (I_GNIKE_OUT N) :=
+  {adversary _ ; (A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((ID (I_NIKE_OUT N) || AE E N I false))))) }.
+Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
+
+Program Definition A5 (A : adversary (I_GPKAE_OUT P)) : adversary (I_GAE_OUT E N) :=
+  {adversary _ ; ((A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || ID (I_AE_OUT E N))))) ∘ ((PKEY (NIKE_to_GEN N) true || ID (I_GAE_OUT E N))))) }.
+Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
+
+
+Theorem Cryptobox_Security (A1 : adversary (I_GPKAE_OUT P)) qset :
+  AdvFor (GPKAE P) A1
   <=
-  AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P false || ID (GPKAE.I_GPKAE_ID_COMP P)))
+  AdvFor (PKEY (NBPES_to_GEN P)) (A1 ∘ (PKAE P false || ID (I_GPKAE_ID_COMP P)))
   +
-  AdvFor (PKEY.PKEY (PKEY.NBPES_to_GEN P)) (A1 ∘ (NBPES_scheme.PKAE P true || ID (GPKAE.I_GPKAE_ID_COMP P)))
+  AdvFor (PKEY (NBPES_to_GEN P)) (A1 ∘ (PKAE P true || ID (I_GPKAE_ID_COMP P)))
   +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N qset false || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  AdvFor (PKEY (NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE N || ID (I_GNIKE_ID_COMP N))) ∘ (KEY N qset false || ID (I_PKEY_OUT (NIKE_to_GEN N))))
   +
-  AdvFor (GNIKE.GNIKE N qset) (A4 A1)
+  AdvFor (GNIKE N qset) (A4 A1)
   +
-  AdvFor (PKEY.PKEY (PKEY.NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE_scheme.NIKE N || ID (GNIKE.I_GNIKE_ID_COMP N))) ∘ (KEY.KEY N qset true || ID (PKEY.I_PKEY_OUT (PKEY.NIKE_to_GEN N))))
+  AdvFor (PKEY (NIKE_to_GEN N)) (((A4 A1) ∘ (NIKE N || ID (I_GNIKE_ID_COMP N))) ∘ (KEY N qset true || ID (I_PKEY_OUT (NIKE_to_GEN N))))
   +
-  \sum_(0 <= i < qset) AdvFor (GSAE.GSAE E) ((A5 A1) ∘ HYBRID.HYBRID E N I i qset ∘ ((ID (GH.I_GH_ID_COMP N)) || (KEY.KEY N qset true))).
+  \sum_(0 <= i < qset) AdvFor (GSAE E) ((A5 A1) ∘ HYBRID E N I i qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true))).
 Proof.
 unfold P in A1.
 unfold P.
 eapply le_trans.
-- apply GPKAE.Corollary1_Adv_GPKAE.
+- apply Corollary1_Adv_GPKAE.
 - repeat rewrite <- GRing.addrA. apply lerD.
 --  done.
 --  rewrite -> GRing.addrC. apply lerD.
@@ -242,7 +245,7 @@ eapply le_trans.
 --- rewrite GRing.addrA. eapply le_trans.
 ---- apply Lemma4_Adv_GuPKAE_CB.
 ---- rewrite GRing.addrA. apply lerD.
------- 1: apply (GNIKE.Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
------- apply (GH.Lemma3_Adv_GAE qset I (A5 A1)). Qed.
+------ 1: apply (Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
+------ apply (Lemma3_Adv_GAE qset I (A5 A1)). Qed.
 
 End crypto_box.

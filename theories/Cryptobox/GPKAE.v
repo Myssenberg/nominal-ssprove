@@ -25,8 +25,8 @@ Import Order.POrderTheory.
 
 From NominalSSP Require Import Prelude Group.
 
-From NominalSSP Require Import PKAE PKEY.
-Import NBPES_scheme PKEY.
+From NominalSSP Require Import PKAE PKEY NBPES.
+Import NBPES PKEY PKAE.
 
 Import PackageNotation.
 
@@ -35,28 +35,19 @@ Import PackageNotation.
 
 Module GPKAE.
 
-Definition GEN := 2%N.
-Definition CSETPK := 3%N.
-Definition PKENC := 14%N.
-Definition PKDEC := 15%N.
-(*tal skal være forskellige across filer*)
-
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
-
 
 Definition I_GPKAE_OUT (E: NBPES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|E.(NBPES_scheme.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|E.(NBPES_scheme.PK)| → 'unit ;
-    #val #[ PKENC ]: (((('fin #|E.(NBPES_scheme.PK)|) × ('fin #|E.(NBPES_scheme.PK)|)) × 'm E) × 'n E) → 'c E ;
-    #val #[ PKDEC ]: (((('fin #|E.(NBPES_scheme.PK)|) × ('fin #|E.(NBPES_scheme.PK)|)) × 'c E) × 'n E) → 'm E
+    [ GEN ]    : { 'unit ~> 'F E.(NBPES.PK) } ;
+    [ CSETPK ] : { 'F E.(NBPES.PK) ~> 'unit } ;
+    [ PKENC ]  : { (((('F E.(NBPES.PK)) × ('F E.(NBPES.PK))) × M E) × 'n E) ~> C E } ;
+    [ PKDEC ]  : { (((('F E.(NBPES.PK)) × ('F E.(NBPES.PK))) × C E) × 'n E) ~> M E }
 ].
 
 Definition I_GPKAE_ID_COMP (E: NBPES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'T 'fin #|E.(NBPES_scheme.PK)| ;
-    #val #[ CSETPK ]: 'T 'fin #|E.(NBPES_scheme.PK)| → 'unit 
+    [ GEN ]    : { 'unit ~> 'F E.(NBPES.PK) } ;
+    [ CSETPK ] : { 'F E.(NBPES.PK) ~> 'unit }
 ].
 
 #[export] Hint Unfold I_GPKAE_OUT I_GPKAE_ID_COMP I_PKAE_OUT I_PKAE_IN I_PKEY_OUT : in_fset_eq.

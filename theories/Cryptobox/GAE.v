@@ -22,7 +22,7 @@ Set Primitive Projections.
 From NominalSSP Require Import Prelude Group.
 
 From NominalSSP Require Import AE KEY NBSES NIKE.
-Import AE KEY NBSES NIKE_scheme.
+Import AE KEY NBSES NIKE.
 
 Import PackageNotation.
 
@@ -30,61 +30,29 @@ Import PackageNotation.
 
 Module GAE.
 
-Notation " 'T c " := (c) (in custom pack_type at level 2, c constr at level 20).
-Notation " 'T c " := (c) (at level 2): package_scope.
-
-Definition SET := 27%N.
-Definition CSET := 28%N.
-Definition ENC := 52%N.
-Definition DEC := 53%N.
-
 Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
-    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
+    [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
 ].
 
 Definition I_GAE_ID_COMP (N : NIKE_scheme) :=
   [interface
-    #val #[ SET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|N.(NIKE_scheme.Shared_Key)|) → 'unit
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit }
 ].
 
 #[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
 
-Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool):
+Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : NIKE.inj ('shared_key N) ('k E)) (b : 'bool):
   raw_module := (AE E N I b || ID (I_GAE_ID_COMP N)) ∘ (KEY N qset true).
 
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : NIKE_scheme.inj ('fin #|N.(NIKE_scheme.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) (b : 'bool) :
+Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : NIKE.inj ('shared_key N) ('k E)) (b : 'bool) :
   ValidPackage (GAE E N qset I b).(loc) [interface] (I_GAE_OUT E N) (GAE E N qset I b).
 Proof.
 unfold GAE. nssprove_valid. Qed.
 
-
-(* Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
-  [interface
-    #val #[ SET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
-    #val #[ ENC ]: ((('pk N × 'pk N) × 'm E) × 'n E) → 'c E ;
-    #val #[ DEC ]: ((('pk N × 'pk N) × 'c E) × 'n E) → 'm E 
-].
-
-Definition I_GAE_ID_COMP (N : NIKE_scheme) (E : NBSES_scheme) :=
-  [interface
-    #val #[ SET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit ;
-    #val #[ CSET ]: ('SID N × 'fin #|E.(NBSES.Shared_Key)|) → 'unit
-].
-
-#[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
-
-Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) (b : 'bool):
-  raw_module := (AE E N b || ID (I_GAE_ID_COMP N E)) ∘ (KEY N (NBSES_to_SGEN E) true).
-
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) (b : 'bool) :
-  ValidPackage (GAE E N b).(loc) [interface] (I_GAE_OUT E N) (GAE E N b).
-Proof.
-unfold GAE. nssprove_valid. Qed. *)
 
 End GAE.

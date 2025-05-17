@@ -41,15 +41,15 @@ Definition SDEC := 4%N.
 
 Definition I_SAE_OUT (E : NBSES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'unit ;    
-    #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
-    #val #[ SDEC ]: ('c E × 'n E) → 'm E 
+    [ GEN ]  : { 'unit ~> 'unit } ;    
+    [ SENC ] : { (M E × 'n E) ~> C E } ;
+    [ SDEC ] : { (C E × 'n E) ~> M E }
 ].
 
 Definition SAE (E : NBSES_scheme) (b : 'bool) :
   game (I_SAE_OUT E)  := 
   [module SAE_locs_tt E ;
-    #def #[ GEN ] (_ : 'unit) : ('unit) {
+    [ GEN ]  : { 'unit ~> 'unit } '_ {
       KLOC ← get SAEK_loc E ;;
       match KLOC with
       | None =>
@@ -59,7 +59,7 @@ Definition SAE (E : NBSES_scheme) (b : 'bool) :
       | Some k => ret (Datatypes.tt : 'unit)
       end
     } ;
-    #def #[ SENC ] ('(m, n) : ('m E × 'n E)) : ('c E) {
+    #def #[ SENC ] ('(m, n) : ('m E × 'n E)) : ('c E) { (*old notation*)
       SMLOC ← get SM_loc E ;;
       #assert SMLOC n == None ;;
       KLOC ← get SAEK_loc E ;;
@@ -74,7 +74,7 @@ Definition SAE (E : NBSES_scheme) (b : 'bool) :
        #put (SM_loc E) := setm SMLOC (n) (m, c) ;;
        ret c
     } ;
-    #def #[ SDEC ] ('(c, n) : ('c E × 'n E)) : ('m E) {
+    #def #[ SDEC ] ('(c, n) : ('c E × 'n E)) : ('m E) { (*old notation*)
       KLOC ← get SAEK_loc E ;;
       #assert (isSome KLOC) as someKey ;;
       let k := getSome KLOC someKey in

@@ -59,7 +59,14 @@ Qed.
 Lemma idents0 : idents fset0 = fset0.
 Proof. by rewrite /idents imfset0. Qed.
 
-#[export] Hint Rewrite @idents_cons @idents0 : in_fset_eq.
+Lemma identsU {I I'}
+  : idents (I :|: I') = idents I :|: idents I'.
+Proof.
+  unfold idents.
+  rewrite imfsetU //=.
+Qed.
+
+#[export] Hint Rewrite @idents_cons @idents0 @identsU : in_fset_eq.
 
 #[export] Hint Rewrite @domm_set @domm0 @domm_ID : in_fset_eq.
 
@@ -112,6 +119,23 @@ Proof. rewrite /rename /= imfset0 //. Qed.
 
 #[export] Hint Rewrite <- @supp_equi : in_fset_eq.
 #[export] Hint Rewrite @rename_fset0 @supp0 : in_fset_eq.
+
+Lemma rename_ID' {π} {I} : π ∙ pkg_composition.ID I = pkg_composition.ID I.
+Proof.
+  apply eq_fmap => n //=.
+  rewrite /rename //= mapmE IDE.
+  destruct (getm_def I n) => //.
+  destruct s as [S T] => //=.
+Qed.
+
+Lemma rename_ID {π} {I} : π ∙ ID I = ID I.
+Proof.
+  apply eq_raw_module.
+  1: rewrite //= rename_fset0 //.
+  apply rename_ID'.
+Qed.
+
+Hint Rewrite @rename_ID' @rename_ID : in_fset_eq.
 
 Lemma supp_mod {I E} (P : module I E)
   : supp (mod P) = supp (module_locs P).
