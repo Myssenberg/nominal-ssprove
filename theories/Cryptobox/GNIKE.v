@@ -44,16 +44,16 @@ Definition I_GNIKE_OUT (N: NIKE_scheme) :=
     [ HON ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'bool }
 ].
 
-Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
+(*Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
   [interface
     [ GEN ]       : { 'unit ~> 'F N.(NIKE.PK) } ;
     [ CSETPK ]    : { 'F N.(NIKE.PK) ~> 'unit } ;
     [ GET ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'F N.(NIKE.Shared_Key) } ;
     [ HON ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'bool }
-].
+].*)
 
-(*Definition I_GNIKE_ID_COMP (N: NIKE) :=
-(I_GMODPKAE_ID_COMP N) :|: (I_AE_IN N).*)
+Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
+(I_GMODPKAE_ID_COMP N) :|: (I_AE_IN N).
 
 Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N .
 
@@ -72,7 +72,7 @@ unfold GuNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.
 
 Lemma GNIKE_valid (N: NIKE_scheme) qset (b : 'bool) : ValidPackage (GNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N qset b).
 Proof.
-unfold GNIKE. nssprove_valid. Qed.
+unfold GNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.
 
 
 Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) qset:

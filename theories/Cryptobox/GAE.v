@@ -30,19 +30,25 @@ Import PackageNotation.
 
 Module GAE.
 
+Definition I_GAE_ID_COMP (N : NIKE_scheme) :=
+  [interface
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit }
+].
+
+Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
+  (I_GAE_ID_COMP N) :|: (I_AE_OUT E N).
+
+(*
 Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
     [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit } ;
     [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
     [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
-].
+].*)
 
-Definition I_GAE_ID_COMP (N : NIKE_scheme) :=
-  [interface
-    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
-    [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit }
-].
+
 
 #[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
 

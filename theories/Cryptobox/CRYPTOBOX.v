@@ -104,10 +104,6 @@ Lemma ID_sep_par I I' :
 ID I || ID I' = ID (I :|: I').
 Admitted.
 
-Lemma eq_ID I I':
-I = I' -> ID I = ID I'.
-Admitted.
-
 
 Lemma Equiv_GuPKAE_GMODPKAE qset (b : 'bool):
 perfect (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I_cb)) (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I_cb) b) (GMODPKAE.GMODPKAE E N qset I b).
@@ -144,7 +140,7 @@ apply lerD.
 apply sep_link_mor. 2: reflexivity. rewrite -sep_link_assoc. apply sep_link_mor. 1: reflexivity.
 erewrite (sep_par_commut _ (ID (I_GNIKE_ID_COMP N))) by nssprove_valid.
 replace (ID (I_GNIKE_ID_COMP N)) with (ID (I_GMODPKAE_ID_COMP N) || ID (I_AE_IN N)).
-2:{ admit. } (*redefine I_GNIKE_ID_COMP*)
+2:{ unfold I_GNIKE_ID_COMP. rewrite ID_sep_par. reflexivity. }
 rewrite -sep_par_assoc.
 erewrite <- sep_interchange by nssprove_valid.
 rewrite -> sep_link_id by nssprove_valid.
@@ -158,10 +154,12 @@ reflexivity.
 - rewrite -Adv_sep_link.
   apply eq_ler. rewrite Adv_sym.
   apply Adv_mor. 3: reflexivity.
-+ rewrite -(@sep_par_empty_l ((AE E N I true || ID (I_GAE_ID_COMP N)) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)) by nssprove_valid. rewrite -> sep_link_id by nssprove_valid.
++ rewrite -(@sep_par_empty_l ((AE E N I true || ID (I_GAE_ID_COMP N)) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)).
+2, 4, 5: nssprove_valid.
+ rewrite -> sep_link_id by nssprove_valid.
 erewrite -> id_sep_link.
 2: nssprove_valid.
-2: { admit. } (*par combination*)
+2: { (*apply trimmed_link. Search trimmed. fset_solve. nssprove_valid.*) admit. } (*par combination*)
 erewrite <- (id_sep_link (PKEY (NIKE_to_GEN N) true)) by nssprove_valid.
 erewrite sep_interchange.
 2, 3, 4, 5, 6, 8 : nssprove_valid.
@@ -179,8 +177,9 @@ rewrite sep_par_assoc. rewrite sep_par_assoc. apply sep_par_mor.
 2: reflexivity.
 replace ((ID (I_GMODPKAE_ID_COMP N) || ID (I_NIKE_IN N))) with (ID (I_PKEY_OUT (NIKE_to_GEN N)) || ID (I_GAE_ID_COMP N)). (*to get equality instead of equivalence*)
 1: reflexivity.
+Check id_sep_par.
 rewrite ID_sep_par. rewrite ID_sep_par.
-apply eq_ID. apply /eqP. rewrite eqEfsubset. apply /andP. split.
+f_equal. apply /eqP. rewrite eqEfsubset. apply /andP. split.
 1,2 : fset_solve.
 + rewrite -(@sep_par_empty_l ((AE E N I false || ID (I_GAE_ID_COMP N)) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)) by nssprove_valid. rewrite -> sep_link_id by nssprove_valid.
 erewrite -> id_sep_link.
@@ -204,7 +203,7 @@ rewrite sep_par_assoc. rewrite sep_par_assoc. apply sep_par_mor.
 replace ((ID (I_GMODPKAE_ID_COMP N) || ID (I_NIKE_IN N))) with (ID (I_PKEY_OUT (NIKE_to_GEN N)) || ID (I_GAE_ID_COMP N)). (*to get equality instead of equivalence*)
 1: reflexivity.
 rewrite ID_sep_par. rewrite ID_sep_par.
-apply eq_ID. apply /eqP. rewrite eqEfsubset. apply /andP. split.
+f_equal. apply /eqP. rewrite eqEfsubset. apply /andP. split.
 1,2 : fset_solve.
 Admitted.
 
