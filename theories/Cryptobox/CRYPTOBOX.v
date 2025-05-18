@@ -151,22 +151,16 @@ erewrite (sep_par_commut  (ID (I_AE_IN N))) by nssprove_valid.
 erewrite <- swash by nssprove_valid.
 reflexivity.
 
-- rewrite -Adv_sep_link.
+- erewrite <- Adv_sep_link.
   apply eq_ler. rewrite Adv_sym.
   apply Adv_mor. 3: reflexivity.
-+ rewrite -(@sep_par_empty_l ((AE E N I true || ID (I_GAE_ID_COMP N)) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)).
-2, 4, 5: nssprove_valid.
- rewrite -> sep_link_id by nssprove_valid.
-erewrite -> id_sep_link.
-2: nssprove_valid.
-2: { (*apply trimmed_link. Search trimmed. fset_solve. nssprove_valid.*) admit. } (*par combination*)
++ rewrite -(@sep_par_empty_l ((ID (I_GAE_ID_COMP N) || AE E N I true) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. unfold I_GAE_OUT. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)) by nssprove_valid. 
+rewrite -> sep_link_id by nssprove_valid.
+erewrite -> id_sep_link by nssprove_valid.
 erewrite <- (id_sep_link (PKEY (NIKE_to_GEN N) true)) by nssprove_valid.
-erewrite sep_interchange.
-2, 3, 4, 5, 6, 8 : nssprove_valid.
-2: { admit. } (*par combination*)
+erewrite sep_interchange by nssprove_valid.
 erewrite sep_link_assoc. erewrite id_sep_link by nssprove_valid. apply sep_link_mor.
 2: reflexivity.
-erewrite (sep_par_commut (AE E N I true)) by nssprove_valid.
 erewrite -> (@swish _ _ _ _ _ _ (NIKE.NIKE N)) by nssprove_valid.
 rewrite sep_link_assoc.
 erewrite <- (id_sep_link (ID (I_GMODPKAE_ID_COMP N))) by nssprove_valid.
@@ -177,22 +171,18 @@ rewrite sep_par_assoc. rewrite sep_par_assoc. apply sep_par_mor.
 2: reflexivity.
 replace ((ID (I_GMODPKAE_ID_COMP N) || ID (I_NIKE_IN N))) with (ID (I_PKEY_OUT (NIKE_to_GEN N)) || ID (I_GAE_ID_COMP N)). (*to get equality instead of equivalence*)
 1: reflexivity.
-Check id_sep_par.
 rewrite ID_sep_par. rewrite ID_sep_par.
 f_equal. apply /eqP. rewrite eqEfsubset. apply /andP. split.
 1,2 : fset_solve.
-+ rewrite -(@sep_par_empty_l ((AE E N I false || ID (I_GAE_ID_COMP N)) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)) by nssprove_valid. rewrite -> sep_link_id by nssprove_valid.
-erewrite -> id_sep_link.
-2: nssprove_valid.
-2: { admit. } (*par combination*)
+
++ rewrite -(@sep_par_empty_l ((ID (I_GAE_ID_COMP N) || AE E N I false) ∘ KEY N qset true)%sep). rewrite -sep_link_assoc. unfold I_GAE_OUT. erewrite <- (sep_interchange (PKEY (NIKE_to_GEN N) true)) by nssprove_valid. 
+rewrite -> sep_link_id by nssprove_valid.
+erewrite -> id_sep_link by nssprove_valid.
 erewrite <- (id_sep_link (PKEY (NIKE_to_GEN N) true)) by nssprove_valid.
-erewrite sep_interchange.
-2, 3, 4, 5, 6, 8 : nssprove_valid.
-2: { admit. } (*par combination*)
+erewrite sep_interchange by nssprove_valid.
 erewrite sep_link_assoc. erewrite id_sep_link by nssprove_valid. apply sep_link_mor.
 2: reflexivity.
-erewrite (sep_par_commut (AE E N I false)) by nssprove_valid.
-erewrite -> (@swish _ _ _ _ _ _ (NIKE N)) by nssprove_valid.
+erewrite -> (@swish _ _ _ _ _ _ (NIKE.NIKE N)) by nssprove_valid.
 rewrite sep_link_assoc.
 erewrite <- (id_sep_link (ID (I_GMODPKAE_ID_COMP N))) by nssprove_valid.
 erewrite sep_interchange by nssprove_valid.
@@ -205,7 +195,7 @@ replace ((ID (I_GMODPKAE_ID_COMP N) || ID (I_NIKE_IN N))) with (ID (I_PKEY_OUT (
 rewrite ID_sep_par. rewrite ID_sep_par.
 f_equal. apply /eqP. rewrite eqEfsubset. apply /andP. split.
 1,2 : fset_solve.
-Admitted.
+Qed.
 
 
 
@@ -215,7 +205,7 @@ Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
 
 Program Definition A5 (A : adversary (I_GPKAE_OUT P)) : adversary (I_GAE_OUT E N) :=
   {adversary _ ; ((A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || ID (I_AE_OUT E N))))) ∘ ((PKEY (NIKE_to_GEN N) true || ID (I_GAE_OUT E N))))) }.
-Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
+Obligation 1. intros. unfold P in A. unfold I_GAE_OUT. nssprove_valid. Qed.
 
 
 Theorem Cryptobox_Security (A1 : adversary (I_GPKAE_OUT P)) qset :
