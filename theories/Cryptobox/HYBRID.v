@@ -30,11 +30,12 @@ Import SAE KEY NBSES NIKE AE.
 
 Module HYBRID.
 
-Definition HS_loc (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). (*Check loc here*)
+
+(* Definition HS_loc (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). *) (*Check loc here*)
 
 
-Definition GH_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N ; M_loc E N].
-Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HS_loc N ; M_loc E N ].
+Definition GH_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HC_loc N ; M_loc E N].
+Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HC_loc N ; M_loc E N ].
 
 
 Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
@@ -64,18 +65,18 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
       let gen := #import [ GEN ]  : { 'unit ~> 'unit } in
       let set := #import [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } in      
 
-      HSLOC ← get HS_loc N ;;
-      #assert isSome (HSLOC (PKs, PKr)) as count ;;
-      let counts := getSome (HSLOC (PKs, PKr)) count in
+      HCLOC ← get HC_loc N ;;
+      #assert isSome (HCLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HCLOC (PKs, PKr)) count in
       #assert (counts < qset) ;;
-      if (HSLOC (PKs, PKr) == None) then  
+      if (HCLOC (PKs, PKr) == None) then  
         if (counts == i) then
           gen Datatypes.tt ;;
-          #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;; (*Double check that this is correct*)
+(*           #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;; (*Double check that *) this is correct*)
           set (PKs, PKr, k) ;;
           ret (Datatypes.tt : 'unit)
         else
-          #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;;          
+(*           #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;;           *)
           set (PKs, PKr, k) ;;          
           ret (Datatypes.tt : 'unit)
       else
@@ -95,12 +96,12 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
 
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
-      HSLOC ← get HS_loc N ;; 
+      HCLOC ← get HC_loc N ;; 
       
       
       #assert MLOC ((PKs, PKr), n) == None ;; 
-      #assert isSome (HSLOC (PKs, PKr)) as count ;; 
-      let counts := getSome (HSLOC (PKs, PKr)) count in 
+      #assert isSome (HCLOC (PKs, PKr)) as count ;; 
+      let counts := getSome (HCLOC (PKs, PKr)) count in 
 
       if (counts < i) then
           c ← E.(sample_C) ;;    (* Should be AE1 here*) 
@@ -122,10 +123,10 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
       
       k ← geti (PKs, PKr) ;;
       MLOC ← get M_loc E N ;;
-      HSLOC ← get HS_loc N ;; 
+      HCLOC ← get HC_loc N ;; 
 
-      #assert isSome (HSLOC (PKs, PKr)) as count ;;
-      let counts := getSome (HSLOC (PKs, PKr)) count in
+      #assert isSome (HCLOC (PKs, PKr)) as count ;;
+      let counts := getSome (HCLOC (PKs, PKr)) count in
       if (counts < i) then
           #assert isSome (MLOC ((PKr, PKs), n)) as someC ;;
           let (m, c') := getSome (MLOC ((PKr, PKs), n)) someC in

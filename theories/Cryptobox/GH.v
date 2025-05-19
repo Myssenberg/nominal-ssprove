@@ -29,9 +29,9 @@ Import Order.POrderTheory.
 #[local] Open Scope package_scope.
 #[local] Open Scope ring_scope.
 
-From NominalSSP Require Import AE HYBRID KEY NBSES NIKE SAE GAE GSAE.
+From NominalSSP Require Import AE HYBRID KEY NBSES NIKE SAE GAE GSAE Reductions.
 
-Import AE HYBRID KEY NBSES NIKE SAE GAE GSAE.
+Import AE HYBRID KEY NBSES NIKE SAE GAE GSAE Reductions.
 
 Module GH.
 
@@ -54,10 +54,20 @@ Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE.inj ('shared_key N)
 Proof.
 unfold GH. nssprove_valid. Qed.
 
+ Definition R (i : 'nat) (c : 'nat) (f : 'option 'unit)
+  := ((c > i)%N = isSome f).
 
+Notation inv i := (
+  couple_rhs HC_loc  (R i)
+).
+ 
 Lemma GAE_HYBRID_perfect {E N} qset {I : NIKE.inj ('shared_key N) ('k E)} b : perfect (I_GAE_OUT E N)
   (GAE E N qset I b) (HYBRID E N I (if b then 0 else qset) qset ∘ ((ID (I_GH_ID_COMP N)) || (KEY N qset true)) ∘ GSAE E true).
 Proof.
+nssprove_share.
+- eapply prove_perfect.
+Check eq_rel_perf_ind.
+(* apply (eq_rel_perf_ind _ _ (inv (if b then 0 else qset))).  *)
 Admitted.
 
 Lemma HYBRID_succ_perfect {E N i} qset {I : NIKE.inj ('shared_key N) ('k E)} : perfect (I_GAE_OUT E N)
