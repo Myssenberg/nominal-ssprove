@@ -35,13 +35,6 @@ Import AE HYBRID KEY NBSES NIKE SAE GAE GSAE.
 
 Module GH.
 
-Definition I_GH_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
-  [interface
-    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
-    [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
-    [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
-    [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
-].
 
 Definition I_GH_ID_COMP (N : NIKE_scheme) :=
   [interface
@@ -51,13 +44,13 @@ Definition I_GH_ID_COMP (N : NIKE_scheme) :=
 ].
 
 
-#[export] Hint Unfold I_GH_OUT I_GH_ID_COMP I_HYBRID_IN I_HYBRID_OUT I_AE_IN I_AE_OUT I_KEY_OUT I_SAE_OUT: in_fset_eq.
+#[export] Hint Unfold (*I_GH_OUT*) I_GH_ID_COMP I_HYBRID_IN I_HYBRID_OUT I_AE_IN I_AE_OUT I_KEY_OUT I_SAE_OUT: in_fset_eq.
 
 Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('shared_key N) ('k E)) i qset (b : 'bool):
   raw_module := (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N) || AE E N I b || SAE E b) ∘ KEY N qset true).
 
 Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : NIKE.inj ('shared_key N) ('k E)) i qset (b : 'bool) :
-  ValidPackage (GH E N I i qset b).(loc) [interface] (I_GH_OUT E N) (GH E N I i qset b).
+  ValidPackage (GH E N I i qset b).(loc) [interface] (I_GAE_OUT E N) (GH E N I i qset b).
 Proof.
 unfold GH. nssprove_valid. Qed.
 

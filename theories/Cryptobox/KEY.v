@@ -64,7 +64,7 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
 
       if b then
         key ← N.(kdist) ;;
-        #put (K_loc N) := @setm ('SID N : choiceType) _ KLOC sid key ;;(*This needs to put a uniformly chosen key*)
+        #put (K_loc N) := @setm ('SID N : choiceType) _ KLOC sid key ;;
         ret (Datatypes.tt : 'unit)
       else
         #assert isSome (KLOC sid) as someKey ;;

@@ -101,13 +101,14 @@ Definition PKEY (G : GEN_scheme) (b : bool) :
   game (I_PKEY_OUT G) :=
   [module PKEY_locs_tt G ; 
     [ GEN ] : { 'unit ~> 'pk G } '_ {
-      '(pk, sk) ← G.(pkgen) ;; (*in doubt whether this should be from cryptobox/NBPES scheme or just randomly sampled*)
+      '(pk, sk) ← G.(pkgen) ;;
 
       if negb b then (*real*)
-        (*#put (PK_loc P) := @setm ('pk P : choiceType) _ PKLOC pk true ;;*) (*the easycrypt code does not register the PK as being honest, but shouldn't it do that?*)
-          SKLOC ← get SK_loc G ;;
-          #put (SK_loc G) := setm SKLOC pk sk ;;
-          ret pk
+        PKLOC ← get PK_loc G ;;
+        #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;; (*the easycrypt code does not register the PK as being honest, but shouldn't it do that?*)
+        SKLOC ← get SK_loc G ;;
+        #put (SK_loc G) := setm SKLOC pk sk ;;
+        ret pk
       else (*ideal*)
         PKLOC ← get PK_loc G;;
         if (PKLOC pk != Some false) then

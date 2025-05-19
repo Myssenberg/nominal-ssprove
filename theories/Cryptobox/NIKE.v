@@ -42,7 +42,7 @@ Record NIKE_scheme :=
     pkgen : 
       code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
 
-    sharedkey : forall (pk : 'fin #|PK|) (sk : 'fin #|SK|), (*unsure here whether this is supposed to make the shared key from two public keys or a public and a secret, from the sender and receiver, respectively*)
+    sharedkey : forall (pk : 'fin #|PK|) (sk : 'fin #|SK|),
       code fset0 [interface] ('fin #|Shared_Key|) ;
     
     kdist : 
