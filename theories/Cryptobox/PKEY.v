@@ -130,7 +130,7 @@ Definition PKEY (G : GEN_scheme) (b : bool) :
    [ GETSK ]  : { 'pk G ~> 'sk G } (pk) {
       PKLOC ← get PK_loc G ;;
       SKLOC ← get SK_loc G ;;
-      #assert PKLOC pk == Some true ;; (*does #assert fail or break this if it's not true?*)
+      #assert PKLOC pk == Some true ;;
       #assert isSome (SKLOC pk) as someSK;;
       let sk := getSome (SKLOC pk) someSK in
       @ret ('sk G) sk

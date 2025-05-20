@@ -42,12 +42,10 @@ Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
     [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
-    [ GET ]  : { ('pk N × 'pk N) ~> 'shared_key N } ;
+    [ KEY.GET ]  : { 'SID N ~> 'shared_key N } ;
     [ GEN ]  : { 'unit ~> 'unit } ; 
     [ SENC ] : { (M E × 'n E) ~> C E } ;
-    [ SDEC ] : { (C E × 'n E) ~> M E } ;
-    [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
-    [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
+    [ SDEC ] : { (C E × 'n E) ~> M E } 
 ]. 
 
 Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=

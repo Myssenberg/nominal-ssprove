@@ -60,7 +60,7 @@ Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
 Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('F N.(NIKE.Shared_Key)) ('F (E.(NBSES.Shared_Key)))) (b : bool) :
   module (I_AE_IN N) (I_AE_OUT E N) := 
   [module AE_locs_tt E N;
-    #def #[ ENC ] ('(((PKr, PKs), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) { (*old notation*)
+    [ ENC ] : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } '(((PKr, PKs), m), n) { (*old notation*)
       let geti := #import [ GET ] : { 'pk N × 'pk N ~> 'shared_key N } in
       let hon  := #import [ HON ] : { 'pk N × 'pk N ~> 'option 'bool } in
       
