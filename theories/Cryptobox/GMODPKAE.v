@@ -32,7 +32,7 @@ Module GMODPKAE.
 
 Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
   [interface
-    [ GEN ]    : { 'unit ~> 'F (N.(NIKE.PK)) } ;
+    [ GEN ]    : { 'unit ~> 'option 'F (N.(NIKE.PK)) } ;
     [ CSETPK ] : { 'F (N.(NIKE.PK)) ~> 'unit } ;
     [ PKENC ]  : { ((('F (N.(NIKE.PK)) × 'F (N.(NIKE.PK))) × E.(NBSES.M)) × 'F (E.(NBSES.Nonce))) ~> E.(NBSES.C) } ; 
     [ PKDEC ]  : { ((('F (N.(NIKE.PK)) × 'F (N.(NIKE.PK))) × E.(NBSES.C)) × 'F (E.(NBSES.Nonce))) ~> E.(NBSES.M) }
@@ -40,7 +40,7 @@ Definition I_GMODPKAE_OUT (N: NIKE_scheme) (E : NBSES_scheme) :=
 
 Definition I_GMODPKAE_ID_COMP (N: NIKE_scheme) :=
   [interface
-    [ GEN ]    : { 'unit ~> 'F N.(NIKE.PK) };
+    [ GEN ]    : { 'unit ~> 'option 'F N.(NIKE.PK) };
     [ CSETPK ] : { 'F N.(NIKE.PK) ~> 'unit }
 ].
 
