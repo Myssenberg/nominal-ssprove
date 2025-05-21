@@ -39,9 +39,6 @@ Definition SK_loc (E : NBPES_scheme): Location := (chMap 'pk E 'sk E ; 9).
 Definition M_loc (E: NBPES_scheme): Location := (chMap (h E × 'n E) (M E × C E) ; 10). 
 
 
-Definition PKAE_locs_tt (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKAE_locs_ff (E : NBPES_scheme):= fset [:: PK_loc E ; SK_loc E ; M_loc E].
-
 Definition GETSK := 4%N.
 Definition HONPK := 5%N.
 
@@ -68,8 +65,8 @@ Definition SORT (E: NBPES_scheme) (PKs PKr : 'pk E) : h E :=
 
 Definition PKAE (E: NBPES_scheme) (b : bool):
   module (I_PKAE_IN E) (I_PKAE_OUT E)  := 
-  [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk E × 'pk E) × 'm E) × 'n E) : ('c E) { (*old notation*)
+  [module fset [:: PK_loc E ; SK_loc E ; M_loc E] ;
+    [ PKENC ] : { ((('pk E × 'pk E) × M E) × 'n E) ~> C E } '(((PKs, PKr), m), n) { 
       let getsk := #import [ GETSK ] : { 'pk E ~> 'sk E } in
       let honpk := #import [ HONPK ] : { 'pk E ~> 'bool } in
 
@@ -87,7 +84,7 @@ Definition PKAE (E: NBPES_scheme) (b : bool):
         #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
         ret c
     } ;
-    #def #[ PKDEC ] ('(((PKr, PKs), c), n) : (('pk E × 'pk E) × 'c E) × 'n E) : ('m E) { (*old notation*)
+    [ PKDEC ] : { ((('pk E × 'pk E) × C E) × 'n E) ~> M E } '(((PKr, PKs), c), n) { 
       let getsk := #import [ GETSK ] : { 'pk E ~> 'sk E } in
       let honpk := #import [ HONPK ] : { 'pk E ~> 'bool } in
       SKr ← getsk PKr ;;

@@ -109,9 +109,9 @@ nssprove_adv_trans ((ID (I_GMODPKAE_ID_COMP N) || (MODPKAE N E ∘ (NIKE N || AE
 erewrite Adv_sym.
 apply lerD.
 
-- erewrite Adv_sep_link.
+- do 2 erewrite Adv_sep_link.
   erewrite Adv_par_r by nssprove_valid.
-  rewrite Adv_sep_link. erewrite Adv_par_l by nssprove_valid.
+  erewrite Adv_par_l by nssprove_valid.
   erewrite (sep_par_commut (ID (I_KEY_OUT N))) by nssprove_valid.
   apply eq_ler.
   apply Adv_mor. 
@@ -138,7 +138,7 @@ apply lerD.
 
 - erewrite <- Adv_sep_link.
   apply eq_ler.
-  rewrite Adv_sym.
+  erewrite Adv_sym.
   apply Adv_mor.
     3: reflexivity.
     
@@ -160,8 +160,7 @@ apply lerD.
     erewrite sep_interchange by nssprove_valid.
     apply sep_link_mor.
       1: erewrite id_sep_link by nssprove_valid ; reflexivity.
-    rewrite sep_par_assoc.
-    rewrite sep_par_assoc.
+    do 2 rewrite sep_par_assoc.
     apply sep_par_mor.
       2: reflexivity.
     do 2 rewrite -> id_sep_par by nssprove_valid.
@@ -187,8 +186,7 @@ apply lerD.
     erewrite sep_interchange by nssprove_valid.
     apply sep_link_mor.
       1: erewrite id_sep_link by nssprove_valid ; reflexivity.
-    rewrite sep_par_assoc.
-    rewrite sep_par_assoc.
+    do 2 rewrite sep_par_assoc.
     apply sep_par_mor.
       2: reflexivity.
     do 2 rewrite -> id_sep_par by nssprove_valid.
@@ -232,7 +230,8 @@ rewrite GRing.addrA.
 eapply le_trans.
 1: apply Lemma4_Adv_GuPKAE_CB.
 rewrite GRing.addrA. apply lerD.
-1: apply (Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
-apply (Lemma3_Adv_GAE qset I (A5 A1)). Qed.
+1: apply (Corollary3_Adv_GNIKE_GuNIKE (A_GNIKE_OUT A)).
+apply (Lemma3_Adv_GAE qset I (A_GAE_OUT A)).
+Qed.
 
 End crypto_box.

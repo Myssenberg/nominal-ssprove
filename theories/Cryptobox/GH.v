@@ -49,12 +49,8 @@ Definition I_GH_ID_COMP (N : NIKE_scheme) :=
 Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (I : inj ('shared_key N) ('k E)) i qset (b : 'bool):
   raw_module := (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N) || SAE E b) ∘ KEY N qset true).
 
-Lemma GH_valid (E : NBSES_scheme) (N: NIKE_scheme) (I : inj ('shared_key N) ('k E)) i qset (b : 'bool) :
-  ValidPackage (GH E N I i qset b).(loc) [interface] (I_GAE_OUT E N) (GH E N I i qset b).
-Proof.
-unfold GH. nssprove_valid. Qed.
 
- Definition R (i : 'nat) (c : 'nat) (f : 'option 'unit)
+Definition R (i : 'nat) (c : 'nat) (f : 'option 'unit)
   := ((c > i)%N = isSome f).
 
 Notation inv i N E := (
@@ -94,17 +90,15 @@ Theorem Lemma3_Adv_GAE {E N} qset (I : inj ('shared_key N) ('k E)) (A : adversar
 Proof.
 rewrite (AdvFor_perfect (GAE_HYBRID_perfect qset)).
 elim: {+ 3 6}qset => [| j IH ].
-- rewrite Adv_same big_nil //.
-- rewrite big_nat_recr //=.
-  nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true)) ∘ GSAE E true)%sep.
-  apply lerD.
-    1: apply IH.
-  erewrite <- (Adv_perfect_r (HYBRID_succ_perfect qset)).
-  unfold AdvFor.
-  rewrite Adv_sep_link.
-  rewrite Adv_sep_link.
-  rewrite sep_link_assoc.
-  done.
+1: rewrite Adv_same big_nil //.
+rewrite big_nat_recr //.
+nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true)) ∘ GSAE E true)%sep.
+apply lerD.
+1: apply IH.
+erewrite <- (Adv_perfect_r (HYBRID_succ_perfect qset)).
+unfold AdvFor.
+do 2 rewrite Adv_sep_link.
+rewrite sep_link_assoc //.
 Qed.
 
 

@@ -38,7 +38,7 @@ Module GNIKE.
 Definition I_GNIKE_OUT (N: NIKE_scheme) :=
   [interface
     [ SHAREDKEY ] : { (('F N.(NIKE.PK) × 'F N.(NIKE.PK))) ~> 'option 'unit } ;
-    [ GEN ]       : { 'unit ~> 'F N.(NIKE.PK) } ;
+    [ GEN ]       : { 'unit ~> 'option 'F N.(NIKE.PK) } ;
     [ CSETPK ]    : { 'F N.(NIKE.PK) ~> 'unit } ;
     [ GET ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'F N.(NIKE.Shared_Key) } ;
     [ HON ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'bool }
@@ -57,17 +57,6 @@ Definition GuNIKE (N: NIKE_scheme) qset (b : 'bool) :
   raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N qset b || PKEY (NIKE_to_GEN N) true).
 
 
-(*
-Lemma GuNIKE_valid (N: NIKE_scheme) qset (b : 'bool) : ValidPackage (GuNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N qset b).
-Proof.
-unfold GuNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.
-
-
-Lemma GNIKE_valid (N: NIKE_scheme) qset (b : 'bool) :
-  ValidPackage (GNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N qset b).
-Proof.
-unfold GNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.*)
-
 
 Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) qset:
 let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in
@@ -84,14 +73,13 @@ erewrite -> Adv_par_r by nssprove_valid.
 erewrite Adv_sym.
 rewrite -GRing.addrA.
 apply lerD.
-- apply lexx.
-- nssprove_adv_trans (KEY N qset true || PKEY (NIKE_to_GEN N) false).
-  apply lerD.
-  + erewrite Adv_sym.
-    apply lexx.
-  + erewrite -> Adv_par_r by nssprove_valid.
-    rewrite Adv_sym.
-    apply lexx.
+1: apply lexx.
+nssprove_adv_trans (KEY N qset true || PKEY (NIKE_to_GEN N) false).
+apply lerD.
+1: erewrite Adv_sym ; apply lexx.
+erewrite -> Adv_par_r by nssprove_valid.
+rewrite Adv_sym.
+apply lexx.
 Qed.
 
 
