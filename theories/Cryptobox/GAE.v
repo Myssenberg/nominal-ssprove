@@ -45,10 +45,5 @@ Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
 Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : inj ('shared_key N) ('k E)) (b : 'bool):
   raw_module := (ID (I_GAE_ID_COMP N) || AE E N I b ) ∘ (KEY N qset true).
 
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : inj ('shared_key N) ('k E)) (b : 'bool) :
-  ValidPackage (GAE E N qset I b).(loc) [interface] (I_GAE_OUT E N) (GAE E N qset I b).
-Proof.
-unfold GAE. nssprove_valid. Qed.
-
 
 End GAE.

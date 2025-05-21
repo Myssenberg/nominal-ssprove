@@ -81,8 +81,6 @@ Definition PK_loc (G : GEN_scheme): Location := (chMap 'pk G 'bool ; 0).
 
 Definition SK_loc (G : GEN_scheme): Location := (chMap 'pk G 'sk G ; 1). 
 
-Definition PKEY_locs_tt (G : GEN_scheme):= fset [:: PK_loc G ; SK_loc G]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition PKEY_locs_ff (G : GEN_scheme):= fset [:: PK_loc G ; SK_loc G].
 
 Definition GEN := 2%N.
 Definition CSETPK := 3%N.
@@ -99,17 +97,17 @@ Definition I_PKEY_OUT (G: GEN_scheme) :=
 
 Definition PKEY (G : GEN_scheme) (b : bool) :
   game (I_PKEY_OUT G) :=
-  [module PKEY_locs_tt G ; 
+  [module fset [:: PK_loc G ; SK_loc G] ; 
     [ GEN ] : { 'unit ~> 'pk G } '_ {
       '(pk, sk) ← G.(pkgen) ;;
 
-      if negb b then (*real*)
+      if negb b then
         PKLOC ← get PK_loc G ;;
-        #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;; (*the easycrypt code does not register the PK as being honest, but shouldn't it do that?*)
+        #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;
         SKLOC ← get SK_loc G ;;
         #put (SK_loc G) := setm SKLOC pk sk ;;
         ret pk
-      else (*ideal*)
+      else 
         PKLOC ← get PK_loc G;;
         if (PKLOC pk != Some false) then
           #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;

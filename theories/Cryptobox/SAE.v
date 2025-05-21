@@ -32,9 +32,6 @@ Module SAE.
 Definition SM_loc (E : NBSES_scheme) : Location := (chMap 'n E (M E × C E) ; 0).
 Definition SAEK_loc (E : NBSES_scheme) : Location := ('option 'k E ; 1).
 
-Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  SM_loc E ; SAEK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition SAE_locs_ff (E : NBSES_scheme) := fset [::  SM_loc E ; SAEK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-
 Definition GEN := 2%N.
 Definition SENC := 3%N.
 Definition SDEC := 4%N.
@@ -48,7 +45,7 @@ Definition I_SAE_OUT (E : NBSES_scheme) :=
 
 Definition SAE (E : NBSES_scheme) (b : 'bool) :
   game (I_SAE_OUT E)  := 
-  [module SAE_locs_tt E ;
+  [module fset [::  SM_loc E ; SAEK_loc E] ;
     [ GEN ]  : { 'unit ~> 'unit } '_ {
       KLOC ← get SAEK_loc E ;;
       match KLOC with

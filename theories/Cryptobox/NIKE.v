@@ -96,16 +96,6 @@ Record inj A B :=
 Arguments encode {A} {B} _.
 Arguments decode {A} {B} _.
 
-Definition SID_loc (N: NIKE_scheme) : Location := (chMap ('SID N) 'bool ; 16).
-Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 17).
-
-
-Definition PK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'bool ; 18).
-Definition SK_loc (N : NIKE_scheme): Location := (chMap 'pk N 'sk N ; 19).
-
-
-Definition NIKE_locs_tt (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition NIKE_locs_ff (N : NIKE_scheme):= fset [:: PK_loc N ; SK_loc N].
 
 Definition GETSK := 4%N.
 Definition HONPK := 5%N.
@@ -130,7 +120,7 @@ Definition I_NIKE_OUT (N: NIKE_scheme) :=
 Definition NIKE (N : NIKE_scheme):
   module (I_NIKE_IN N) (I_NIKE_OUT N) :=
   [module no_locs ; 
-    #def #[ SHAREDKEY ] ('(pks, pkr) : 'pk N × 'pk N ) : 'option 'unit { (*old notation*)
+    [ SHAREDKEY ] : { ('pk N × 'pk N) ~> 'option 'unit } '(pks, pkr) { 
       let honpk := #import [ HONPK ] : { 'pk N ~> 'bool } in
       let getsk := #import [ GETSK ] : { 'pk N ~> 'sk N } in
       let set   := #import [ SET ]   : { ('SID N × 'shared_key N) ~> 'unit } in

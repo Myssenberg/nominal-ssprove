@@ -57,17 +57,6 @@ Definition GuNIKE (N: NIKE_scheme) qset (b : 'bool) :
   raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N qset b || PKEY (NIKE_to_GEN N) true).
 
 
-(*
-Lemma GuNIKE_valid (N: NIKE_scheme) qset (b : 'bool) : ValidPackage (GuNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N qset b).
-Proof.
-unfold GuNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.
-
-
-Lemma GNIKE_valid (N: NIKE_scheme) qset (b : 'bool) :
-  ValidPackage (GNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N qset b).
-Proof.
-unfold GNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.*)
-
 
 Theorem Corollary3_Adv_GNIKE_GuNIKE {N} (A : adversary (I_GNIKE_OUT N)) qset:
 let A' := (A ∘ (NIKE N || ID (I_GNIKE_ID_COMP N)))%sep in

@@ -58,16 +58,6 @@ Definition GPKAE (E: NBPES_scheme) (b : 'bool) :
 Definition GuPKAE (E: NBPES_scheme) (b: 'bool) :
   raw_module := (PKAE E b || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true).
 
-Lemma GuPKAE_valid (E: NBPES_scheme) (b: 'bool) :
-  ValidPackage (GuPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GuPKAE E b).
-Proof.
-unfold GuPKAE. nssprove_valid. Qed.
-
-Lemma GPKAE_valid (E: NBPES_scheme) (b : 'bool) :
-  ValidPackage (GPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GPKAE E b).
-Proof.
-unfold GPKAE. nssprove_valid. Qed. 
-
 
 Theorem Corollary1_Adv_GPKAE {E} (A : adversary (I_GPKAE_OUT E)) :
   AdvFor (GPKAE E) A

@@ -51,9 +51,5 @@ Definition I_GMODPKAE_ID_COMP (N: NIKE_scheme) :=
 Definition GMODPKAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : inj 'shared_key N 'k E) (b : 'bool) :
   raw_module := (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || AE E N I b)))) ∘ ((PKEY (NIKE_to_GEN N) true || KEY N qset b)).
 
-Lemma GMODPKAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (b : 'bool) (I : inj 'shared_key N 'k E) : ValidPackage (GMODPKAE E N qset I b).(loc) [interface] (I_GMODPKAE_OUT N E) (GMODPKAE E N qset I b).
-Proof.
-unfold GMODPKAE. nssprove_valid. Qed.
-
 
 End GMODPKAE.
