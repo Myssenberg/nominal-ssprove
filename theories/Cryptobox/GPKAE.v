@@ -38,7 +38,7 @@ Module GPKAE.
 
 Definition I_GPKAE_OUT (E: NBPES_scheme) :=
   [interface
-    [ GEN ]    : { 'unit ~> 'F E.(NBPES.PK) } ;
+    [ GEN ]    : { 'unit ~> 'option 'F E.(NBPES.PK) } ;
     [ CSETPK ] : { 'F E.(NBPES.PK) ~> 'unit } ;
     [ PKENC ]  : { (((('F E.(NBPES.PK)) × ('F E.(NBPES.PK))) × M E) × 'n E) ~> C E } ;
     [ PKDEC ]  : { (((('F E.(NBPES.PK)) × ('F E.(NBPES.PK))) × C E) × 'n E) ~> M E }
@@ -46,7 +46,7 @@ Definition I_GPKAE_OUT (E: NBPES_scheme) :=
 
 Definition I_GPKAE_ID_COMP (E: NBPES_scheme) :=
   [interface
-    [ GEN ]    : { 'unit ~> 'F E.(NBPES.PK) } ;
+    [ GEN ]    : { 'unit ~> 'option 'F E.(NBPES.PK) } ;
     [ CSETPK ] : { 'F E.(NBPES.PK) ~> 'unit }
 ].
 

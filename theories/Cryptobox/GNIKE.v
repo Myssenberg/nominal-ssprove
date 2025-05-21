@@ -38,7 +38,7 @@ Module GNIKE.
 Definition I_GNIKE_OUT (N: NIKE_scheme) :=
   [interface
     [ SHAREDKEY ] : { (('F N.(NIKE.PK) × 'F N.(NIKE.PK))) ~> 'option 'unit } ;
-    [ GEN ]       : { 'unit ~> 'F N.(NIKE.PK) } ;
+    [ GEN ]       : { 'unit ~> 'option 'F N.(NIKE.PK) } ;
     [ CSETPK ]    : { 'F N.(NIKE.PK) ~> 'unit } ;
     [ GET ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'F N.(NIKE.Shared_Key) } ;
     [ HON ]       : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'bool }

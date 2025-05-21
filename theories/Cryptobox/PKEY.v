@@ -89,7 +89,7 @@ Definition HONPK := 5%N.
 
 Definition I_PKEY_OUT (G: GEN_scheme) :=
   [interface
-    [ GEN ]    : { 'unit ~> 'pk G } ;
+    [ GEN ]    : { 'unit ~> 'option 'pk G } ;
     [ CSETPK ] : { 'pk G ~> 'unit } ;
     [ GETSK ]  : { 'pk G ~> 'sk G } ;
     [ HONPK ]  : { 'pk G ~> 'bool }
@@ -98,7 +98,7 @@ Definition I_PKEY_OUT (G: GEN_scheme) :=
 Definition PKEY (G : GEN_scheme) (b : bool) :
   game (I_PKEY_OUT G) :=
   [module fset [:: PK_loc G ; SK_loc G] ; 
-    [ GEN ] : { 'unit ~> 'pk G } '_ {
+    [ GEN ] : { 'unit ~> 'option 'pk G } '_ {
       '(pk, sk) ← G.(pkgen) ;;
 
       if negb b then
@@ -106,16 +106,16 @@ Definition PKEY (G : GEN_scheme) (b : bool) :
         #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;
         SKLOC ← get SK_loc G ;;
         #put (SK_loc G) := setm SKLOC pk sk ;;
-        ret pk
+        @ret ('option 'pk G) (Some pk)
       else 
         PKLOC ← get PK_loc G;;
         if (PKLOC pk != Some false) then
           #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;
           SKLOC ← get SK_loc G ;;
           #put (SK_loc G) := setm SKLOC pk sk ;;
-          ret pk
+          @ret ('option 'pk G) (Some pk)
         else
-          ret pk
+          ret None
     } ;
 
     [ CSETPK ] : { 'pk G ~> 'unit } (pk) {
