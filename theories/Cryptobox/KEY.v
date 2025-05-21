@@ -31,10 +31,8 @@ Import NIKE NBSES.
 
 Definition SID_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'bool ; 25).
 Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 26).
-Definition HC_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'nat; 58). (*Need to check the loc here*)
+Definition HC_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'nat; 58).
 
-Definition KEY_locs_tt (N: NIKE_scheme) := fset [:: SID_loc N ; K_loc N ; HC_loc N].  
-Definition KEY_locs_ff (N: NIKE_scheme) := fset [:: SID_loc N ; K_loc N ; HC_loc N].
 
 Definition SET := 27%N.
 Definition CSET := 28%N.
@@ -51,8 +49,8 @@ Definition I_KEY_OUT (N: NIKE_scheme) :=
 
 Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
   game (I_KEY_OUT N) :=
-  [module KEY_locs_tt N;
-    #def #[ SET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) { (*old notation*)
+  [module fset [:: SID_loc N ; K_loc N ; HC_loc N];
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } '(sid, k) {
       KLOC ← get K_loc N ;;
       SIDLOC ← get SID_loc N ;;
       HCLOC ← get HC_loc N;;
@@ -73,7 +71,7 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('(sid, k) : 'SID N × 'shared_key N): ('unit) { (*old notation*)
+    [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit } '(sid, k) { 
       KLOC ← get K_loc N ;;
       #assert isSome (KLOC sid) as someKey ;;
       SIDLOC ← get SID_loc N ;;
@@ -91,7 +89,7 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
 
     [ HON ]  : { 'SID N ~> 'option 'bool } (sid) {
       SIDLOC ← get SID_loc N;;
-      #assert isSome (SIDLOC sid) as someBool ;;  (*Should this be deleted?*)
+      #assert isSome (SIDLOC sid) as someBool ;;
       @ret ('option 'bool) (Some(getSome (SIDLOC sid) someBool))
 
     }

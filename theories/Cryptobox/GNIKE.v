@@ -47,9 +47,8 @@ Definition I_GNIKE_OUT (N: NIKE_scheme) :=
 Definition I_GNIKE_ID_COMP (N: NIKE_scheme) :=
 (I_GMODPKAE_ID_COMP N) :|: (I_AE_IN N).
 
-Definition I_R_PKEY_OUT (N: NIKE_scheme) := I_NIKE_OUT N :|: I_KEY_OUT N .
 
-#[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT I_R_PKEY_OUT I_GMODPKAE_ID_COMP I_AE_IN: in_fset_eq.
+#[export] Hint Unfold I_GNIKE_OUT I_GNIKE_ID_COMP I_NIKE_OUT I_NIKE_IN I_PKEY_OUT I_KEY_OUT I_GMODPKAE_ID_COMP I_AE_IN: in_fset_eq.
 
 Definition GNIKE (N: NIKE_scheme) qset (b : 'bool) :
   raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N qset b || PKEY (NIKE_to_GEN N) false).
@@ -57,12 +56,14 @@ Definition GNIKE (N: NIKE_scheme) qset (b : 'bool) :
 Definition GuNIKE (N: NIKE_scheme) qset (b : 'bool) :
   raw_module := (NIKE N || ID (I_GNIKE_ID_COMP N)) ∘ (KEY N qset b || PKEY (NIKE_to_GEN N) true).
 
-Lemma GuNIKE_valid (N: NIKE_scheme) qset (b : 'bool) : ValidPackage (GuNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N qset b).
+Lemma GuNIKE_valid (N: NIKE_scheme) qset (b : 'bool) :
+  ValidPackage (GuNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GuNIKE N qset b).
 Proof.
 unfold GuNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.
 
 
-Lemma GNIKE_valid (N: NIKE_scheme) qset (b : 'bool) : ValidPackage (GNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N qset b).
+Lemma GNIKE_valid (N: NIKE_scheme) qset (b : 'bool) :
+  ValidPackage (GNIKE N qset b).(loc) [interface] (I_GNIKE_OUT N) (GNIKE N qset b).
 Proof.
 unfold GNIKE. unfold I_GNIKE_ID_COMP. nssprove_valid. Qed.
 
@@ -84,9 +85,13 @@ rewrite -GRing.addrA.
 apply lerD.
 - apply lexx.
 - nssprove_adv_trans (KEY N qset true || PKEY (NIKE_to_GEN N) false).
-apply lerD.
--- erewrite Adv_sym. apply lexx.
--- erewrite -> Adv_par_r by nssprove_valid. rewrite Adv_sym. apply lexx. Qed.
+  apply lerD.
+  + erewrite Adv_sym.
+    apply lexx.
+  + erewrite -> Adv_par_r by nssprove_valid.
+    rewrite Adv_sym.
+    apply lexx.
+Qed.
 
 
 End GNIKE.

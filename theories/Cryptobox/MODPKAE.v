@@ -33,9 +33,6 @@ Module MODPKAE.
 Definition PKENC := 14%N.
 Definition PKDEC := 15%N.
 
-Notation " 'T c " := c (in custom pack_type at level 2, c constr at level 20). (*delete when old notation is fixed*)
-Notation " 'T c " := c (at level 2): package_scope.
-
 
 Definition I_MODPKAE_IN (N : NIKE_scheme) (E : NBSES_scheme) :=
   [interface
@@ -57,7 +54,7 @@ Definition SORT (N: NIKE_scheme) (PKs PKr : 'F N.(NIKE.PK)) : ('F N.(NIKE.PK) ×
 Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
   module (I_MODPKAE_IN N E) (I_MODPKAE_OUT N E) :=
   [module no_locs ; 
-    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.M)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.C)) { (*old notation*)
+    [ PKENC ]: { ((('F N.(NIKE.PK) × 'F N.(NIKE.PK)) × E.(NBSES.M)) × 'F E.(NBSES.Nonce)) ~> E.(NBSES.C) } '(((PKs, PKr), m), n) {
       let sharedkey := #import [ SHAREDKEY ] : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'unit } in
       let enc       := #import [ ENC ]       : { ((('F N.(NIKE.PK) × 'F N.(NIKE.PK)) × E.(NBSES.M)) × 'F E.(NBSES.Nonce)) ~> E.(NBSES.C) } in
       let dec       := #import [ DEC ]       : { ((('F N.(NIKE.PK) × 'F N.(NIKE.PK)) × E.(NBSES.C)) × 'F E.(NBSES.Nonce)) ~> E.(NBSES.M) } in
@@ -68,7 +65,7 @@ Definition MODPKAE (N : NIKE_scheme) (E : NBSES_scheme):
       C ← enc (fst, snd, m, n) ;;
       ret C
     } ;
-    #def #[ PKDEC ] ('(((PKs, PKr), c), n) : (('T 'fin #|N.(NIKE.PK)| × 'T 'fin #|N.(NIKE.PK)|) × 'T E.(NBSES.C)) × 'T 'fin #|E.(NBSES.Nonce)|) : ('T E.(NBSES.M)) { (*old notation*)
+    [ PKDEC ]: { ((('F N.(NIKE.PK) × 'F N.(NIKE.PK)) × E.(NBSES.C)) × 'F E.(NBSES.Nonce)) ~> E.(NBSES.M) } '(((PKs, PKr), c), n){
       let sharedkey := #import [ SHAREDKEY ] : { ('F N.(NIKE.PK) × 'F N.(NIKE.PK)) ~> 'option 'unit } in
       let enc       := #import [ ENC ]       : { ((('F N.(NIKE.PK) × 'F N.(NIKE.PK)) × E.(NBSES.M)) × 'F E.(NBSES.Nonce)) ~> E.(NBSES.C) } in
       let dec       := #import [ DEC ]       : { ((('F N.(NIKE.PK) × 'F N.(NIKE.PK)) × E.(NBSES.C)) × 'F E.(NBSES.Nonce)) ~> E.(NBSES.M) } in

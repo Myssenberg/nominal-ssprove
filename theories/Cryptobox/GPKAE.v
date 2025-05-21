@@ -58,11 +58,13 @@ Definition GPKAE (E: NBPES_scheme) (b : 'bool) :
 Definition GuPKAE (E: NBPES_scheme) (b: 'bool) :
   raw_module := (PKAE E b || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true).
 
-Lemma GuPKAE_valid (E: NBPES_scheme) (b: 'bool) : ValidPackage (GuPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GuPKAE E b).
+Lemma GuPKAE_valid (E: NBPES_scheme) (b: 'bool) :
+  ValidPackage (GuPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GuPKAE E b).
 Proof.
 unfold GuPKAE. nssprove_valid. Qed.
 
-Lemma GPKAE_valid (E: NBPES_scheme) (b : 'bool) : ValidPackage (GPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GPKAE E b).
+Lemma GPKAE_valid (E: NBPES_scheme) (b : 'bool) :
+  ValidPackage (GPKAE E b).(loc) [interface] (I_GPKAE_OUT E) (GPKAE E b).
 Proof.
 unfold GPKAE. nssprove_valid. Qed. 
 
@@ -79,14 +81,14 @@ nssprove_adv_trans ((PKAE E false || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to
 rewrite Adv_sep_link.
 rewrite -GRing.addrA.
 apply lerD.
-  - rewrite Adv_sym.
+- rewrite Adv_sym.
+  apply lexx.
+- nssprove_adv_trans ((PKAE E true || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
+  apply lerD.
+  + rewrite Adv_sym.
     apply lexx.
-  - nssprove_adv_trans ((PKAE E true || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
-    apply lerD.
-  -- rewrite Adv_sym.
-     apply lexx.
-  -- rewrite Adv_sep_link.
-     apply lexx.
+  + rewrite Adv_sep_link.
+    apply lexx.
 Qed.
 
 

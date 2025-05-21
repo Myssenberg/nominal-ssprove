@@ -42,10 +42,10 @@ Definition I_GAE_OUT (E : NBSES_scheme) (N : NIKE_scheme) :=
 
 #[export] Hint Unfold I_GAE_OUT I_GAE_ID_COMP I_AE_IN I_AE_OUT I_KEY_OUT I_NIKE_IN I_NIKE_OUT : in_fset_eq.
 
-Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : NIKE.inj ('shared_key N) ('k E)) (b : 'bool):
+Definition GAE (E : NBSES_scheme) (N : NIKE_scheme) qset (I : inj ('shared_key N) ('k E)) (b : 'bool):
   raw_module := (ID (I_GAE_ID_COMP N) || AE E N I b ) ∘ (KEY N qset true).
 
-Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : NIKE.inj ('shared_key N) ('k E)) (b : 'bool) :
+Lemma GAE_valid (E : NBSES_scheme) (N: NIKE_scheme) qset (I : inj ('shared_key N) ('k E)) (b : 'bool) :
   ValidPackage (GAE E N qset I b).(loc) [interface] (I_GAE_OUT E N) (GAE E N qset I b).
 Proof.
 unfold GAE. nssprove_valid. Qed.
