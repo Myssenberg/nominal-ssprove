@@ -90,17 +90,15 @@ Theorem Lemma3_Adv_GAE {E N} qset (I : inj ('shared_key N) ('k E)) (A : adversar
 Proof.
 rewrite (AdvFor_perfect (GAE_HYBRID_perfect qset)).
 elim: {+ 3 6}qset => [| j IH ].
-- rewrite Adv_same big_nil //.
-- rewrite big_nat_recr //=.
-  nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true)) ∘ GSAE E true)%sep.
-  apply lerD.
-    1: apply IH.
-  erewrite <- (Adv_perfect_r (HYBRID_succ_perfect qset)).
-  unfold AdvFor.
-  rewrite Adv_sep_link.
-  rewrite Adv_sep_link.
-  rewrite sep_link_assoc.
-  done.
+1: rewrite Adv_same big_nil //.
+rewrite big_nat_recr //.
+nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true)) ∘ GSAE E true)%sep.
+apply lerD.
+1: apply IH.
+erewrite <- (Adv_perfect_r (HYBRID_succ_perfect qset)).
+unfold AdvFor.
+do 2 rewrite Adv_sep_link.
+rewrite sep_link_assoc //.
 Qed.
 
 

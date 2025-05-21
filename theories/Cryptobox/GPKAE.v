@@ -71,14 +71,12 @@ nssprove_adv_trans ((PKAE E false || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to
 rewrite Adv_sep_link.
 rewrite -GRing.addrA.
 apply lerD.
-- rewrite Adv_sym.
-  apply lexx.
-- nssprove_adv_trans ((PKAE E true || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
-  apply lerD.
-  + rewrite Adv_sym.
-    apply lexx.
-  + rewrite Adv_sep_link.
-    apply lexx.
+1: rewrite Adv_sym ; apply lexx.
+nssprove_adv_trans ((PKAE E true || ID (I_GPKAE_ID_COMP E)) ∘ (PKEY (NBPES_to_GEN E) true))%sep.
+apply lerD.
+1: rewrite Adv_sym ; apply lexx.
+rewrite Adv_sep_link.
+apply lexx.
 Qed.
 
 
