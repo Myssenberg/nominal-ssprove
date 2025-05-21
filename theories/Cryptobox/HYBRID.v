@@ -31,22 +31,15 @@ Import SAE KEY NBSES NIKE AE.
 Module HYBRID.
 
 
-(* Definition HS_loc (N : NIKE_scheme) : Location := (chMap ('pk N × 'pk N) 'nat; 31). *) (*Check loc here*)
-
-
-Definition GH_locs_tt (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HC_loc N ; M_loc E N].
-Definition GH_locs_ff (E: NBSES_scheme) (N : NIKE_scheme) := fset [::  HC_loc N ; M_loc E N ].
-
-
 Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
     [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
     [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
-    [ KEY.GET ]  : { 'SID N ~> 'shared_key N } ;
+    [ GET ]  : { 'SID N ~> 'shared_key N } ;
     [ GEN ]  : { 'unit ~> 'unit } ; 
     [ SENC ] : { (M E × 'n E) ~> C E } ;
     [ SDEC ] : { (C E × 'n E) ~> M E } 
-]. 
+].
 
 Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
@@ -56,10 +49,10 @@ Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
     [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
 ].
 
-Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(NIKE.Shared_Key)|) ('fin #|E.(NBSES.Shared_Key)|)) i qset: 
+Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : inj ('F N.(NIKE.Shared_Key)) ('F E.(NBSES.Shared_Key))) i qset: 
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
-  [module GH_locs_tt E N ;
-    #def #[ SET ] ('((PKs, PKr), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|)) : ('unit) { (*old notation*)
+  [module fset [::  HC_loc N ; M_loc E N] ;
+    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } '((PKs, PKr), k) {
       let gen := #import [ GEN ]  : { 'unit ~> 'unit } in
       let set := #import [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } in      
 
@@ -70,11 +63,9 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
       if (HCLOC (PKs, PKr) == None) then  
         if (counts == i) then
           gen Datatypes.tt ;;
-(*           #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;; (*Double check that *) this is correct*)
           set (PKs, PKr, k) ;;
           ret (Datatypes.tt : 'unit)
         else
-(*           #put (HS_loc N) := setm HSLOC (PKs, PKr) (counts.+1) ;;           *)
           set (PKs, PKr, k) ;;          
           ret (Datatypes.tt : 'unit)
       else
@@ -82,13 +73,13 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
         ret (Datatypes.tt : 'unit)
     } ;
 
-    #def #[ CSET ] ('((PKr, PKs), k) : (('pk N × 'pk N) × 'fin #|N.(NIKE.Shared_Key)|)) : ('unit) { (*old notation*)
+    [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } '((PKr, PKs), k) { 
       let cset := #import [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } in
 
       cset (PKr, PKs, k) ;;
       ret (Datatypes.tt : 'unit)
     }  ;
-    #def #[ ENC ] ('(((PKs, PKr), m), n) : (('pk N × 'pk N) × 'm E) × 'n E) : ('c E) { (*old notation*)
+    [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } '(((PKs, PKr), m), n) { 
       let geti   := #import [ GET ]  : { ('pk N × 'pk N) ~> 'shared_key N } in      
       let SAEenc := #import [ SENC ] : { (M E × 'n E) ~> C E } in
 
@@ -102,11 +93,11 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
       let counts := getSome (HCLOC (PKs, PKr)) count in 
 
       if (counts < i) then
-          c ← E.(sample_C) ;;    (* Should be AE1 here*) 
+          c ← E.(sample_C) ;; 
           #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
           ret c
       else if (i < counts) then 
-          c ← E.(enc) m (I.(encode) k) n ;; (* Should be AE0 here*) 
+          c ← E.(enc) m (I.(encode) k) n ;;
           #put (M_loc E N) := setm MLOC ((PKr, PKs), n) (m, c) ;;
           ret c 
       else 
@@ -115,7 +106,7 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('fin #|N.(
           
     } ;
     
-    #def #[ DEC ] ('(((PKr, PKs), c), n) : (('pk N × 'pk N) × 'c E) × 'n E) : ('m E) { (*old notation*)
+    [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E } '(((PKr, PKs), c), n) { 
       let geti   := #import [ GET ]  : { ('pk N × 'pk N) ~> 'shared_key N } in
       let SAEdec := #import [ SDEC ] : { (C E × 'n E) ~> M E } in
       
