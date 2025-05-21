@@ -64,17 +64,6 @@ Notation " 'n p " := ('fin #|Nonce p|)
 Notation " 'n p " := ('fin #|Nonce p|)
   (at level 3) : package_scope.
 
-Notation " 'm e " := (M e)
-  (in custom pack_type at level 2, e constr at level 20).
-
-Notation " 'm e " := (M e)
-  (at level 3) : package_scope.
-
-Notation " 'c e " := (C e)
-  (in custom pack_type at level 2, e constr at level 20).
-
-Notation " 'c e " := (C e)
-  (at level 3) : package_scope.
 
 Instance pk_posi p : Positive #|PK p|.
 Proof.

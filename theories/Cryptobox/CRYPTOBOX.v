@@ -232,7 +232,7 @@ rewrite GRing.addrA.
 eapply le_trans.
 1: apply Lemma4_Adv_GuPKAE_CB.
 rewrite GRing.addrA. apply lerD.
-1: apply (Corollary3_Adv_GNIKE_GuNIKE (A4 A1)).
-apply (Lemma3_Adv_GAE qset I (A5 A1)). Qed.
+1: apply (Corollary3_Adv_GNIKE_GuNIKE (A_GNIKE_OUT A)).
+apply (Lemma3_Adv_GAE qset I (A_GAE_OUT A)). Qed.
 
 End crypto_box.

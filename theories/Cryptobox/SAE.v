@@ -29,7 +29,7 @@ Import NBSES.
 
 Module SAE.
 
-Definition SM_loc (E : NBSES_scheme) : Location := (chMap 'n E ('m E × 'c E) ; 0).
+Definition SM_loc (E : NBSES_scheme) : Location := (chMap 'n E (M E × C E) ; 0).
 Definition SAEK_loc (E : NBSES_scheme) : Location := ('option 'k E ; 1).
 
 Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  SM_loc E ; SAEK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
@@ -59,7 +59,7 @@ Definition SAE (E : NBSES_scheme) (b : 'bool) :
       | Some k => ret (Datatypes.tt : 'unit)
       end
     } ;
-    #def #[ SENC ] ('(m, n) : ('m E × 'n E)) : ('c E) { (*old notation*)
+    [ SENC ] : { (M E × 'n E) ~> C E } '(m, n) {
       SMLOC ← get SM_loc E ;;
       #assert SMLOC n == None ;;
       KLOC ← get SAEK_loc E ;;
@@ -74,7 +74,7 @@ Definition SAE (E : NBSES_scheme) (b : 'bool) :
        #put (SM_loc E) := setm SMLOC (n) (m, c) ;;
        ret c
     } ;
-    #def #[ SDEC ] ('(c, n) : ('c E × 'n E)) : ('m E) { (*old notation*)
+    [ SDEC ] : { (C E × 'n E) ~> M E } '(c, n) { 
       KLOC ← get SAEK_loc E ;;
       #assert (isSome KLOC) as someKey ;;
       let k := getSome KLOC someKey in

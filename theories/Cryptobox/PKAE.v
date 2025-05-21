@@ -69,7 +69,7 @@ Definition SORT (E: NBPES_scheme) (PKs PKr : 'pk E) : h E :=
 Definition PKAE (E: NBPES_scheme) (b : bool):
   module (I_PKAE_IN E) (I_PKAE_OUT E)  := 
   [module PKAE_locs_tt E ;
-    #def #[ PKENC ] ('(((PKs, PKr), m), n) : (('pk E × 'pk E) × 'm E) × 'n E) : ('c E) { (*old notation*)
+    [ PKENC ] : { ((('pk E × 'pk E) × M E) × 'n E) ~> C E } '(((PKs, PKr), m), n) { 
       let getsk := #import [ GETSK ] : { 'pk E ~> 'sk E } in
       let honpk := #import [ HONPK ] : { 'pk E ~> 'bool } in
 
@@ -87,7 +87,7 @@ Definition PKAE (E: NBPES_scheme) (b : bool):
         #put (M_loc E) := setm MLOC (h, n) (m, c) ;;
         ret c
     } ;
-    #def #[ PKDEC ] ('(((PKr, PKs), c), n) : (('pk E × 'pk E) × 'c E) × 'n E) : ('m E) { (*old notation*)
+    [ PKDEC ] : { ((('pk E × 'pk E) × C E) × 'n E) ~> M E } '(((PKr, PKs), c), n) { 
       let getsk := #import [ GETSK ] : { 'pk E ~> 'sk E } in
       let honpk := #import [ HONPK ] : { 'pk E ~> 'bool } in
       SKr ← getsk PKr ;;
