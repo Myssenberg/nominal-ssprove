@@ -115,12 +115,12 @@ apply lerD.
   erewrite (sep_par_commut (ID (I_KEY_OUT N))) by nssprove_valid.
   apply eq_ler.
   apply Adv_mor. 
-    1, 2: reflexivity.
+  1, 2: reflexivity.
   apply sep_link_mor.
-    2: reflexivity.
+  2: reflexivity.
   rewrite -sep_link_assoc.
   apply sep_link_mor.
-    1: reflexivity.
+  1: reflexivity.
   erewrite (sep_par_commut _ (ID (I_GNIKE_ID_COMP N))) by nssprove_valid.
   unfold I_GNIKE_ID_COMP.
   rewrite <- id_sep_par by nssprove_valid.
@@ -128,10 +128,10 @@ apply lerD.
   erewrite <- sep_interchange by nssprove_valid.
   rewrite -> sep_link_id by nssprove_valid.
   apply sep_par_mor.
-    1: reflexivity.
+  1: reflexivity.
   rewrite -sep_link_assoc.
   apply sep_link_mor.
-    1: reflexivity.
+  1: reflexivity.
   erewrite (sep_par_commut  (ID (I_AE_IN N))) by nssprove_valid.
   erewrite <- swash by nssprove_valid.
   reflexivity.
@@ -140,7 +140,7 @@ apply lerD.
   apply eq_ler.
   erewrite Adv_sym.
   apply Adv_mor.
-    3: reflexivity.
+  3: reflexivity.
     
   + rewrite <- (@sep_par_empty_l ((ID (I_GAE_ID_COMP N) || AE E N I true) ∘ KEY N qset true)%sep).
     rewrite -sep_link_assoc.
@@ -153,16 +153,16 @@ apply lerD.
     erewrite sep_link_assoc.
     erewrite id_sep_link by nssprove_valid.
     apply sep_link_mor.
-      2: reflexivity.
+    2: reflexivity.
     erewrite -> (@swish _ _ _ _ _ _ (NIKE.NIKE N)) by nssprove_valid.
     rewrite sep_link_assoc.
     erewrite <- (id_sep_link (ID (I_GMODPKAE_ID_COMP N))) by nssprove_valid.
     erewrite sep_interchange by nssprove_valid.
     apply sep_link_mor.
-      1: erewrite id_sep_link by nssprove_valid ; reflexivity.
+    1: erewrite id_sep_link by nssprove_valid ; reflexivity.
     do 2 rewrite sep_par_assoc.
     apply sep_par_mor.
-      2: reflexivity.
+    2: reflexivity.
     do 2 rewrite -> id_sep_par by nssprove_valid.
     apply alpha_eq.
     f_equal.
@@ -179,16 +179,16 @@ apply lerD.
     erewrite sep_link_assoc.
     erewrite id_sep_link by nssprove_valid.
     apply sep_link_mor.
-      2: reflexivity.
+    2: reflexivity.
     erewrite -> (@swish _ _ _ _ _ _ (NIKE.NIKE N)) by nssprove_valid.
     rewrite sep_link_assoc.
     erewrite <- (id_sep_link (ID (I_GMODPKAE_ID_COMP N))) by nssprove_valid.
     erewrite sep_interchange by nssprove_valid.
     apply sep_link_mor.
-      1: erewrite id_sep_link by nssprove_valid ; reflexivity.
+    1: erewrite id_sep_link by nssprove_valid ; reflexivity.
     do 2 rewrite sep_par_assoc.
     apply sep_par_mor.
-      2: reflexivity.
+    2: reflexivity.
     do 2 rewrite -> id_sep_par by nssprove_valid.
     apply alpha_eq.
     f_equal.
