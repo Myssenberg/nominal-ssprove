@@ -40,12 +40,12 @@ Record GEN_scheme :=
       code fset0 [interface] ('fin #|PK| × 'fin #|SK|) ;
   }.
 
-Definition NBPES_to_GEN (N : NBPES_scheme) : (GEN_scheme) :=
-  {| PK := N.(NBPES.PK) ;
-     PK_pos := N.(NBPES.PK_pos) ;
-     SK := N.(NBPES.SK) ;
-     SK_pos := N.(NBPES.SK_pos) ;
-     pkgen := N.(NBPES.pkgen)
+Definition NBPES_to_GEN (P : NBPES_scheme) : (GEN_scheme) :=
+  {| PK := P.(NBPES.PK) ;
+     PK_pos := P.(NBPES.PK_pos) ;
+     SK := P.(NBPES.SK) ;
+     SK_pos := P.(NBPES.SK_pos) ;
+     pkgen := P.(NBPES.pkgen)
 |}.
 
 Definition NIKE_to_GEN (N : NIKE_scheme) : (GEN_scheme) :=
@@ -68,11 +68,11 @@ Notation " 'sk n " := ('fin #|SK n|)
 Notation " 'sk n " := ('fin #|SK n|)
   (at level 3) : package_scope.
 
-Instance pk_posi p : Positive #|PK p|.
+Instance pk_posi n : Positive #|PK n|.
 Proof.
 apply PK_pos. Defined.
 
-Instance sk_posi p : Positive #|SK p|.
+Instance sk_posi n : Positive #|SK n|.
 Proof.
 apply SK_pos. Defined.
 

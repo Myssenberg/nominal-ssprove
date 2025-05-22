@@ -54,7 +54,7 @@ Definition I_AE_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
 ].
 
 
-Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : NIKE.inj ('F N.(NIKE.Shared_Key)) ('F (E.(NBSES.Shared_Key)))) (b : bool) :
+Definition AE (E: NBSES_scheme) (N : NIKE_scheme) (I : inj ('F N.(NIKE.Shared_Key)) ('F (E.(NBSES.Shared_Key)))) (b : bool) :
   module (I_AE_IN N) (I_AE_OUT E N) := 
   [module fset [::  M_loc E N];
     [ ENC ] : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } '(((PKr, PKs), m), n) {
