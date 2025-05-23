@@ -108,7 +108,7 @@ Definition PKEY (G : GEN_scheme) (b : bool) :
         #put (SK_loc G) := setm SKLOC pk sk ;;
         @ret ('option 'pk G) (Some pk)
       else 
-        #assert PKLOC pk == Some true ;;
+        #assert PKLOC pk != Some false ;;
         #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;
         SKLOC ← get SK_loc G ;;
         #put (SK_loc G) := setm SKLOC pk sk ;;
