@@ -100,22 +100,19 @@ Definition PKEY (G : GEN_scheme) (b : bool) :
   [module fset [:: PK_loc G ; SK_loc G] ; 
     [ GEN ] : { 'unit ~> 'option 'pk G } '_ {
       '(pk, sk) ← G.(pkgen) ;;
+       PKLOC ← get PK_loc G ;;
 
       if negb b then
-        PKLOC ← get PK_loc G ;;
         #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;
         SKLOC ← get SK_loc G ;;
         #put (SK_loc G) := setm SKLOC pk sk ;;
         @ret ('option 'pk G) (Some pk)
       else 
-        PKLOC ← get PK_loc G;;
-        if (PKLOC pk != Some false) then
-          #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;
-          SKLOC ← get SK_loc G ;;
-          #put (SK_loc G) := setm SKLOC pk sk ;;
-          @ret ('option 'pk G) (Some pk)
-        else
-          ret None
+        #assert PKLOC pk == Some true ;;
+        #put (PK_loc G) := @setm ('pk G : choiceType) _ PKLOC pk true ;;
+        SKLOC ← get SK_loc G ;;
+        #put (SK_loc G) := setm SKLOC pk sk ;;
+        @ret ('option 'pk G) (Some pk)
     } ;
 
     [ CSETPK ] : { 'pk G ~> 'unit } (pk) {
