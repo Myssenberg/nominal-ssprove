@@ -36,18 +36,10 @@ Import AE HYBRID KEY NBSES NIKE SAE GAE GSAE Reductions.
 Module GH.
 
 
-Definition I_GH_ID_COMP (N : NIKE_scheme) :=
-  [interface
-    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
-    [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
-    [ GET ]  : { ('pk N × 'pk N) ~> 'shared_key N }
-].
-
-
-#[export] Hint Unfold I_GH_ID_COMP I_HYBRID_IN I_HYBRID_OUT I_AE_IN I_AE_OUT I_KEY_OUT I_SAE_OUT I_GSAE_OUT: in_fset_eq.
+#[export] Hint Unfold I_HYBRID_IN I_HYBRID_OUT I_AE_IN I_AE_OUT I_KEY_OUT I_SAE_OUT I_GSAE_OUT: in_fset_eq.
 
 Definition GH (E : NBSES_scheme) (N : NIKE_scheme) (I : inj ('shared_key N) ('k E)) i qset (b : 'bool):
-  raw_module := (HYBRID E N I i qset) ∘ ((ID (I_GH_ID_COMP N) || SAE E b) ∘ KEY N qset true).
+  raw_module := (HYBRID E N I i qset) ∘ (SAE E b || KEY N qset true).
 
 
 Definition R (i : 'nat) (c : 'nat) (f : 'option 'unit)
