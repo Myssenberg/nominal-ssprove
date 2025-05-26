@@ -31,7 +31,7 @@ Import NIKE NBSES.
 
 Definition SID_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'bool ; 25).
 Definition K_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'shared_key N ; 26).
-Definition HC_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'nat; 58).
+Definition C_loc : Location := ('nat; 90).
 
 
 Definition SET := 27%N.
@@ -41,7 +41,7 @@ Definition HON := 30%N.
 
 Definition I_KEY_OUT (N: NIKE_scheme) :=
   [interface
-    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'nat } ;
     [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit } ;
     [ GET ]  : { 'SID N ~> 'shared_key N } ;
     [ HON ]  : { 'SID N ~> 'option 'bool }
@@ -49,26 +49,24 @@ Definition I_KEY_OUT (N: NIKE_scheme) :=
 
 Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
   game (I_KEY_OUT N) :=
-  [module fset [:: SID_loc N ; K_loc N ; HC_loc N];
-    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } '(sid, k) {
+  [module fset [:: SID_loc N ; K_loc N ; C_loc];
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'nat } '(sid, k) {
       KLOC ← get K_loc N ;;
       SIDLOC ← get SID_loc N ;;
-      HCLOC ← get HC_loc N;;
       
-      #assert isSome (HCLOC sid) as count ;;
-      let counts := getSome (HCLOC sid) count in
+      counts ← get C_loc ;;
       #assert (counts < qset) ;;
-      #put (HC_loc N) := setm HCLOC sid (counts.+1) ;;
+      #put (C_loc) := counts.+1 ;;
 
       if b then
         key ← N.(kdist) ;;
         #put (K_loc N) := @setm ('SID N : choiceType) _ KLOC sid key ;;
-        ret (Datatypes.tt : 'unit)
+        @ret 'nat counts
       else
         #assert isSome (KLOC sid) as someKey ;;
         #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid true ;;
         #put (K_loc N) := setm KLOC sid k ;;
-        ret (Datatypes.tt : 'unit)
+        @ret 'nat counts
     } ;
 
     [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit } '(sid, k) { 

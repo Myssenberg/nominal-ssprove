@@ -30,10 +30,13 @@ Import SAE KEY NBSES NIKE AE.
 
 Module HYBRID.
 
+Definition HC_loc (N: NIKE_scheme) : Location := (chMap 'SID N 'nat; 70).
+Definition M_loc (E: NBSES_scheme) (N : NIKE_scheme) : Location := (chMap (('pk N × 'pk N) × 'n E) (M E × C E); 91).
+
 
 Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
+    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'nat } ;
     [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
     [ GET ]  : { 'SID N ~> 'shared_key N } ;
     [ GEN ]  : { 'unit ~> 'unit } ; 
@@ -51,25 +54,22 @@ Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
 
 Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : inj ('F N.(NIKE.Shared_Key)) ('F E.(NBSES.Shared_Key))) i qset: 
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
-  [module fset [::  HC_loc N ; M_loc E N] ;
+  [module fset [:: M_loc E N ; HC_loc N] ;
     [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } '((PKs, PKr), k) {
       let gen := #import [ GEN ]  : { 'unit ~> 'unit } in
-      let set := #import [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } in      
+      let set := #import [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'nat } in      
 
-      HCLOC ← get HC_loc N ;;
-      #assert isSome (HCLOC (PKs, PKr)) as count ;;
-      let counts := getSome (HCLOC (PKs, PKr)) count in
+      counts ← set (PKs, PKr, k) ;;
       #assert (counts < qset) ;;
-      if (HCLOC (PKs, PKr) == None) then  
-        if (counts == i) then
-          gen Datatypes.tt ;;
-          set (PKs, PKr, k) ;;
-          ret (Datatypes.tt : 'unit)
-        else
-          set (PKs, PKr, k) ;;          
-          ret (Datatypes.tt : 'unit)
-      else
-        set (PKs, PKr, k) ;;
+      
+      HCLOC ← get HC_loc N ;;
+      
+      #put (HC_loc N) := setm HCLOC (PKr, PKs) counts ;;
+
+      if (counts == i) then
+        gen Datatypes.tt ;;
+        ret (Datatypes.tt : 'unit)
+      else       
         ret (Datatypes.tt : 'unit)
     } ;
 
