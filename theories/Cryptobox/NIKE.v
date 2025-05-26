@@ -107,7 +107,7 @@ Definition I_NIKE_IN (N: NIKE_scheme) :=
   [interface
     [ GETSK ] : { 'pk N ~> 'sk N } ;
     [ HONPK ] : { 'pk N ~> 'bool } ;
-    [ SET ]   : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ SET ]   : { ('SID N × 'shared_key N) ~> 'nat } ;
     [ CSET ]  : { ('SID N × 'shared_key N) ~> 'unit }
 ].
 
@@ -123,14 +123,14 @@ Definition NIKE (N : NIKE_scheme):
     [ SHAREDKEY ] : { ('pk N × 'pk N) ~> 'option 'unit } '(pks, pkr) { 
       let honpk := #import [ HONPK ] : { 'pk N ~> 'bool } in
       let getsk := #import [ GETSK ] : { 'pk N ~> 'sk N } in
-      let set   := #import [ SET ]   : { ('SID N × 'shared_key N) ~> 'unit } in
+      let set   := #import [ SET ]   : { ('SID N × 'shared_key N) ~> 'nat } in
       let cset  := #import [ CSET ]  : { ('SID N × 'shared_key N) ~> 'unit } in
 
       hs ← honpk pks ;;
       hr ← honpk pkr ;;
       
       sks ← getsk pks ;;
-       shared_key ← N.(sharedkey) pkr sks ;;
+      shared_key ← N.(sharedkey) pkr sks ;;
       
       if (hs && hr) then
         let sid := (pks, pkr) in

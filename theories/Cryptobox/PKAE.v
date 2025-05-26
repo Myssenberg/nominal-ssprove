@@ -32,7 +32,6 @@ Notation " 'F c " := 'fin #|c| (at level 2): package_scope.
 Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (in custom pack_type at level 2, n constr at level 20).
 Notation " 'SID n " := ('fin #|PK n| × 'fin #|PK n|) (at level 2): package_scope.
 
-(*Definition h (P: NBPES_scheme) : choice_type := ('pk P × 'pk P).*)
 
 Definition PK_loc (P : NBPES_scheme): Location := (chMap 'pk P 'bool ; 8).
 

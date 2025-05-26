@@ -32,7 +32,7 @@ Module GAE.
 
 Definition I_GAE_ID_COMP (N : NIKE_scheme) :=
   [interface
-    [ SET ]  : { ('SID N × 'shared_key N) ~> 'unit } ;
+    [ SET ]  : { ('SID N × 'shared_key N) ~> 'nat } ;
     [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit }
 ].
 
