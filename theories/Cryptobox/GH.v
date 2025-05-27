@@ -53,13 +53,13 @@ Notation inv i N E := (
 Lemma GAE_HYBRID_perfect {E N} qset {I : inj ('shared_key N) ('k E)} b :
 perfect (I_GAE_OUT E N)
   (GAE E N qset I b)
-  (HYBRID E N I (if b then 0 else qset) qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true) ) ∘ GSAE E true).
+  (HYBRID E N I (if b then qset else 0) qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true) ) ∘ GSAE E true).
 Proof.
 (*unfold GAE, GSAE.
 nssprove_share.
 - eapply prove_perfect.
 Check eq_rel_perf_ind.
-eapply (eq_rel_perf_ind _ _ (inv (if b then 0 else qset) N E)). Unshelve.
+eapply (eq_rel_perf_ind _ _ (inv (if b then qset else 0) N E)). Unshelve.
 5, 6 : nssprove_valid.
 1: ssprove_invariant ; fset_solve.
 simplify_eq_rel arg.
@@ -81,6 +81,7 @@ Theorem Lemma3_Adv_GAE {E N} qset (I : inj ('shared_key N) ('k E)) (A : adversar
   \sum_(0 <= i < qset) AdvFor (GSAE E) (A ∘ HYBRID E N I i qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true))).
 Proof.
 rewrite (AdvFor_perfect (GAE_HYBRID_perfect qset)).
+rewrite Adv_sym.
 elim: {+ 3 6}qset => [| j IH ].
 1: rewrite Adv_same big_nil //.
 rewrite big_nat_recr //.
