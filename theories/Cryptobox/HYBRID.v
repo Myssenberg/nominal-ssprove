@@ -46,7 +46,7 @@ Definition I_HYBRID_IN (E: NBSES_scheme) (N : NIKE_scheme) :=
 
 Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
   [interface
-    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
+    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'nat } ;
     [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } ;
     [ ENC ]  : { ((('pk N × 'pk N) × M E) × 'n E) ~> C E } ;
     [ DEC ]  : { ((('pk N × 'pk N) × C E) × 'n E) ~> M E }
@@ -55,7 +55,7 @@ Definition I_HYBRID_OUT (E: NBSES_scheme) (N : NIKE_scheme) :=
 Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : inj ('F N.(NIKE.Shared_Key)) ('F E.(NBSES.Shared_Key))) i qset: 
   module (I_HYBRID_IN E N) (I_HYBRID_OUT E N) := 
   [module fset [:: M_loc E N ; HC_loc N] ;
-    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } '((PKs, PKr), k) {
+    [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'nat } '((PKs, PKr), k) {
       let gen := #import [ GEN ]  : { 'unit ~> 'unit } in
       let set := #import [ SET ]  : { (('pk N × 'pk N) × 'shared_key N) ~> 'nat } in      
 
@@ -68,9 +68,9 @@ Definition HYBRID (E : NBSES_scheme) (N : NIKE_scheme) (I : inj ('F N.(NIKE.Shar
 
       if (counts == i) then
         gen Datatypes.tt ;;
-        ret (Datatypes.tt : 'unit)
+        ret counts
       else       
-        ret (Datatypes.tt : 'unit)
+        ret counts
     } ;
 
     [ CSET ] : { (('pk N × 'pk N) × 'shared_key N) ~> 'unit } '((PKr, PKs), k) { 
