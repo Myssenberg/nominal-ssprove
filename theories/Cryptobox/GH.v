@@ -53,7 +53,7 @@ Notation inv i N E := (
 Lemma GAE_HYBRID_perfect {E N} qset {I : inj ('shared_key N) ('k E)} b :
 perfect (I_GAE_OUT E N)
   (GAE E N qset I b)
-  (HYBRID E N I (if b then qset else 0) qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true) ) ∘ GSAE E true).
+  (HYBRID E N I (if b then qset else 0) qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true) ) ∘ GSAE E false).
 Proof.
 (*unfold GAE, GSAE.
 nssprove_share.
@@ -70,8 +70,8 @@ Admitted.
 
 Lemma HYBRID_succ_perfect {E N i} qset {I : inj ('shared_key N) ('k E)} :
 perfect (I_GAE_OUT E N)
-  (HYBRID E N I i qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true)) ∘ GSAE E false)
-  (HYBRID E N I i.+1 qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true)) ∘ GSAE E true).
+  (HYBRID E N I i qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true)) ∘ GSAE E true)
+  (HYBRID E N I i.+1 qset ∘ (ID (I_GSAE_OUT E) || (KEY N qset true)) ∘ GSAE E false).
 Proof.
 Admitted.
 
@@ -85,13 +85,14 @@ rewrite Adv_sym.
 elim: {+ 3 6}qset => [| j IH ].
 1: rewrite Adv_same big_nil //.
 rewrite big_nat_recr //.
-nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true)) ∘ GSAE E true)%sep.
+nssprove_adv_trans ( HYBRID E N I j qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true)) ∘ GSAE E false)%sep.
 apply lerD.
 1: apply IH.
 erewrite <- (Adv_perfect_r (HYBRID_succ_perfect qset)).
 unfold AdvFor.
 do 2 rewrite Adv_sep_link.
 rewrite sep_link_assoc //.
+rewrite Adv_sym //.
 Qed.
 
 
