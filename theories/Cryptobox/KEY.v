@@ -52,7 +52,10 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
   [module fset [:: SID_loc N ; K_loc N ; C_loc];
     [ SET ]  : { ('SID N × 'shared_key N) ~> 'nat } '(sid, k) {
       KLOC ← get K_loc N ;;
+      #assert KLOC sid == None ;;
+      
       SIDLOC ← get SID_loc N ;;
+      #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid true ;;
       
       counts ← get C_loc ;;
       #assert (counts < qset) ;;
@@ -63,15 +66,13 @@ Definition KEY (N: NIKE_scheme) qset (b : 'bool) :
         #put (K_loc N) := @setm ('SID N : choiceType) _ KLOC sid key ;;
         @ret 'nat counts
       else
-        #assert isSome (KLOC sid) as someKey ;;
-        #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid true ;;
         #put (K_loc N) := setm KLOC sid k ;;
         @ret 'nat counts
     } ;
 
     [ CSET ] : { ('SID N × 'shared_key N) ~> 'unit } '(sid, k) { 
       KLOC ← get K_loc N ;;
-      #assert isSome (KLOC sid) as someKey ;;
+      #assert KLOC sid == None ;;
       SIDLOC ← get SID_loc N ;;
       #put (SID_loc N) := @setm ('SID N : choiceType) _ SIDLOC sid false ;;
       ret (Datatypes.tt : 'unit)
