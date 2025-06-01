@@ -1,5 +1,5 @@
-(*This is a part of the implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme.
-This file contains the specification for the GSAE game and following lemmas*)
+(*This is a part of the implementation of the state-separated proof of security for the NaCl crypto_box public-key authenticated encryption scheme.
+This file contains the specification for the GSAE game.*)
 
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
@@ -30,22 +30,14 @@ Import PackageNotation.
 
 Module GSAE.
 
-Definition GEN := 2%N.
-Definition SENC := 3%N.
-Definition SDEC:= 4%N.
-
 Definition I_GSAE_OUT (E : NBSES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'unit ;
-    #val #[ SENC ]: ('m E × 'n E) → 'c E ;
-    #val #[ SDEC ]: ('c E × 'n E) → 'm E
+    [ GEN ]  : { 'unit ~> 'unit } ;
+    [ SENC ] : { (M E × 'n E) ~> C E } ;
+    [ SDEC ] : { (C E × 'n E) ~> M E }
 ].
 
 Definition GSAE (E : NBSES_scheme) (b : 'bool) :
   raw_module := SAE E b.
-
-Lemma GSAE_valid (E : NBSES_scheme) (b : 'bool) : ValidPackage (GSAE E b).(loc) [interface] (I_GSAE_OUT E) (GSAE E b).
-Proof.
-unfold GSAE. nssprove_valid. Qed.
 
 End GSAE.

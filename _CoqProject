@@ -8,6 +8,7 @@ theories/Pr.v
 theories/NomPackage.v
 theories/Disjoint.v
 theories/Prelude.v
+theories/Tests.v
 
 theories/Example/PK/Scheme.v
 theories/Example/PK/Reductions.v
@@ -25,7 +26,7 @@ theories/Example/Sigma/OR.v
 
 
 theories/Cryptobox/AE.v
-
+theories/Cryptobox/CRYPTOBOX.v
 theories/Cryptobox/GAE.v
 theories/Cryptobox/GH.v
 theories/Cryptobox/GMODPKAE.v
@@ -36,6 +37,7 @@ theories/Cryptobox/HYBRID.v
 theories/Cryptobox/KEY.v
 theories/Cryptobox/MODPKAE.v
 theories/Cryptobox/NBSES.v
+theories/Cryptobox/NBPES.v
 theories/Cryptobox/NIKE.v
 theories/Cryptobox/PKAE.v
 theories/Cryptobox/PKEY.v

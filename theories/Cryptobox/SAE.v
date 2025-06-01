@@ -1,4 +1,5 @@
-(*This is an implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme.*)
+(*This is a part of the implementation of the state-separated proof of security for the NaCl crypto_box public-key authenticated encryption scheme.
+This file contains the specification for the SAE module.*)
 
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
@@ -29,11 +30,8 @@ Import NBSES.
 
 Module SAE.
 
-Definition SM_loc (E : NBSES_scheme) : Location := (chMap 'n E ('m E × 'c E) ; 0).
+Definition SM_loc (E : NBSES_scheme) : Location := (chMap 'n E (M E × C E) ; 0).
 Definition SAEK_loc (E : NBSES_scheme) : Location := ('option 'k E ; 1).
-
-Definition SAE_locs_tt (E : NBSES_scheme) := fset [::  SM_loc E ; SAEK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
-Definition SAE_locs_ff (E : NBSES_scheme) := fset [::  SM_loc E ; SAEK_loc E]. (*If they're using the same loc, can they share then because Nom-SSP will rename or do we get into trouble?*)
 
 Definition GEN := 2%N.
 Definition SENC := 3%N.
@@ -41,15 +39,15 @@ Definition SDEC := 4%N.
 
 Definition I_SAE_OUT (E : NBSES_scheme) :=
   [interface
-    #val #[ GEN ]: 'unit → 'unit ;    
-    #val #[ SENC ]: ('m E × 'n E) → 'c E  ;
-    #val #[ SDEC ]: ('c E × 'n E) → 'm E 
+    [ GEN ]  : { 'unit ~> 'unit } ;    
+    [ SENC ] : { (M E × 'n E) ~> C E } ;
+    [ SDEC ] : { (C E × 'n E) ~> M E }
 ].
 
 Definition SAE (E : NBSES_scheme) (b : 'bool) :
   game (I_SAE_OUT E)  := 
-  [module SAE_locs_tt E ;
-    #def #[ GEN ] (_ : 'unit) : ('unit) {
+  [module fset [::  SM_loc E ; SAEK_loc E] ;
+    [ GEN ]  : { 'unit ~> 'unit } '_ {
       KLOC ← get SAEK_loc E ;;
       match KLOC with
       | None =>
@@ -59,7 +57,7 @@ Definition SAE (E : NBSES_scheme) (b : 'bool) :
       | Some k => ret (Datatypes.tt : 'unit)
       end
     } ;
-    #def #[ SENC ] ('(m, n) : ('m E × 'n E)) : ('c E) {
+    [ SENC ] : { (M E × 'n E) ~> C E } '(m, n) {
       SMLOC ← get SM_loc E ;;
       #assert SMLOC n == None ;;
       KLOC ← get SAEK_loc E ;;
@@ -74,7 +72,7 @@ Definition SAE (E : NBSES_scheme) (b : 'bool) :
        #put (SM_loc E) := setm SMLOC (n) (m, c) ;;
        ret c
     } ;
-    #def #[ SDEC ] ('(c, n) : ('c E × 'n E)) : ('m E) {
+    [ SDEC ] : { (C E × 'n E) ~> M E } '(c, n) { 
       KLOC ← get SAEK_loc E ;;
       #assert (isSome KLOC) as someKey ;;
       let k := getSome KLOC someKey in

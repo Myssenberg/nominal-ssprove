@@ -1,3 +1,6 @@
+(*This is a part of the implementation of the state-separated proof of security for the NaCl crypto_box public-key authenticated encryption scheme.
+This file contains the specification for the NBSES scheme.*)
+
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
   fingroup.fingroup solvable.cyclic prime ssrnat ssreflect ssrfun ssrbool ssrnum
@@ -31,7 +34,7 @@ Record NBSES_scheme :=
     M        : choice_type ;
     C        : choice_type ;
     sample_K : code fset0 [interface] 'fin #|Shared_Key| ;
-    sample_C : code fset0 [interface] C ; (*We might need more logs here*)
+    sample_C : code fset0 [interface] C ;
 
     enc : forall (m : M) (k : 'fin #|Shared_Key|) (n : 'fin #|Nonce|),
       code fset0 [interface] C ;
@@ -40,45 +43,11 @@ Record NBSES_scheme :=
       code fset0 [interface] M 
   }.
 
-(*
-Definition NBPES_to_NBSES (P : NBPES_scheme.NBPES_scheme) : (NBSES_scheme) :=
-  {| Shared_Key  := P.(NBPES_scheme.PK) × P.(NBPES_scheme.SK) ;
-     Nonce       := P.(NBPES_scheme.Nonce) ;
-     M           := P.(NBPES_scheme.M) ;
-     C           := P.(NBPES_scheme.C) ;
-
-     sample_K :=
-      {code
-        k ← sample uniform #|(prod P.(NBPES_scheme.PK) P.(NBPES_scheme.SK) : finType)| ;;
-        ret k
-      } ;
-
-     sample_C := P.(NBPES_scheme.sample_C)  ; (*We might need more logs here*)
-
-     enc : forall (m : M) (k : 'fin #|Shared_Key|) (n : 'fin #|Nonce|),
-      code fset0 [interface] C ;
-
-     dec : forall (c : C) (k : 'fin #|Shared_Key|) (n : 'fin #|Nonce|),
-      code fset0 [interface] M
-|}.*)
-
 
 Notation " 'k e " := ('fin #|Shared_Key e|)
   (in custom pack_type at level 2, e constr at level 20).
 
 Notation " 'k e " := ('fin #|Shared_Key e|)
-  (at level 3) : package_scope.
-
-Notation " 'm e " := (M e)
-  (in custom pack_type at level 2, e constr at level 20).
-
-Notation " 'm e " := (M e)
-  (at level 3) : package_scope.
-
-Notation " 'c e " := (C e)
-  (in custom pack_type at level 2, e constr at level 20).
-
-Notation " 'c e " := (C e)
   (at level 3) : package_scope.
 
 Notation " 'n e " := ('fin #|Nonce e|)
