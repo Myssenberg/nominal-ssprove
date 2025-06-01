@@ -75,11 +75,11 @@ Definition CRYPTOBOX_scheme (N: NIKE_scheme) (E : NBSES_scheme) (I : inj ('F N.(
 Local Obligation Tactic := idtac.
 
 Context (N : NIKE_scheme) (E : NBSES_scheme) (I : inj ('F N.(NIKE.Shared_Key)) ('F E.(NBSES.Shared_Key))).
-Let P := (CRYPTOBOX_scheme N E I).
+Let CB := (CRYPTOBOX_scheme N E I).
 
 
 Lemma Equiv_GuPKAE_GMODPKAE qset (b : 'bool):
-perfect (GPKAE.I_GPKAE_OUT (CRYPTOBOX_scheme N E I)) (GPKAE.GuPKAE (CRYPTOBOX_scheme N E I) b) (GMODPKAE.GMODPKAE E N qset I b).
+perfect (GPKAE.I_GPKAE_OUT CB) (GPKAE.GuPKAE CB b) (GMODPKAE.GMODPKAE E N qset I b).
 Proof.
 (*unfold GPKAE.GuPKAE, GMODPKAE.GMODPKAE.
 nssprove_share.
@@ -96,8 +96,8 @@ simplify_eq_rel x.
 Admitted.
 
 
-Theorem Lemma4_Adv_GuPKAE_CB (A : adversary (I_GPKAE_OUT P)) qset:
-  AdvFor (GuPKAE (CRYPTOBOX_scheme N E I)) A
+Theorem Lemma4_Adv_GuPKAE_CB (A : adversary (I_GPKAE_OUT CB)) qset:
+  AdvFor (GuPKAE CB) A
   <= AdvFor (GuNIKE N qset) (A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((ID (I_NIKE_OUT N) || AE E N I false)))))
      +
      AdvFor (GAE E N qset I) (A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || ID (I_AE_OUT E N))))) ∘ ((PKEY (NIKE_to_GEN N) true || ID (I_GAE_OUT E N)))).
@@ -196,21 +196,21 @@ apply lerD.
 Qed.
 
 
-Program Definition A_GNIKE_OUT (A : adversary (I_GPKAE_OUT P)) : adversary (I_GNIKE_OUT N) :=
+Program Definition A_GNIKE_OUT (A : adversary (I_GPKAE_OUT CB)) : adversary (I_GNIKE_OUT N) :=
   {adversary _ ; (A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((ID (I_NIKE_OUT N) || AE E N I false))))) }.
-Obligation 1. intros. unfold P in A. nssprove_valid. Qed.
+Obligation 1. intros. unfold CB in A. nssprove_valid. Qed.
 
-Program Definition A_GAE_OUT (A : adversary (I_GPKAE_OUT P)) : adversary (I_GAE_OUT E N) :=
+Program Definition A_GAE_OUT (A : adversary (I_GPKAE_OUT CB)) : adversary (I_GAE_OUT E N) :=
   {adversary _ ; ((A ∘ (ID (I_GMODPKAE_ID_COMP N) || ((MODPKAE N E) ∘ ((NIKE N || ID (I_AE_OUT E N))))) ∘ ((PKEY (NIKE_to_GEN N) true || ID (I_GAE_OUT E N))))) }.
-Obligation 1. intros. unfold P in A. unfold I_GAE_OUT. nssprove_valid. Qed.
+Obligation 1. intros. unfold CB in A. unfold I_GAE_OUT. nssprove_valid. Qed.
 
 
-Theorem Cryptobox_Security (A : adversary (I_GPKAE_OUT P)) qset :
-  AdvFor (GPKAE P) A
+Theorem Cryptobox_Security (A : adversary (I_GPKAE_OUT CB)) qset :
+  AdvFor (GPKAE CB) A
   <=
-  AdvFor (PKEY (NBPES_to_GEN P)) (A ∘ (PKAE P false || ID (I_GPKAE_ID_COMP P)))
+  AdvFor (PKEY (NBPES_to_GEN CB)) (A ∘ (PKAE CB false || ID (I_GPKAE_ID_COMP CB)))
   +
-  AdvFor (PKEY (NBPES_to_GEN P)) (A ∘ (PKAE P true || ID (I_GPKAE_ID_COMP P)))
+  AdvFor (PKEY (NBPES_to_GEN CB)) (A ∘ (PKAE CB true || ID (I_GPKAE_ID_COMP CB)))
   +
   AdvFor (PKEY (NIKE_to_GEN N)) (((A_GNIKE_OUT A) ∘ (NIKE N || ID (I_GNIKE_ID_COMP N))) ∘ (KEY N qset false || ID (I_PKEY_OUT (NIKE_to_GEN N))))
   +
@@ -220,8 +220,8 @@ Theorem Cryptobox_Security (A : adversary (I_GPKAE_OUT P)) qset :
   +
   \sum_(0 <= i < qset) AdvFor (GSAE E) ((A_GAE_OUT A) ∘ HYBRID E N I i qset ∘ ((ID (I_GSAE_OUT E)) || (KEY N qset true))).
 Proof.
-unfold P in A.
-unfold P.
+unfold CB in A.
+unfold CB.
 eapply le_trans.
 1: apply Corollary1_Adv_GPKAE.
 repeat rewrite <- GRing.addrA. apply lerD => //.
