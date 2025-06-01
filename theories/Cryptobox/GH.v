@@ -1,5 +1,5 @@
-(*This is a part of the implementation of the state-separated game-based proof of security for the NaCl crypto_box authenticated encryption scheme.
-This file contains the specification for the GAE game and following lemmas*)
+(*This is a part of the implementation of the state-separated proof of security for the NaCl crypto_box public-key authenticated encryption scheme.
+This file contains the specification for the GH game and the lemmas GAE_HYBRID_perfect, HYBRID_succ_perfect and Lemma3_Adv_GAE.*)
 
 Set Warnings "-notation-overridden,-ambiguous-paths".
 From mathcomp Require Import all_ssreflect all_algebra reals distr realsum
