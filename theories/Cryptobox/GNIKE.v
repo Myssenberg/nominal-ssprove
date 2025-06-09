@@ -70,7 +70,6 @@ repeat rewrite Adv_sep_link.
 erewrite Adv_sym.
 nssprove_adv_trans (KEY N qset false || PKEY (NIKE_to_GEN N) false).
 erewrite -> Adv_par_r by nssprove_valid.
-erewrite Adv_sym.
 rewrite -GRing.addrA.
 apply lerD.
 1: apply lexx.
