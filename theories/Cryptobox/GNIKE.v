@@ -74,8 +74,9 @@ rewrite -GRing.addrA.
 apply lerD.
 1: apply lexx.
 nssprove_adv_trans (KEY N qset true || PKEY (NIKE_to_GEN N) false).
+erewrite Adv_sym.
 apply lerD.
-1: erewrite Adv_sym ; apply lexx.
+1: apply lexx.
 erewrite -> Adv_par_r by nssprove_valid.
 rewrite Adv_sym.
 apply lexx.
