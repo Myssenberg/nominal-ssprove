@@ -225,12 +225,14 @@ unfold CB in A.
 unfold CB.
 eapply le_trans.
 1: apply Corollary1_Adv_GPKAE.
-repeat rewrite <- GRing.addrA. apply lerD => //.
-rewrite -> GRing.addrC. apply lerD => //.
-rewrite GRing.addrA.
+repeat rewrite <- GRing.addrA.
+apply lerD => //.
+rewrite -> GRing.addrC.
+apply lerD => //.
+repeat rewrite GRing.addrA.
 eapply le_trans.
 1: apply Lemma4_Adv_GuPKAE_CB.
-rewrite GRing.addrA. apply lerD.
+apply lerD.
 1: apply (Corollary3_Adv_GNIKE_GuNIKE (A_GNIKE_OUT A)).
 apply (Lemma3_Adv_GAE qset I (A_GAE_OUT A)).
 Qed.
